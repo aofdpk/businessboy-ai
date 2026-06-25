@@ -3,7 +3,7 @@
 function originOk(req) {
   const allow = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   const ref = req.headers.origin || req.headers.referer || '';
-  if (!ref) return true;
+  if (!ref) return false; // fail-closed: บล็อกคำขอที่ไม่มี origin/referer
   try {
     const h = new URL(ref).host;
     if (h === req.headers.host) return true;
@@ -18,7 +18,10 @@ module.exports = async (req, res) => {
   if (!key) return res.status(500).json({ error: { message: 'ยังไม่ได้ตั้งค่า GEMINI_API_KEY' } });
 
   const { displayName, mimeType, size } = req.body || {};
-  if (!mimeType || !size) return res.status(400).json({ error: { message: 'bad request' } });
+  const sz = Number(size);
+  if (!mimeType || !sz || sz <= 0 || sz > 2 * 1024 * 1024 * 1024) {
+    return res.status(400).json({ error: { message: 'bad request (mimeType/size)' } });
+  }
 
   try {
     const r = await fetch('https://generativelanguage.googleapis.com/upload/v1beta/files', {

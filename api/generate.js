@@ -7,7 +7,7 @@ const ALLOWED_MODELS = new Set([
 function originOk(req) {
   const allow = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   const ref = req.headers.origin || req.headers.referer || '';
-  if (!ref) return true; // same-origin fetch บางทีไม่ส่ง origin -> อนุญาต
+  if (!ref) return false; // fail-closed: ไม่มี origin/referer (เช่น curl/บอท) -> บล็อก
   try {
     const h = new URL(ref).host;
     if (h === req.headers.host) return true;

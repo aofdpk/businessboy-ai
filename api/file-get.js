@@ -2,7 +2,7 @@
 function originOk(req) {
   const allow = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   const ref = req.headers.origin || req.headers.referer || '';
-  if (!ref) return true;
+  if (!ref) return false; // fail-closed: บล็อกคำขอที่ไม่มี origin/referer
   try {
     const h = new URL(ref).host;
     if (h === req.headers.host) return true;
