@@ -118,7 +118,9 @@
     try {
       const e = (typeof body === 'string' ? JSON.parse(body) : body);
       const m = e.error && e.error.message ? e.error.message : '';
+      const code = e.error && e.error.code ? e.error.code : '';
       if (status === 400 && /API key not valid/i.test(m)) msg = 'API key ไม่ถูกต้อง — กดรูปเฟือง ⚙️ มุมขวาบนเพื่อใส่ใหม่';
+      else if (status === 429 && code === 'RATE_LIMIT') msg = m; // โควต้าทดลองต่อคน/วัน — ใช้ข้อความจากเซิร์ฟเวอร์ตรงๆ
       else if (status === 429) msg = 'เรียกถี่/โควต้าหมดชั่วคราว — รอสักครู่แล้วลองใหม่ (free tier จำกัดต่อนาที)';
       else if (status === 403) msg = 'key ถูกปฏิเสธ — ตรวจว่าเปิดสิทธิ์ Gemini API และไม่ติด restriction';
       else if (m) msg = m;
@@ -133,8 +135,11 @@
     if (opts.generationConfig) body.generationConfig = opts.generationConfig;
     let res;
     if (PROXY) {
+      const h = { 'Content-Type': 'application/json' };
+      try { h['x-gk-app'] = location.pathname || '/'; } catch (e) {}
+      if (opts.retry) h['x-gk-retry'] = '1'; // retry/variant ภายใน — ไม่นับโควต้าซ้ำ
       res = await fetch(PROXY + '/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: h,
         body: JSON.stringify({ model: model, body: body })
       });
     } else {
@@ -171,8 +176,8 @@
     const out = extractText(await generate(MODEL_TEXT, [{ text: prompt }], cfg));
     if (!opts.json) return out;
     let parsed = safeJson(out);
-    if (parsed == null) { // retry once on bad JSON
-      parsed = safeJson(extractText(await generate(MODEL_TEXT, [{ text: prompt + '\n\nสำคัญ: ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น ห้ามมีข้อความอื่นหรือ markdown' }], cfg)));
+    if (parsed == null) { // retry once on bad JSON (ไม่นับโควต้าซ้ำ)
+      parsed = safeJson(extractText(await generate(MODEL_TEXT, [{ text: prompt + '\n\nสำคัญ: ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น ห้ามมีข้อความอื่นหรือ markdown' }], Object.assign({}, cfg, { retry: true }))));
     }
     return parsed;
   }
@@ -192,9 +197,9 @@
     const out = extractText(await generate(MODEL_TEXT, parts, cfg));
     if (!opts.json) return out;
     let parsed = safeJson(out);
-    if (parsed == null) { // retry once on bad JSON
+    if (parsed == null) { // retry once on bad JSON (ไม่นับโควต้าซ้ำ)
       const parts2 = parts.slice(0, -1).concat([{ text: prompt + '\n\nสำคัญ: ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น ห้ามมีข้อความอื่นหรือ markdown' }]);
-      parsed = safeJson(extractText(await generate(MODEL_TEXT, parts2, cfg)));
+      parsed = safeJson(extractText(await generate(MODEL_TEXT, parts2, Object.assign({}, cfg, { retry: true }))));
     }
     return parsed;
   }
@@ -215,9 +220,12 @@
       undefined
     ];
     let lastErr;
-    for (const gc of variants) {
+    for (let vi = 0; vi < variants.length; vi++) {
+      const gc = variants[vi];
       try {
-        const resp = await generate(MODEL_IMAGE, parts, gc ? { generationConfig: gc } : {});
+        const o = gc ? { generationConfig: gc } : {};
+        if (vi > 0) o.retry = true; // variant ถัดๆ ไปคือ retry ภายใน — ไม่นับโควต้าซ้ำ
+        const resp = await generate(MODEL_IMAGE, parts, o);
         const dataUrl = extractImage(resp);
         if (dataUrl) return dataUrl;
         lastErr = new Error('AI ไม่ได้ส่งรูปกลับมา — ลองปรับคำสั่งหรือลองใหม่');
