@@ -1,0 +1,279 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>วิเคราะห์รีวิวลูกค้า 💡</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#11998e;--bg2:#38ef7d;--accent:#059669;--soft:#ecfdf5;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+textarea{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;resize:vertical;min-height:110px}
+textarea:focus{border-color:var(--accent)}
+.drop{border:2px dashed var(--accent);border-radius:13px;padding:18px 14px;text-align:center;cursor:pointer;background:var(--soft);color:var(--accent);font-size:14px;font-weight:500;transition:background .2s}
+.drop:hover{background:#d1fae5}
+.previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.previews img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid var(--soft)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative}
+.result-card h3{font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.result-card ul{list-style:none;padding:0}
+.result-card ul li{font-size:14px;line-height:1.7;padding:5px 0;border-bottom:1px solid #f3f4f6;color:var(--ink)}
+.result-card ul li:last-child{border-bottom:none}
+.result-card ul li::before{margin-right:6px}
+.praise-card h3{color:#059669}.praise-card li::before{content:'👍'}
+.complaint-card h3{color:#dc2626}.complaint-card li::before{content:'⚠️'}
+.action-card h3{color:#7c3aed}.action-card li::before{content:'🔧'}
+.sentiment-card{background:linear-gradient(135deg,#ecfdf5,#d1fae5)}
+.sentiment-card h3{color:#065f46}
+.sentiment-text{font-size:15px;line-height:1.7;color:#065f46;font-weight:500}
+.copy-btn{position:absolute;top:10px;right:10px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.err{background:#fff;border-radius:16px;padding:14px 16px;color:#dc2626;box-shadow:0 8px 20px rgba(0,0,0,.1);font-size:15px}
+.summary-all{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative}
+.summary-all h3{font-size:14px;font-weight:700;color:#374151;margin-bottom:6px}
+.row{display:flex;gap:10px}.row>.field{flex:1;margin-bottom:14px}
+select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:11px 12px;font-size:14px;outline:none;font-family:inherit;background:#fff;color:var(--ink)}
+select:focus{border-color:var(--accent)}
+input[type=text]{width:100%;border:2px solid var(--soft);border-radius:13px;padding:11px 14px;font-size:14px;outline:none;font-family:inherit}
+input[type=text]:focus{border-color:var(--accent)}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}
+.tool-btn{flex:1;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.reply-card h3{color:#0369a1}.reply-card li::before{content:'💬'}
+.idea-card h3{color:#b45309}.idea-card li::before{content:'💡'}
+.muted-note{font-size:11px;color:var(--muted);margin-top:2px}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>วิเคราะห์รีวิวลูกค้า 💡</h1>
+    <p>วางรีวิว หรืออัปสกรีนช็อต → รู้ทันทีว่าลูกค้าชม/บ่นอะไร</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>📝 วางข้อความรีวิว (ไม่บังคับถ้ามีรูป)</label>
+      <textarea id="reviewText" placeholder="วางรีวิวลูกค้าที่นี่ หลายรีวิวก็ได้ คั่นด้วยบรรทัดว่าง..."></textarea>
+    </div>
+    <div class="field">
+      <label>🖼️ อัปสกรีนช็อตรีวิว (ไม่บังคับ เลือกได้หลายรูป)</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        📂 แตะเพื่อเลือกภาพรีวิว
+      </div>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden onchange="handleFiles(this.files)">
+      <div class="previews" id="previews"></div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>📱 แพลตฟอร์ม</label>
+        <select id="platform">
+          <option value="">ทั่วไป</option>
+          <option value="Facebook / เพจร้าน">Facebook</option>
+          <option value="Shopee">Shopee</option>
+          <option value="Lazada">Lazada</option>
+          <option value="TikTok / TikTok Shop">TikTok</option>
+          <option value="Google Maps / รีวิวร้าน">Google Maps</option>
+          <option value="LINE OA / แชท">LINE OA</option>
+          <option value="Instagram">Instagram</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>🎙️ โทนการตอบ</label>
+        <select id="tone">
+          <option value="เป็นกันเอง อบอุ่น">เป็นกันเอง</option>
+          <option value="สุภาพ มืออาชีพ">สุภาพทางการ</option>
+          <option value="สนุก ขี้เล่น มีอีโมจิ">สนุกขี้เล่น</option>
+          <option value="ขายของ กระตุ้นปิดการขาย">สายขายของ</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>🏪 บริบทร้าน (ไม่บังคับ — ใส่เพื่อผลเฉพาะร้านคุณ)</label>
+      <input type="text" id="ctxBrand" placeholder="ชื่อแบรนด์/ร้าน เช่น ครัวคุณยาย">
+      <input type="text" id="ctxPrice" placeholder="ราคา/โปร เช่น เริ่ม 99.- ส่งฟรี" style="margin-top:8px">
+      <input type="text" id="ctxUsp" placeholder="จุดขายหลัก เช่น วัตถุดิบสดใหม่ทุกวัน" style="margin-top:8px">
+      <div class="muted-note">ข้อมูลนี้ช่วยให้ AI แนะนำและร่างคำตอบตรงร้านจริง ไม่เดามั่ว</div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">💡 วิเคราะห์รีวิวเลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFiles = [];
+
+function handleFiles(files) {
+  selectedFiles = Array.from(files);
+  const previews = document.getElementById('previews');
+  previews.innerHTML = '';
+  selectedFiles.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      previews.appendChild(img);
+    };
+    reader.readAsDataURL(f);
+  });
+  const dropZone = document.getElementById('dropZone');
+  dropZone.textContent = '✅ เลือกแล้ว ' + selectedFiles.length + ' รูป (แตะเพื่อเปลี่ยน)';
+}
+
+async function run() {
+  const reviewText = document.getElementById('reviewText').value.trim();
+  if (!reviewText && selectedFiles.length === 0) {
+    GeminiKit.toast('ใส่ข้อความรีวิว หรืออัปรูปก่อนนะ');
+    return;
+  }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังวิเคราะห์รีวิว...</div>';
+
+  const platform = document.getElementById('platform').value;
+  const tone = document.getElementById('tone').value;
+  const brand = document.getElementById('ctxBrand').value.trim();
+  const price = document.getElementById('ctxPrice').value.trim();
+  const usp = document.getElementById('ctxUsp').value.trim();
+
+  const schema = '{"praise":["จุดที่ลูกค้าชม"],"complaints":["จุดที่ลูกค้าบ่น"],"sentiment":"ภาพรวมความรู้สึกลูกค้า 1-2 ประโยค","actions":["สิ่งที่ควรปรับปรุง พร้อมเหตุผลสั้นๆ"],"replies":["ตัวอย่างคำตอบกลับลูกค้าที่ก๊อปไปวางได้เลย"],"contentIdeas":["ไอเดียคอนเทนต์/แคปชั่นขายของจากจุดที่ลูกค้าชม พร้อม CTA"]}';
+  let prompt = 'คุณคือนักการตลาดและที่ปรึกษาร้านค้าออนไลน์ไทยมือทอง เชี่ยวชาญการอ่านรีวิวลูกค้าและเปลี่ยนเป็นยอดขาย\n';
+  prompt += 'งานของคุณ: วิเคราะห์รีวิวต่อไปนี้แล้วตอบเป็น JSON เท่านั้น ตามโครงสร้างนี้:\n' + schema + '\n';
+  prompt += 'ความหมายแต่ละช่อง:\n';
+  prompt += '- praise: สิ่งที่ลูกค้าพอใจ/ชมเชยจริงจากรีวิว\n';
+  prompt += '- complaints: สิ่งที่ลูกค้าไม่พอใจ/บ่นจริงจากรีวิว\n';
+  prompt += '- sentiment: สรุปภาพรวมความรู้สึก (บวก/ลบ/ปนกัน) แบบกระชับ\n';
+  prompt += '- actions: สิ่งที่เจ้าของร้านควรลงมือทำเพื่อปรับปรุง ต้อง actionable ทำได้จริงทันที พร้อมเหตุผลสั้นๆ\n';
+  prompt += '- replies: ร่างคำตอบกลับลูกค้าแบบสุภาพและดูแลใจ ที่เจ้าของร้านคัดลอกไปวางตอบได้เลย (ตอบรีวิวบวกให้ขอบคุณ+ชวนกลับมาซื้อ, ตอบรีวิวลบให้ขอโทษ+เสนอทางแก้+ดึงกลับมา)\n';
+  prompt += '- contentIdeas: ไอเดียคอนเทนต์หรือแคปชั่นขายของที่หยิบจุดที่ลูกค้าชมมาทำเป็นโพสต์เรียกยอด พร้อมแทรก CTA ปิดการขาย (เช่น ทักแชท/กดสั่งเลย)\n\n';
+  prompt += 'กฎสำคัญ:\n';
+  prompt += '1) ห้ามเดาหรือกุข้อมูลที่ไม่มีในรีวิว ถ้ารีวิวไม่ได้พูดถึงเรื่องใดห้ามแต่งขึ้นเอง ถ้าช่องไหนไม่มีข้อมูลให้ใส่ array ว่าง\n';
+  prompt += '2) ใช้โทนการตลาดไทยที่อ่านแล้วลงมือทำได้จริง พูดตรง กระชับ ไม่อ้อมค้อม\n';
+  prompt += '3) replies และ contentIdeas ต้องเขียนเป็นภาษาขายของไทยที่ใช้ได้จริงและมี CTA\n';
+
+  let ctx = '';
+  if (platform) ctx += '- แพลตฟอร์ม: ' + platform + ' (ปรับคำตอบ/คอนเทนต์ให้เข้ากับสไตล์แพลตฟอร์มนี้)\n';
+  if (tone) ctx += '- โทนที่ต้องการ: ' + tone + '\n';
+  if (brand) ctx += '- ชื่อแบรนด์/ร้าน: ' + brand + ' (ใช้ชื่อนี้ในคำตอบและคอนเทนต์)\n';
+  if (price) ctx += '- ราคา/โปรโมชัน: ' + price + '\n';
+  if (usp) ctx += '- จุดขายหลัก: ' + usp + ' (ชูจุดนี้ในคอนเทนต์เมื่อเกี่ยวข้อง)\n';
+  if (ctx) prompt += '\nบริบทร้านจริง (ใช้ให้ตรง ห้ามเดาเกินจากนี้):\n' + ctx;
+
+  if (reviewText) {
+    prompt += '\nข้อความรีวิว:\n' + reviewText;
+  }
+  if (selectedFiles.length > 0 && reviewText) {
+    prompt += '\n(ดูรูปสกรีนช็อตรีวิวประกอบด้วย)';
+  } else if (selectedFiles.length > 0) {
+    prompt += '\nรีวิวอยู่ในรูปสกรีนช็อตที่แนบมา ให้อ่านข้อความจากรูปแล้ววิเคราะห์';
+  }
+
+  try {
+    let result;
+    if (selectedFiles.length > 0) {
+      result = await GeminiKit.vision(prompt, selectedFiles, {json: true});
+    } else {
+      result = await GeminiKit.text(prompt, {json: true});
+    }
+
+    if (!result || typeof result !== 'object') {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    const praise = Array.isArray(result.praise) ? result.praise : [];
+    const complaints = Array.isArray(result.complaints) ? result.complaints : [];
+    const sentiment = result.sentiment || '';
+    const actions = Array.isArray(result.actions) ? result.actions : [];
+    const replies = Array.isArray(result.replies) ? result.replies : [];
+    const ideas = Array.isArray(result.contentIdeas) ? result.contentIdeas : [];
+
+    function section(items, title, prefixNum) {
+      if (!items.length) return '';
+      const block = title + '\n' + items.map((x, i) => (prefixNum ? (i+1) + '. ' : '- ') + x).join('\n');
+      return block;
+    }
+
+    // เก็บข้อความดิบไว้ใน closure สำหรับปุ่มคัดลอก/ดาวน์โหลด
+    const fullParts = [];
+    if (sentiment) fullParts.push('🌟 ภาพรวมความรู้สึกลูกค้า\n' + sentiment);
+    if (praise.length) fullParts.push(section(praise, '👍 สิ่งที่ลูกค้าชม:', false));
+    if (complaints.length) fullParts.push(section(complaints, '⚠️ สิ่งที่ลูกค้าบ่น:', false));
+    if (actions.length) fullParts.push(section(actions, '🔧 สิ่งที่ควรปรับปรุง:', true));
+    if (replies.length) fullParts.push(section(replies, '💬 ตัวอย่างคำตอบกลับลูกค้า:', true));
+    if (ideas.length) fullParts.push(section(ideas, '💡 ไอเดียคอนเทนต์/แคปชั่นขายของ:', true));
+    const fullText = fullParts.join('\n\n');
+
+    let html = '';
+
+    if (sentiment) {
+      html += '<div class="result-card sentiment-card"><h3>🌟 ภาพรวมความรู้สึกลูกค้า</h3>';
+      html += '<div class="sentiment-text">' + esc(sentiment) + '</div></div>';
+    }
+
+    html += renderListCard(praise, 'praise-card', '👍 สิ่งที่ลูกค้าชม', false);
+    html += renderListCard(complaints, 'complaint-card', '⚠️ สิ่งที่ลูกค้าบ่น', false);
+    html += renderListCard(actions, 'action-card', '🔧 สิ่งที่ควรปรับปรุง', true);
+    html += renderListCard(replies, 'reply-card', '💬 ตัวอย่างคำตอบกลับลูกค้า', true);
+    html += renderListCard(ideas, 'idea-card', '💡 ไอเดียคอนเทนต์/แคปชั่นขายของ', true);
+
+    if (!html) {
+      throw new Error('AI ไม่พบข้อมูลรีวิวที่วิเคราะห์ได้ ลองใส่รีวิวให้ชัดขึ้น');
+    }
+
+    const toolbar = '<div class="toolbar">'
+      + '<button class="tool-btn" onclick="copyAll()">📋 คัดลอกทั้งหมด</button>'
+      + '<button class="tool-btn" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>'
+      + '</div>';
+
+    out.innerHTML = toolbar + html;
+
+    // ผูกข้อความดิบไว้กับปุ่มในการ์ดผ่าน closure
+    out.querySelectorAll('.copy-btn').forEach(btnEl => {
+      const raw = cardRaw[btnEl.dataset.k];
+      btnEl.onclick = () => GeminiKit.copy(raw);
+    });
+    window._copyAll = () => GeminiKit.copy(fullText);
+    window._downloadAll = () => {
+      const stamp = new Date().toISOString().slice(0,10);
+      GeminiKit.download('วิเคราะห์รีวิว-' + stamp + '.txt', fullText, 'text/plain');
+    };
+
+  } catch(e) {
+    out.innerHTML = '<div class="err">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// เก็บข้อความดิบของแต่ละการ์ดเพื่อให้ปุ่มคัดลอกอ่านจาก closure ไม่ใช่ textContent
+let cardRaw = {};
+function renderListCard(items, cls, title, prefixNum) {
+  if (!items || !items.length) return '';
+  const key = cls;
+  cardRaw[key] = title + '\n' + items.map((x, i) => (prefixNum ? (i+1) + '. ' : '- ') + x).join('\n');
+  let h = '<div class="result-card ' + cls + '"><h3>' + esc(title) + ' (' + items.length + ' ข้อ)</h3><ul>';
+  items.forEach(x => { h += '<li>' + esc(x) + '</li>'; });
+  h += '</ul><button class="copy-btn" data-k="' + key + '">คัดลอก</button></div>';
+  return h;
+}
+
+function copyAll() { if (window._copyAll) window._copyAll(); }
+function downloadAll() { if (window._downloadAll) window._downloadAll(); }
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+</script>
+</body></html>

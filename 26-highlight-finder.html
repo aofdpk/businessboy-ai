@@ -1,0 +1,317 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>หาไฮไลต์ตัด Reels จากไลฟ์ ✂️</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#42275a;--bg2:#734b6d;--accent:#a21caf;--soft:#fdf4ff;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;background:#fff}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.drop{border:2.5px dashed #d8b4fe;border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;transition:background .2s;background:var(--soft);color:var(--accent);font-weight:600;font-size:15px}
+.drop:hover,.drop.over{background:#f3e8ff}
+.drop-icon{font-size:36px;margin-bottom:8px}
+.drop small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:4px}
+.preview-wrap{margin-top:12px;border-radius:13px;overflow:hidden;background:#000}
+.preview-wrap video{width:100%;max-height:220px;display:block}
+.file-name{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.clip-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.12);border-left:4px solid var(--accent)}
+.clip-time{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:6px;letter-spacing:.5px}
+.clip-time span{font-size:14px;font-weight:400;color:var(--muted);margin:0 4px}
+.clip-dur{display:inline-block;font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px;margin-left:8px;vertical-align:middle;background:#dcfce7;color:#16a34a}
+.clip-dur.warn{background:#fef3c7;color:#b45309}
+.warn-file{background:#fef3c7;color:#b45309;border-radius:10px;padding:8px 12px;font-size:12px;line-height:1.6;margin-top:8px;text-align:center}
+.tools-row{display:flex;gap:8px;margin-bottom:12px}
+.tools-row .copy-btn{flex:1;text-align:center;padding:10px}
+.clip-hook{font-size:14px;font-weight:600;color:#b45309;background:#fffbeb;border-radius:10px;padding:8px 12px;margin-bottom:8px;line-height:1.6}
+.clip-hook::before{content:"🎯 Hook: "}
+.clip-cta{font-size:13px;font-weight:600;color:#16a34a;background:#f0fdf4;border-radius:10px;padding:8px 12px;margin-bottom:8px;line-height:1.6}
+.clip-cta::before{content:"📣 CTA: "}
+.clip-caption{font-size:15px;color:var(--ink);line-height:1.7;margin-bottom:8px;white-space:pre-wrap}
+.clip-why{font-size:13px;color:var(--muted);background:var(--soft);border-radius:10px;padding:8px 12px;margin-bottom:10px;line-height:1.6}
+.clip-why::before{content:"💡 ";font-size:14px}
+.copy-btn{border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.copy-btn:hover{background:#f3e8ff}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.6}
+.badge{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600;margin-bottom:12px}
+.tip{font-size:12px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>หาไฮไลต์ตัด Reels ✂️</h1>
+    <p>อัปไลฟ์/คลิปยาว → AI หาช่วงเด็ดให้เลย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>อัปโหลดคลิป (วิดีโอหรือเสียง)</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">🎬</div>
+        แตะเพื่อเลือกคลิป
+        <small>MP4, MOV, AVI, MP3, M4A ฯลฯ • คลิปยิ่งสั้นยิ่งเร็ว</small>
+      </div>
+      <input type="file" id="fileInput" accept="video/*,audio/*" hidden onchange="onFileChange(this)">
+      <div id="previewWrap"></div>
+      <div id="fileName" class="file-name"></div>
+    </div>
+    <div class="field">
+      <label>จำนวนไฮไลต์ที่ต้องการ (ไม่บังคับ)</label>
+      <select id="count">
+        <option value="5">5 ช่วง (แนะนำ)</option>
+        <option value="3">3 ช่วง</option>
+        <option value="8">8 ช่วง</option>
+        <option value="10">10 ช่วง</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์มที่จะลง</label>
+      <select id="platform">
+        <option value="Reels">Facebook/Instagram Reels</option>
+        <option value="TikTok">TikTok</option>
+        <option value="Shorts">YouTube Shorts</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>โทนแคปชั่น</label>
+      <select id="tone">
+        <option value="ขายตรง">ขายตรง (กระตุ้นให้ทักแชท/สั่งซื้อ)</option>
+        <option value="สนุก">สนุก ติดเทรนด์ ดึงดูดให้แชร์</option>
+        <option value="ให้ความรู้">ให้ความรู้ สร้างความน่าเชื่อถือ</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>บริบทเพิ่มเติม (ไม่บังคับ)</label>
+      <textarea id="context" rows="2" placeholder="เช่น ไลฟ์ขายเสื้อผ้า เน้นช่วงที่มีคนถามและแม่ค้าอธิบาย"></textarea>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✂️ หาไฮไลต์เลย</button>
+  <p class="tip">⚠️ คลิปที่ยาวมากอาจใช้เวลาสักครู่ระหว่างอัปโหลด</p>
+
+  <div id="output" style="margin-top:18px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+const SIZE_WARN_MB = 100; // Gemini File API ทำงานได้ดีกับไฟล์ที่ไม่ใหญ่เกินไป
+
+function acceptFile(file) {
+  if (!file) return;
+  if (!(file.type.startsWith('video/') || file.type.startsWith('audio/'))) {
+    GeminiKit.toast('กรุณาเลือกไฟล์วิดีโอหรือเสียงเท่านั้น');
+    return;
+  }
+  selectedFile = file;
+  document.getElementById('fileName').textContent = '📁 ' + file.name + ' (' + formatSize(file.size) + ')';
+  const wrap = document.getElementById('previewWrap');
+  let html = '';
+  if (file.type.startsWith('video/')) {
+    const url = URL.createObjectURL(file);
+    html = '<div class="preview-wrap"><video src="' + url + '" controls muted playsinline></video></div>';
+  }
+  const mb = file.size / (1024 * 1024);
+  if (mb > SIZE_WARN_MB) {
+    html += '<div class="warn-file">⚠️ ไฟล์ใหญ่ ' + mb.toFixed(0) + ' MB อาจอัปโหลดช้าหรือเกินลิมิตได้ '
+      + 'แนะนำตัดเหลือเฉพาะช่วงไลฟ์ที่ขายของ หรือบีบ/ลดความละเอียดก่อนอัป</div>';
+  }
+  wrap.innerHTML = html;
+}
+
+function onFileChange(input) {
+  acceptFile(input.files[0]);
+}
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  acceptFile(e.dataTransfer.files[0]);
+});
+
+function formatSize(bytes) {
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+async function run() {
+  if (!selectedFile) { GeminiKit.toast('เลือกคลิปก่อนนะ'); return; }
+  const count = document.getElementById('count').value;
+  const platform = document.getElementById('platform').value;
+  const tone = document.getElementById('tone').value;
+  const ctx = document.getElementById('context').value.trim();
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+
+  const mb = selectedFile.size / (1024 * 1024);
+  if (mb > SIZE_WARN_MB) {
+    GeminiKit.toast('ไฟล์ใหญ่ ' + mb.toFixed(0) + ' MB อาจอัปโหลดช้าและกินโทเคนมาก กำลังเริ่ม...');
+  }
+
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังอัปโหลดคลิป...</div>';
+
+  const toneGuide = {
+    'ขายตรง': 'โทนขายตรง: ปิดการขาย กระตุ้นให้ทักแชท/สั่งซื้อทันที CTA ชัดเจน เช่น "ทักแชทสั่งเลย" "คอมเมนต์ CF"',
+    'สนุก': 'โทนสนุก เป็นกันเอง ติดเทรนด์ เล่นมุก ดึงดูดให้คนแชร์และคอมเมนต์',
+    'ให้ความรู้': 'โทนให้ความรู้ ให้คุณค่า/ทิปก่อน สร้างความน่าเชื่อถือ แล้วค่อยชวนติดตาม/ทัก'
+  }[tone] || '';
+
+  const prompt =
+    'คุณเป็นครีเอเตอร์และนักตัด Reels มืออาชีพสายขายของออนไลน์ในไทย เชี่ยวชาญทำคลิปสั้นให้ยอดวิวพุ่งและปิดการขายได้จริง คุณเข้าใจอัลกอริทึมของ ' + platform + ' และจิตวิทยาการหยุดนิ้วใน 3 วินาทีแรก\n'
+    + 'ดูคลิป/เสียงนี้ (ภาษาไทย) แล้วเลือกช่วง "ไฮไลต์" ที่เหมาะตัดลง ' + platform + ' จำนวน ' + count + ' ช่วง\n'
+    + (ctx ? 'บริบทจากเจ้าของคลิป: ' + ctx + '\n' : '')
+    + 'เกณฑ์การเลือกและเขียนแคปชั่น:\n'
+    + '- แต่ละช่วงควรยาว 15-60 วินาที (เหมาะกับ ' + platform + ') ห้ามสั้นกว่า 10 วินาที และพยายามไม่เกิน 60 วินาที\n'
+    + '- ระบุ timecode start/end เป็น นาที:วินาที (mm:ss) ให้ตรงกับช่วงในคลิปจริง ห้ามเดามั่ว\n'
+    + '- เลือกช่วงที่มี hook สะดุด, อารมณ์ร่วม, ข้อมูลที่มีประโยชน์ หรือจังหวะที่กระตุ้นให้อยากซื้อ\n'
+    + '- เรียงไฮไลต์ตามลำดับเวลา (start น้อยไปมาก)\n'
+    + '- caption ต้องเอาไปโพสต์ได้ทันที โครงสร้าง: บรรทัดแรกเป็น hook ประโยคสั้นสะดุดหยุดนิ้ว + เนื้อหาสั้นกระชับ + CTA ปิดท้าย. ' + toneGuide + '\n'
+    + '- ต่อท้าย caption ด้วย hashtag ภาษาไทยที่เกี่ยวข้อง 3-5 ตัว (ขึ้นต้นด้วย #)\n'
+    + 'ตอบเป็น JSON เท่านั้น ห้ามมีข้อความหรือ markdown อื่น รูปแบบ:\n'
+    + '{"clips":[{'
+    + '"start":"MM:SS","end":"MM:SS",'
+    + '"hook":"ประโยค hook 3 วิแรกแบบดัดแปลงไปใช้กับสินค้า/บริการตัวเองได้ทันที (ข้อความขึ้นจอ/พูดเปิด)",'
+    + '"caption":"แคปชั่นพร้อมโพสต์ = hook + เนื้อหา + CTA + hashtag",'
+    + '"cta":"ประโยค call-to-action ชัดเจนว่าให้คนดูทำอะไรต่อ เช่น ทักแชท/คอมเมนต์ CF/กดติดตาม",'
+    + '"why":"เหตุผลว่าทำไมช่วงนี้เด็ดและเหมาะลง ' + platform + '"'
+    + '}]}\n'
+    + 'start และ end เป็นรูปแบบ นาที:วินาที เช่น 02:30';
+
+  try {
+    const result = await GeminiKit.media(prompt, selectedFile, (a, b) => {
+      // ทนรูปแบบ argument: บาง kit ส่ง string ตรงๆ บางอันส่ง (stage, text)
+      let msg;
+      if (typeof a === 'string' && b == null) msg = a;
+      else if (typeof b === 'string' && b) msg = b;
+      else if (typeof a === 'string') msg = a;
+      else msg = 'กำลังประมวลผล...';
+      out.innerHTML = '<div class="loading"><div class="spinner"></div>' + esc(msg) + '</div>';
+    });
+
+    let data;
+    try {
+      const match = result.match(/\{[\s\S]*\}/);
+      data = match ? JSON.parse(match[0]) : null;
+    } catch (e) {
+      data = null;
+    }
+
+    if (!data || !Array.isArray(data.clips) || !data.clips.length) {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    const clips = data.clips.slice().sort((a, b) => toSec(a.start) - toSec(b.start));
+    let html = '<div class="badge">✂️ พบ ' + clips.length + ' ไฮไลต์</div>'
+      + '<div class="tools-row">'
+      + '<button class="copy-btn" onclick="cpAll(this)">📋 คัดลอกทั้งหมด</button>'
+      + '<button class="copy-btn" onclick="dlAll()">⬇️ ดาวน์โหลด .txt</button>'
+      + '</div>';
+    clips.forEach((clip, i) => {
+      const dur = clipDuration(clip.start, clip.end);
+      html += '<div class="clip-card">'
+        + '<div class="clip-time">▶ ' + esc(clip.start || '?') + '<span>ถึง</span>' + esc(clip.end || '?')
+        + (dur.label ? '<span class="clip-dur' + (dur.warn ? ' warn' : '') + '">' + esc(dur.label) + '</span>' : '')
+        + '</div>'
+        + (clip.hook ? '<div class="clip-hook">' + esc(clip.hook) + '</div>' : '')
+        + '<div class="clip-caption">' + esc(clip.caption || '') + '</div>'
+        + (clip.cta ? '<div class="clip-cta">' + esc(clip.cta) + '</div>' : '')
+        + '<div class="clip-why">' + esc(clip.why || '') + '</div>'
+        + '<button class="copy-btn" onclick="cpClip(this,' + i + ')">📋 คัดลอกแคปชั่น</button>'
+        + '</div>';
+    });
+    out.innerHTML = html;
+    window._clips = clips;
+
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function toSec(t) {
+  if (!t) return 0;
+  const p = String(t).split(':').map(n => parseInt(n, 10));
+  if (p.some(isNaN)) return 0;
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+  if (p.length === 2) return p[0] * 60 + p[1];
+  return p[0] || 0;
+}
+
+function clipDuration(start, end) {
+  const s = toSec(start), e = toSec(end);
+  if (!end || e <= s) return { label: '', warn: false };
+  const d = e - s;
+  let warn = false, note = '';
+  if (d < 10) { warn = true; note = ' (สั้นไป)'; }
+  else if (d > 60) { warn = true; note = ' (ยาวไป)'; }
+  return { label: '⏱ ' + d + ' วิ' + note, warn };
+}
+
+function buildText(clip) {
+  let t = '';
+  if (clip.hook) t += '🎯 Hook: ' + clip.hook + '\n\n';
+  t += clip.caption || '';
+  if (clip.cta) t += '\n\n📣 CTA: ' + clip.cta;
+  t += '\n\n(ช่วง ' + clip.start + ' - ' + clip.end + ')';
+  return t;
+}
+
+function flashBtn(btn, okLabel, defLabel) {
+  if (!btn) return;
+  btn.textContent = okLabel;
+  setTimeout(() => { btn.textContent = defLabel; }, 1400);
+}
+
+function cpClip(btn, idx) {
+  const clip = window._clips && window._clips[idx];
+  if (!clip) return;
+  GeminiKit.copy(buildText(clip));
+  flashBtn(btn, '✓ คัดลอกแล้ว', '📋 คัดลอกแคปชั่น');
+}
+
+function allText() {
+  const clips = window._clips || [];
+  return clips.map((c, i) =>
+    'ไฮไลต์ ' + (i + 1) + ' | ช่วง ' + (c.start || '?') + ' - ' + (c.end || '?') + '\n'
+    + (c.hook ? 'Hook: ' + c.hook + '\n' : '')
+    + 'แคปชั่น:\n' + (c.caption || '') + '\n'
+    + (c.cta ? 'CTA: ' + c.cta + '\n' : '')
+    + 'ทำไมเด็ด: ' + (c.why || '')
+  ).join('\n\n----------------------\n\n');
+}
+
+function cpAll(btn) {
+  if (!window._clips || !window._clips.length) return;
+  GeminiKit.copy(allText());
+  flashBtn(btn, '✓ คัดลอกทั้งหมดแล้ว', '📋 คัดลอกทั้งหมด');
+}
+
+function dlAll() {
+  if (!window._clips || !window._clips.length) return;
+  GeminiKit.download('highlights-reels.txt', allText(), 'text/plain;charset=utf-8');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

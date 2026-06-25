@@ -1,0 +1,275 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สร้างพื้นหลังวางสินค้า 🖼️</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5f2c82;--bg2:#49a09d;--accent:#0891b2;--soft:#e0f2fe;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.drop{border:2.5px dashed var(--soft);border-radius:16px;padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px;transition:border-color .2s,background .2s;background:#fafafa}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--soft)}
+.drop .icon{font-size:32px;margin-bottom:6px}
+.preview-wrap{margin-top:12px;text-align:center}
+.preview-wrap img{max-width:100%;max-height:180px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.12);object-fit:contain}
+.remove-btn{margin-top:6px;background:none;border:1.5px solid #e5e7eb;border-radius:9px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit}
+.remove-btn:hover{color:#dc2626;border-color:#dc2626}
+.theme-label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:10px}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.theme-btn{border:2.5px solid var(--soft);border-radius:13px;padding:12px 8px;background:#fafafa;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;color:var(--ink);transition:all .18s;text-align:center}
+.theme-btn .theme-icon{font-size:22px;display:block;margin-bottom:4px}
+.theme-btn:hover{border-color:var(--accent);background:var(--soft)}
+.theme-btn.active{border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:700}
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5}
+.ratio-chips{display:flex;gap:8px;flex-wrap:wrap}
+.ratio-chip{flex:1;min-width:90px;border:2.5px solid var(--soft);border-radius:13px;padding:10px 6px;background:#fafafa;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink);transition:all .18s;text-align:center;line-height:1.35}
+.ratio-chip b{font-size:15px;display:block}
+.ratio-chip small{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+.ratio-chip:hover{border-color:var(--accent);background:var(--soft)}
+.ratio-chip.active{border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:700}
+.ratio-chip.active small{color:var(--accent)}
+.change-img-hint{font-size:11px;color:var(--accent);margin-top:6px;cursor:pointer;display:inline-block}
+.result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.regen-btn{background:#fff;color:var(--accent);border:2px solid var(--accent);border-radius:12px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.regen-btn:hover{background:var(--soft)}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px;text-align:center}
+.result-card h3{font-size:15px;font-weight:600;margin-bottom:12px;color:var(--ink)}
+.result-card img{max-width:100%;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.14);margin-bottom:14px}
+.dl-btn{display:inline-block;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.7}
+.watermark-note{font-size:11px;color:var(--muted);margin-top:8px;opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สร้างพื้นหลังวางสินค้า 🖼️</h1>
+    <p>อัปรูปสินค้า เลือกสไตล์พื้นหลัง → AI จัดให้เลย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>รูปสินค้า (ไม่บังคับ)</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="icon">📷</div>
+        <div>แตะเพื่ออัปรูปสินค้า<br><span style="font-size:12px;opacity:.7">หรือลากวางไฟล์รูปภาพที่นี่</span></div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" hidden onchange="onFileSelect(this)">
+      <div class="preview-wrap" id="previewWrap" style="display:none">
+        <img id="previewImg" src="" alt="preview" title="แตะเพื่อเปลี่ยนรูป" style="cursor:pointer" onclick="document.getElementById('fileInput').click()">
+        <div>
+          <span class="change-img-hint" onclick="document.getElementById('fileInput').click()">🔁 เปลี่ยนรูป</span>
+          <button class="remove-btn" onclick="removeFile()" style="margin-left:8px">✕ ลบรูป</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>ชื่อสินค้า (ช่วยให้ AI เข้าใจบริบท)</label>
+      <input type="text" id="productName" placeholder="เช่น น้ำหอม ครีมบำรุง กระเป๋าหนัง">
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="theme-label">เลือกสไตล์พื้นหลัง</span>
+    <div class="themes">
+      <button class="theme-btn active" id="theme-minimal" onclick="selectTheme('minimal')">
+        <span class="theme-icon">⬜</span>มินิมอล
+      </button>
+      <button class="theme-btn" id="theme-luxury" onclick="selectTheme('luxury')">
+        <span class="theme-icon">✨</span>หรูหรา
+      </button>
+      <button class="theme-btn" id="theme-nature" onclick="selectTheme('nature')">
+        <span class="theme-icon">🌿</span>ธรรมชาติ
+      </button>
+      <button class="theme-btn" id="theme-colorful" onclick="selectTheme('colorful')">
+        <span class="theme-icon">🎨</span>สีสันสดใส
+      </button>
+      <button class="theme-btn" id="theme-marble" onclick="selectTheme('marble')" style="grid-column:1/-1">
+        <span class="theme-icon">🪨</span>หินอ่อนหรูพรีเมียม
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="theme-label">เลือกอัตราส่วนภาพ (สำหรับลงขาย)</span>
+    <div class="ratio-chips">
+      <button class="ratio-chip active" id="ratio-1:1" onclick="selectRatio('1:1')">
+        <b>1:1</b><small>Shopee / Lazada</small>
+      </button>
+      <button class="ratio-chip" id="ratio-4:5" onclick="selectRatio('4:5')">
+        <b>4:5</b><small>โพสต์ IG / FB</small>
+      </button>
+      <button class="ratio-chip" id="ratio-9:16" onclick="selectRatio('9:16')">
+        <b>9:16</b><small>Story / Reels</small>
+      </button>
+    </div>
+  </div>
+
+  <button class="btn" id="goBtn" onclick="run()">🖼️ สร้างพื้นหลังเลย</button>
+  <p class="note">รูปที่ได้จะมี watermark SynthID จาก Google<br>ถ้ามีข้อความภาษาไทยบนรูป ตัวอักษรอาจเพี้ยน — แนะนำใส่ข้อความเองทีหลัง</p>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+let selectedTheme = 'minimal';
+let selectedRatio = '1:1';
+
+const ratioFraming = {
+  '1:1': 'Square 1:1 aspect ratio, centered composition suitable for Shopee/Lazada marketplace listing thumbnail',
+  '4:5': 'Vertical 4:5 portrait aspect ratio, composition optimized for Instagram and Facebook feed posts',
+  '9:16': 'Tall vertical 9:16 aspect ratio, full-frame composition optimized for Story and Reels'
+};
+
+const themePrompts = {
+  minimal: 'clean minimal white background with soft shadows, studio product photography style, pure white or very light gray seamless backdrop, professional lighting',
+  luxury: 'luxurious dark background with gold accents, elegant rich velvet or satin texture, dramatic lighting, high-end luxury product photography',
+  nature: 'natural green botanical background with leaves and plants, fresh organic feel, soft natural light, eco-friendly aesthetic with moss and wood elements',
+  colorful: 'vibrant colorful gradient background with bright pastel pops of color, fun and energetic product display, playful aesthetic',
+  marble: 'premium white marble texture background with grey veins, elegant and sophisticated, high-end product placement, soft natural side lighting'
+};
+
+const themeNames = {
+  minimal: 'มินิมอล',
+  luxury: 'หรูหรา',
+  nature: 'ธรรมชาติ',
+  colorful: 'สีสันสดใส',
+  marble: 'หินอ่อน'
+};
+
+function selectTheme(theme) {
+  selectedTheme = theme;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('theme-' + theme).classList.add('active');
+}
+
+function selectRatio(ratio) {
+  selectedRatio = ratio;
+  document.querySelectorAll('.ratio-chip').forEach(b => b.classList.remove('active'));
+  document.getElementById('ratio-' + ratio).classList.add('active');
+}
+
+function onFileSelect(input) {
+  if (input.files && input.files[0]) {
+    setFile(input.files[0]);
+  }
+  // เคลียร์ค่า เพื่อให้เลือกไฟล์เดิมซ้ำ/เปลี่ยนรูปได้โดยไม่ต้องรีโหลด
+  input.value = '';
+}
+
+function setFile(file) {
+  if (!file.type.startsWith('image/')) {
+    GeminiKit.toast('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+    return;
+  }
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewWrap').style.display = 'block';
+    document.getElementById('dropZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeFile() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.add('over');
+}
+
+function onDragLeave(e) {
+  document.getElementById('dropZone').classList.remove('over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('over');
+  const file = e.dataTransfer.files[0];
+  if (file) setFile(file);
+}
+
+async function run() {
+  const productName = document.getElementById('productName').value.trim();
+  const out = document.getElementById('output');
+  const btn = document.getElementById('goBtn');
+
+  const bgPrompt = themePrompts[selectedTheme];
+  const themeName = themeNames[selectedTheme];
+  const framing = ratioFraming[selectedRatio];
+
+  // เสริม prompt เชิงพาณิชย์ ให้พร้อมลงขายจริง
+  const commercial = 'photorealistic, sharp focus, e-commerce ready, professional studio lighting, no extra text, no watermark, no logo.';
+  const keepProduct = 'IMPORTANT: do NOT distort, reshape, or recolor the product. Keep the product label, packaging and branding readable and unchanged.';
+
+  let prompt = '';
+  if (selectedFile && productName) {
+    prompt = `Product photography: keep the original product (${productName}) exactly as it is in the image, but replace the background with: ${bgPrompt}. ${keepProduct} The product stays centered and clearly visible. ${framing}. ${commercial}`;
+  } else if (selectedFile) {
+    prompt = `Product photography: keep the original product exactly as it is in the image, but replace the background with: ${bgPrompt}. ${keepProduct} The product stays centered and clearly visible. ${framing}. ${commercial}`;
+  } else if (productName) {
+    prompt = `Create a product photography background for displaying ${productName}. Background style: ${bgPrompt}. Leave clear space in center for product placement. ${framing}. ${commercial}`;
+  } else {
+    prompt = `Create a beautiful product photography background. Background style: ${bgPrompt}. Professional commercial photography backdrop with nice lighting. ${framing}. ${commercial}`;
+  }
+
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังสร้างพื้นหลัง ' + esc(themeName) + '...<br><span style="font-size:12px;opacity:.8">อาจใช้เวลา 15–30 วินาที</span></div>';
+
+  try {
+    const files = selectedFile ? [selectedFile] : [];
+    const dataUrl = await GeminiKit.generateImage(prompt, files);
+
+    if (!dataUrl || !dataUrl.startsWith('data:image')) {
+      throw new Error('AI ไม่สามารถสร้างรูปได้ในครั้งนี้ ลองใหม่อีกครั้ง');
+    }
+
+    out.innerHTML = `
+      <div class="result-card">
+        <h3>🎉 พื้นหลังสไตล์ "${esc(themeName)}" พร้อมแล้ว!</h3>
+        <img src="${dataUrl}" alt="ผลลัพธ์พื้นหลัง" id="resultImg">
+        <br>
+        <div class="result-actions">
+          <a class="dl-btn" id="dlBtn" download="backdrop-${selectedTheme}-${selectedRatio.replace(':','x')}.png">⬇️ ดาวน์โหลดรูป</a>
+          <button class="regen-btn" onclick="run()">🔄 สร้างใหม่อีกครั้ง</button>
+        </div>
+        <p class="watermark-note">รูปนี้มี watermark SynthID จาก Google · ถ้าต้องการใส่ข้อความภาษาไทยแนะนำใส่เองทีหลัง</p>
+      </div>`;
+
+    document.getElementById('dlBtn').href = dataUrl;
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

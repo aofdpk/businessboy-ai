@@ -1,0 +1,268 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ถอดเสียงไลฟ์/คลิป 🎙️</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#1d2b64;--bg2:#f8cdda;--accent:#6366f1;--soft:#eef2ff;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.drop{border:2px dashed var(--soft);border-radius:16px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#fafbff}
+.drop:hover{border-color:var(--accent);background:var(--soft)}
+.drop.has-file{border-color:var(--accent);background:var(--soft)}
+.drop-icon{font-size:38px;margin-bottom:8px}
+.drop-label{font-size:14px;color:var(--muted);line-height:1.6}
+.drop-label strong{color:var(--accent)}
+.file-info{margin-top:10px;font-size:13px;color:var(--accent);font-weight:600;display:none}
+.file-info.show{display:block}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;padding:0 2px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25);transition:opacity .2s}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#output{margin-top:16px}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.result-block{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.10);position:relative}
+.result-block .copy{position:absolute;top:10px;right:10px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.transcript-box{max-height:220px;overflow-y:auto;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--ink);padding-right:4px}
+.transcript-box::-webkit-scrollbar{width:4px}
+.transcript-box::-webkit-scrollbar-thumb{background:var(--soft);border-radius:4px}
+.summary-list{list-style:none;padding:0}
+.summary-list li{padding:8px 0;border-bottom:1px solid var(--soft);font-size:14px;line-height:1.6;color:var(--ink)}
+.summary-list li:last-child{border-bottom:none}
+.summary-list li::before{content:"📌 ";font-size:13px}
+.key-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.key-tag{background:var(--soft);color:var(--accent);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500}
+.err{background:#fff;border-radius:16px;padding:14px 16px;color:#dc2626;font-size:14px;line-height:1.6;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.stage-text{font-size:13px;opacity:.85;margin-top:4px}
+.act-row{display:flex;gap:8px;position:absolute;top:10px;right:10px}
+.act-row .copy,.act-row .dl{border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.act-row .dl{background:var(--accent);color:#fff}
+.result-block.with-actions{padding-top:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ถอดเสียงไลฟ์/คลิป 🎙️</h1>
+    <p>อัปไฟล์เสียงหรือวิดีโอ → ถอดคำ + สรุปประเด็น</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ไฟล์เสียงหรือวิดีโอ</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">🎵</div>
+        <div class="drop-label">กดเพื่อเลือกไฟล์<br><strong>MP3, MP4, M4A, WAV, OGG, WEBM</strong> ฯลฯ</div>
+        <input type="file" id="fileInput" accept="audio/*,video/*" hidden onchange="onFile(this)">
+      </div>
+      <div class="file-info" id="fileInfo"></div>
+      <p class="hint">💡 คลิปสั้น 10–20 นาที ถอดได้เร็วที่สุด ไฟล์ยิ่งสั้นยิ่งเร็ว</p>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()" disabled>🎙️ ถอดเสียงเลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+let lastData = null;
+let lastBaseName = 'transcript';
+
+function onFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  selectedFile = file;
+  const zone = document.getElementById('dropZone');
+  zone.classList.add('has-file');
+  const info = document.getElementById('fileInfo');
+  const mbNum = file.size / 1024 / 1024;
+  const mb = mbNum.toFixed(1);
+  info.textContent = '📁 ' + file.name + ' (' + mb + ' MB)';
+  info.classList.add('show');
+  document.getElementById('go').disabled = false;
+  if (mbNum > 80) {
+    GeminiKit.toast('⚠️ ไฟล์ใหญ่ ' + mb + ' MB อาจช้าหรือไม่สำเร็จ แนะนำตัดให้สั้นลง/บีบอัดก่อน');
+  }
+}
+
+async function run() {
+  if (!selectedFile) { GeminiKit.toast('เลือกไฟล์เสียงหรือวิดีโอก่อนนะ'); return; }
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div><div id="stageMsg">กำลังอัปโหลดไฟล์...</div></div>';
+
+  const prompt = `คุณคือนักถอดเทปและนักวิเคราะห์คอนเทนต์มืออาชีพระดับท็อปของไทย ทำงานให้เจ้าของธุรกิจ
+ถอดเสียงจากไฟล์นี้ให้ครบถ้วน แม่นยำ เป็นภาษาไทยที่อ่านลื่น (จัดย่อหน้าให้อ่านง่าย, ใส่เครื่องหมายวรรคตอน, แก้คำผิดที่ฟังพลาดได้ตามบริบท, คงศัพท์/ชื่อแบรนด์ตามจริง)
+
+สำคัญมาก: ตรวจว่าเนื้อหาเป็น "การสั่งของ/ออเดอร์/จองสินค้า" หรือไม่ (เช่น ลูกค้าบอกรายการสินค้า จำนวน ที่อยู่จัดส่ง)
+- ถ้าใช่: ให้ดึงออเดอร์ออกมาให้แม่นที่สุด normalize ตัวเลขจำนวนเป็นเลขอารบิก, แยกรายการ-จำนวน-หน่วยให้ชัด, จัดที่อยู่/เบอร์โทรให้เป็นรูปแบบมาตรฐาน, ถ้ามีจุดที่ฟังไม่ชัดให้ทำเครื่องหมาย [?] ไว้
+- ถ้าไม่ใช่ (ไลฟ์/คลิปทั่วไป): ใส่ orders เป็น [] ว่าง
+
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก JSON โครงสร้าง:
+{
+  "transcript": "ถอดเสียงคำพูดทั้งหมดแบบเต็มๆ จัดย่อหน้าอ่านง่าย",
+  "summary": ["ประเด็นสรุปเชิงปฏิบัติที่ 1 (กระชับ ทำตามได้)", "ประเด็นสรุปที่ 2", "..."],
+  "keyPoints": ["คำสำคัญ/ประเด็นหลัก 1", "คำสำคัญ 2", "..."],
+  "actions": ["สิ่งที่ควรทำต่อ/Next step ที่นำไปใช้ได้จริง 1", "..."],
+  "orders": [ {"item":"ชื่อสินค้า","qty":"จำนวน(เลขอารบิก)","unit":"หน่วย","note":"หมายเหตุ/สี/ไซส์ ถ้ามี"} ],
+  "customer": {"name":"ชื่อผู้สั่ง ถ้ามี","phone":"เบอร์โทร normalize","address":"ที่อยู่จัดส่ง normalize"}
+}
+ถ้าไม่มีข้อมูลออเดอร์/ลูกค้า ให้ orders เป็น [] และ customer เป็นค่าว่างทุกช่อง`;
+
+  try {
+    const result = await GeminiKit.media(prompt, selectedFile, (stage, txt) => {
+      const msg = document.getElementById('stageMsg');
+      if (!msg) return;
+      if (stage === 'upload' || stage === 'uploading') msg.textContent = 'กำลังอัปโหลดไฟล์...';
+      else if (stage === 'process' || stage === 'processing') msg.textContent = 'AI กำลังประมวลผลคลิป...';
+      else if (stage === 'analyze' || stage === 'transcribing') msg.textContent = 'กำลังถอดเสียงและวิเคราะห์...';
+      else if (txt) msg.textContent = txt;
+    });
+
+    // GeminiKit.media returns a string, parse JSON manually
+    let data = null;
+    if (typeof result === 'string') {
+      try {
+        const clean = result.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+        data = JSON.parse(clean);
+      } catch (e) {
+        throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+      }
+    } else if (result && typeof result === 'object') {
+      data = result;
+    }
+
+    if (!data || !data.transcript) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    lastData = data;
+    const base = (selectedFile.name || 'transcript').replace(/\.[^.]+$/, '');
+    lastBaseName = base;
+
+    let html = '';
+
+    // Transcript block
+    html += '<div class="section-title">📝 คำถอดเสียง</div>';
+    html += '<div class="result-block with-actions">';
+    html += '<div class="act-row"><button class="copy" onclick="cpTranscript()">คัดลอก</button><button class="dl" onclick="dlTranscript()">⬇ .txt</button></div>';
+    html += '<div class="transcript-box" id="transcript">' + esc(data.transcript) + '</div>';
+    html += '</div>';
+
+    // Summary block
+    if (Array.isArray(data.summary) && data.summary.length) {
+      html += '<div class="section-title" style="margin-top:4px">📋 สรุปประเด็น</div>';
+      html += '<div class="result-block with-actions">';
+      html += '<div class="act-row"><button class="copy" onclick="cpSummary()">คัดลอก</button><button class="dl" onclick="dlSummary()">⬇ .txt</button></div>';
+      html += '<ul class="summary-list">';
+      data.summary.forEach(item => { html += '<li>' + esc(item) + '</li>'; });
+      html += '</ul></div>';
+    }
+
+    // Key points block
+    if (Array.isArray(data.keyPoints) && data.keyPoints.length) {
+      html += '<div class="section-title" style="margin-top:4px">🔑 ประเด็นสำคัญ</div>';
+      html += '<div class="result-block with-actions">';
+      html += '<div class="act-row"><button class="copy" onclick="cpKey()">คัดลอก</button></div>';
+      html += '<div class="key-list">';
+      data.keyPoints.forEach(kp => { html += '<span class="key-tag">' + esc(kp) + '</span>'; });
+      html += '</div></div>';
+    }
+
+    // Actions / next steps block
+    if (Array.isArray(data.actions) && data.actions.length) {
+      html += '<div class="section-title" style="margin-top:4px">✅ สิ่งที่ควรทำต่อ</div>';
+      html += '<div class="result-block with-actions">';
+      html += '<div class="act-row"><button class="copy" onclick="cpActions()">คัดลอก</button></div>';
+      html += '<ul class="summary-list">';
+      data.actions.forEach(item => { html += '<li>' + esc(item) + '</li>'; });
+      html += '</ul></div>';
+    }
+
+    // Orders block (only when detected)
+    const hasOrders = Array.isArray(data.orders) && data.orders.length;
+    const c = data.customer || {};
+    const hasCustomer = c.name || c.phone || c.address;
+    if (hasOrders || hasCustomer) {
+      html += '<div class="section-title" style="margin-top:4px">🧾 ออเดอร์ที่ตรวจพบ</div>';
+      html += '<div class="result-block with-actions">';
+      html += '<div class="act-row"><button class="copy" onclick="cpOrders()">คัดลอก</button><button class="dl" onclick="dlOrders()">⬇ .txt</button></div>';
+      if (hasOrders) {
+        html += '<ul class="summary-list">';
+        data.orders.forEach(o => {
+          const line = [o.item, o.qty ? '× ' + o.qty : '', o.unit || '', o.note ? '(' + o.note + ')' : ''].filter(Boolean).join(' ');
+          html += '<li>' + esc(line) + '</li>';
+        });
+        html += '</ul>';
+      }
+      if (hasCustomer) {
+        html += '<div style="margin-top:10px;font-size:14px;line-height:1.8;color:var(--ink)">';
+        if (c.name) html += '👤 ' + esc(c.name) + '<br>';
+        if (c.phone) html += '📞 ' + esc(c.phone) + '<br>';
+        if (c.address) html += '📍 ' + esc(c.address);
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
+    out.innerHTML = html;
+  } catch (e) {
+    out.innerHTML = '<div class="err">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function bulletList(arr) {
+  return (arr || []).map(s => '• ' + String(s).trim()).join('\n');
+}
+
+function ordersText() {
+  if (!lastData) return '';
+  const lines = [];
+  (lastData.orders || []).forEach(o => {
+    const line = [o.item, o.qty ? '× ' + o.qty : '', o.unit || '', o.note ? '(' + o.note + ')' : ''].filter(Boolean).join(' ');
+    if (line.trim()) lines.push('• ' + line);
+  });
+  const c = lastData.customer || {};
+  if (c.name || c.phone || c.address) {
+    lines.push('');
+    if (c.name) lines.push('ชื่อ: ' + c.name);
+    if (c.phone) lines.push('เบอร์: ' + c.phone);
+    if (c.address) lines.push('ที่อยู่: ' + c.address);
+  }
+  return lines.join('\n');
+}
+
+function cpTranscript() { if (lastData) GeminiKit.copy(lastData.transcript || ''); }
+function cpSummary() { if (lastData) GeminiKit.copy(bulletList(lastData.summary)); }
+function cpKey() { if (lastData) GeminiKit.copy((lastData.keyPoints || []).join(', ')); }
+function cpActions() { if (lastData) GeminiKit.copy(bulletList(lastData.actions)); }
+function cpOrders() { GeminiKit.copy(ordersText()); }
+
+function dlTranscript() { if (lastData) GeminiKit.download(lastBaseName + '-ถอดเสียง.txt', lastData.transcript || '', 'text/plain'); }
+function dlSummary() {
+  if (!lastData) return;
+  let t = 'สรุปประเด็น\n' + bulletList(lastData.summary);
+  if (Array.isArray(lastData.keyPoints) && lastData.keyPoints.length) t += '\n\nประเด็นสำคัญ: ' + lastData.keyPoints.join(', ');
+  if (Array.isArray(lastData.actions) && lastData.actions.length) t += '\n\nสิ่งที่ควรทำต่อ\n' + bulletList(lastData.actions);
+  GeminiKit.download(lastBaseName + '-สรุป.txt', t, 'text/plain');
+}
+function dlOrders() { GeminiKit.download(lastBaseName + '-ออเดอร์.txt', ordersText(), 'text/plain'); }
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

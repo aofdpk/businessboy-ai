@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สตอรี่แบรนด์ 3 นาที 📖</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#654ea3;--bg2:#eaafc8;--accent:#7c3aed;--soft:#f5f0ff;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;color:var(--ink)}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:11px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.chip.on{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.toolbar{display:flex;gap:10px;margin-bottom:14px}
+.toolbar button{flex:1;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.result-card{background:#fff;border-radius:16px;padding:14px 16px 14px 16px;margin-bottom:14px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative}
+.result-label{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase}
+.result-text{white-space:pre-wrap;font-size:15px;line-height:1.8;color:var(--ink);padding-right:4px}
+.copy{position:absolute;top:12px;right:12px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สตอรี่แบรนด์ 3 นาที 📖</h1>
+    <p>เล่าเรื่องแบรนด์คุณให้ลูกค้าหลงรัก</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ที่มา / แรงบันดาลใจของแบรนด์</label>
+      <textarea id="origin" placeholder="เช่น เริ่มจากแม่ทำขนมขายหน้าบ้าน อยากต่อยอดให้คนอื่นได้กิน"></textarea>
+    </div>
+    <div class="field">
+      <label>สินค้า / บริการ</label>
+      <input id="product" type="text" placeholder="เช่น ขนมไทยโบราณ, คอร์สสอนเบเกอรี่">
+    </div>
+    <div class="field">
+      <label>คุณค่าที่อยากสื่อ</label>
+      <textarea id="value" placeholder="เช่น ความรัก ความอบอุ่น รสชาติดั้งเดิมจากภูมิปัญญาชาวบ้าน"></textarea>
+    </div>
+    <div class="field">
+      <label>กลุ่มลูกค้าหลัก</label>
+      <input id="audience" type="text" placeholder="เช่น แม่บ้าน วัย 30-45 ชอบของทำมือ">
+    </div>
+    <div class="field">
+      <label>จุดต่างจากคู่แข่ง</label>
+      <textarea id="diff" placeholder="เช่น ไม่ใส่สารกันบูด ทำสดทุกวัน ส่งถึงบ้าน"></textarea>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์มที่จะเอาไปลง (เลือกได้)</label>
+      <div class="chips" id="platformChips">
+        <button type="button" class="chip on" data-val="Facebook">Facebook</button>
+        <button type="button" class="chip" data-val="Instagram">Instagram</button>
+        <button type="button" class="chip" data-val="TikTok">TikTok</button>
+        <button type="button" class="chip" data-val="LINE OA">LINE</button>
+        <button type="button" class="chip" data-val="Shopee/Lazada">Shopee</button>
+        <button type="button" class="chip" data-val="เว็บไซต์ About Us">เว็บไซต์</button>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>โทนการเล่าเรื่อง</label>
+      <div class="chips" id="toneChips">
+        <button type="button" class="chip on" data-val="อบอุ่น กินใจ จริงใจ">อบอุ่น กินใจ</button>
+        <button type="button" class="chip" data-val="สนุก เป็นกันเอง">สนุก เป็นกันเอง</button>
+        <button type="button" class="chip" data-val="หรูหรา พรีเมียม น่าเชื่อถือ">หรูหรา พรีเมียม</button>
+        <button type="button" class="chip" data-val="มืออาชีพ น่าเชื่อถือ">มืออาชีพ</button>
+        <button type="button" class="chip" data-val="สร้างแรงบันดาลใจ ฮึกเหิม">สร้างแรงบันดาลใจ</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ สร้างสตอรี่แบรนด์</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+// เก็บผลดิบไว้รวมคัดลอก/ดาวน์โหลด
+let LAST = null;
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+// chips: เลือกได้ทีละหลายอันสำหรับแพลตฟอร์ม, ทีละ 1 สำหรับโทน
+document.getElementById('platformChips').addEventListener('click',e=>{
+  const c=e.target.closest('.chip'); if(!c)return; c.classList.toggle('on');
+});
+document.getElementById('toneChips').addEventListener('click',e=>{
+  const c=e.target.closest('.chip'); if(!c)return;
+  document.querySelectorAll('#toneChips .chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');
+});
+function pickedChips(id){return [...document.querySelectorAll('#'+id+' .chip.on')].map(c=>c.dataset.val);}
+
+async function run(){
+  const origin = document.getElementById('origin').value.trim();
+  const product = document.getElementById('product').value.trim();
+  const value = document.getElementById('value').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+  const diff = document.getElementById('diff').value.trim();
+  const platforms = pickedChips('platformChips');
+  const tone = (pickedChips('toneChips')[0]) || 'อบอุ่น กินใจ จริงใจ';
+
+  if(!origin||!product||!value||!audience||!diff){
+    GeminiKit.toast('กรุณากรอกข้อมูลให้ครบทุกช่องก่อนนะคะ');
+    return;
+  }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังเล่าเรื่องแบรนด์คุณ...</div>';
+
+  const platformLine = platforms.length ? platforms.join(', ') : 'ทั่วไป';
+
+  const system = 'คุณคือนักเขียนคอนเทนต์และนักการตลาดขายของออนไลน์ไทยมือโปร เชี่ยวชาญการเล่าสตอรี่แบรนด์ที่กินใจและกระตุ้นให้ลูกค้าอยากซื้อ เขียนภาษาไทยที่เป็นธรรมชาติ ลื่นไหล จริงใจ ไม่ใช้ศัพท์ฝรั่งเกินจำเป็น และห้ามแต่งข้อมูลที่ผู้ใช้ไม่ได้ให้มา (เช่น ปี รางวัล ยอดขาย ตัวเลข) ให้ใช้เฉพาะข้อมูลที่ได้รับเท่านั้น';
+
+  const prompt = `เขียนเรื่องราวแบรนด์ (Brand Story) จากข้อมูลจริงด้านล่าง เพื่อนำไปใช้บนแพลตฟอร์ม: ${platformLine}
+โทนการเล่าเรื่อง: ${tone}
+
+ข้อมูลแบรนด์ (ใช้เฉพาะข้อมูลนี้ ห้ามเพิ่มข้อเท็จจริงที่ไม่ได้ระบุ):
+- ที่มา/แรงบันดาลใจ: ${origin}
+- สินค้า/บริการ: ${product}
+- คุณค่าที่อยากสื่อ: ${value}
+- กลุ่มลูกค้า: ${audience}
+- จุดต่างจากคู่แข่ง: ${diff}
+
+ตอบเป็น JSON เท่านั้น มี 4 key:
+- "long": เรื่องราวแบรนด์ฉบับยาวแบบ storytelling กินใจ มีจุดเริ่มต้น-ปัญหา-การเปลี่ยนแปลง-คุณค่า อ่านแล้วสัมผัสได้ถึงหัวใจของแบรนด์ ประมาณ 200-280 คำ ปิดท้ายด้วยประโยคที่ชวนให้ลูกค้าอยากเป็นส่วนหนึ่ง
+- "short": ฉบับสั้นสำหรับโปรไฟล์/About Us กระชับได้ใจความ 50-80 คำ
+- "tagline": สโลแกน/ประโยคแบรนด์สั้นๆ ที่จำง่ายและบอกคุณค่าหลัก 1 บรรทัด
+- "caption": แคปชั่นพร้อมโพสต์สำหรับ ${platformLine} โทน ${tone} เกริ่นเรื่องแบรนด์สั้นๆ ดึงดูดในบรรทัดแรก มีอีโมจิพอเหมาะ จบด้วย CTA ที่เหมาะกับแพลตฟอร์ม (เช่น ทักแชท/กดสั่ง/คอมเมนต์) และแฮชแท็ก 3-5 ตัวที่เกี่ยวข้อง
+
+ห้ามตอบอะไรนอกจาก JSON`;
+
+  try{
+    const result = await GeminiKit.text(prompt, {json:true, system});
+    if(!result || typeof result.long !== 'string' || typeof result.short !== 'string'){
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+    LAST = result;
+    render(result);
+  } catch(e){
+    out.innerHTML = '<div class="error-card">⚠️ '+esc(e.message)+'</div>';
+  } finally{
+    btn.disabled = false;
+  }
+}
+
+function block(label, key, text){
+  if(!text) return '';
+  const id = 'txt-'+key;
+  return `<div class="result-card">
+      <div class="result-label">${label}</div>
+      <button class="copy" data-copy="${key}" onclick="cp(this)">คัดลอก</button>
+      <div class="result-text" id="${id}">${esc(text)}</div>
+    </div>`;
+}
+
+function render(r){
+  const out = document.getElementById('output');
+  out.innerHTML =
+    `<div class="toolbar">
+       <button onclick="copyAll()">📋 คัดลอกทั้งหมด</button>
+       <button onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>
+     </div>` +
+    block('📖 ฉบับยาว — เล่าเรื่องเต็ม','long',r.long) +
+    block('✂️ ฉบับสั้น — ลงโปรไฟล์/About','short',r.short) +
+    block('💬 สโลแกนแบรนด์','tagline',r.tagline) +
+    block('📣 แคปชั่นพร้อมโพสต์','caption',r.caption);
+}
+
+// คัดลอกปุ่มเดี่ยว: อ่านข้อความดิบจาก LAST ผ่าน data-copy
+function cp(btn){
+  const key = btn.getAttribute('data-copy');
+  const text = (LAST && LAST[key]) ? LAST[key] : '';
+  GeminiKit.copy(text);
+}
+
+function combinedText(){
+  if(!LAST) return '';
+  const parts = [];
+  if(LAST.long)    parts.push('📖 เรื่องราวแบรนด์ (ฉบับยาว)\n'+LAST.long);
+  if(LAST.short)   parts.push('✂️ ฉบับสั้น (About Us)\n'+LAST.short);
+  if(LAST.tagline) parts.push('💬 สโลแกนแบรนด์\n'+LAST.tagline);
+  if(LAST.caption) parts.push('📣 แคปชั่นพร้อมโพสต์\n'+LAST.caption);
+  return parts.join('\n\n――――――――――――\n\n');
+}
+
+function copyAll(){ GeminiKit.copy(combinedText()); }
+
+function downloadAll(){
+  GeminiKit.download('brand-story.txt', combinedText(), 'text/plain');
+}
+</script>
+</body></html>

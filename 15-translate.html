@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>แปลโพสต์ขายหลายภาษา 🌏</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#2193b0;--bg2:#6dd5ed;--accent:#0ea5e9;--soft:#e0f2fe;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+textarea{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;resize:vertical;min-height:120px}
+textarea:focus{border-color:var(--accent)}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.lang-item{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:10px;padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
+.lang-item:hover{background:#bae6fd}
+.lang-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.lang-item span{font-size:14px;font-weight:500;color:var(--ink)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative}
+.result-card .lang-label{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:6px;letter-spacing:.5px}
+.result-card .content{white-space:pre-wrap;font-size:15px;line-height:1.75;color:var(--ink);padding-right:56px}
+.result-card .copy{position:absolute;top:12px;right:12px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{background:var(--soft);border:2px solid transparent;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;user-select:none;transition:all .15s}
+.chip.active{background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border-color:var(--accent)}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}
+.toolbar button{flex:1;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>แปลโพสต์ขายหลายภาษา 🌏</h1>
+    <p>วางโพสต์ขายของไทย → แปลทีเดียวหลายภาษา</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>โพสต์ขายของ (ภาษาไทย)</label>
+      <textarea id="post" placeholder="เช่น 🌟 เซรั่มวิตามินซีเข้มข้น ผิวกระจ่างใสใน 7 วัน ราคาพิเศษ 590 บาท ส่งฟรีทั่วไทย สั่งได้เลย!"></textarea>
+    </div>
+    <div class="field">
+      <label>เลือกภาษาที่ต้องการ</label>
+      <div class="lang-grid">
+        <label class="lang-item">
+          <input type="checkbox" value="อังกฤษ" checked>
+          <span>🇬🇧 อังกฤษ</span>
+        </label>
+        <label class="lang-item">
+          <input type="checkbox" value="จีน" checked>
+          <span>🇨🇳 จีน</span>
+        </label>
+        <label class="lang-item">
+          <input type="checkbox" value="พม่า">
+          <span>🇲🇲 พม่า</span>
+        </label>
+        <label class="lang-item">
+          <input type="checkbox" value="ลาว">
+          <span>🇱🇦 ลาว</span>
+        </label>
+        <label class="lang-item">
+          <input type="checkbox" value="ญี่ปุ่น">
+          <span>🇯🇵 ญี่ปุ่น</span>
+        </label>
+      </div>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์มที่จะโพสต์</label>
+      <div class="chips" id="platChips">
+        <div class="chip active" data-plat="Facebook">Facebook</div>
+        <div class="chip" data-plat="Instagram">Instagram</div>
+        <div class="chip" data-plat="TikTok">TikTok</div>
+        <div class="chip" data-plat="LINE">LINE</div>
+        <div class="chip" data-plat="Shopee/Lazada">Shopee/Lazada</div>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>โทนการขาย</label>
+      <div class="chips" id="toneChips">
+        <div class="chip active" data-tone="สนุก เป็นกันเอง">สนุก เป็นกันเอง</div>
+        <div class="chip" data-tone="หรู พรีเมียม">หรู พรีเมียม</div>
+        <div class="chip" data-tone="เร่งด่วน ปิดการขาย">เร่งด่วน ปิดการขาย</div>
+        <div class="chip" data-tone="ให้ข้อมูล น่าเชื่อถือ">ให้ข้อมูล น่าเชื่อถือ</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🌐 แปลทันที</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+const flagMap = { 'อังกฤษ': '🇬🇧', 'จีน': '🇨🇳', 'พม่า': '🇲🇲', 'ลาว': '🇱🇦', 'ญี่ปุ่น': '🇯🇵' };
+let lastResults = null;
+
+// chips: แพลตฟอร์ม = เลือกได้ 1, โทน = เลือกได้ 1
+function bindSingleChip(containerId) {
+  document.getElementById(containerId).addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    [...chip.parentElement.children].forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+}
+bindSingleChip('platChips');
+bindSingleChip('toneChips');
+
+function getPlatform() {
+  const a = document.querySelector('#platChips .chip.active');
+  return a ? a.dataset.plat : 'Facebook';
+}
+function getTone() {
+  const a = document.querySelector('#toneChips .chip.active');
+  return a ? a.dataset.tone : 'สนุก เป็นกันเอง';
+}
+
+async function run() {
+  const post = document.getElementById('post').value.trim();
+  if (!post) { GeminiKit.toast('ใส่โพสต์ขายของก่อนนะ'); return; }
+
+  const checked = [...document.querySelectorAll('.lang-grid input[type=checkbox]:checked')].map(c => c.value);
+  if (!checked.length) { GeminiKit.toast('เลือกอย่างน้อย 1 ภาษา'); return; }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังแปล ' + checked.length + ' ภาษา...</div>';
+
+  const platform = getPlatform();
+  const tone = getTone();
+  const langList = checked.join(', ');
+
+  const system = 'คุณคือนักเขียนคอนเทนต์และนักการตลาดขายของออนไลน์มือโปรที่เชี่ยวชาญหลายภาษาและเข้าใจวัฒนธรรมการช้อปปิ้งของแต่ละประเทศ คุณไม่ได้แปลตรงตัว แต่ "เขียนใหม่ให้ขายได้" ในภาษาและวัฒนธรรมปลายทาง โดยคงใจความ ราคา และโปรโมชันเดิมไว้ครบถ้วน';
+
+  const prompt = `เขียนโพสต์ขายของต่อไปนี้ใหม่เป็นภาษา: ${langList}
+ให้เป็นธรรมชาติเหมือนเจ้าของภาษาเขียนเอง จูงใจให้ลูกค้าอยากซื้อ
+
+เงื่อนไขสำคัญ:
+- แพลตฟอร์ม: ${platform} (ปรับความยาว อิโมจิ และการขึ้นบรรทัดให้เหมาะกับแพลตฟอร์มนี้)
+- โทนการขาย: ${tone}
+- ใส่ CTA (คำกระตุ้นให้สั่งซื้อ/ทัก) ที่เหมาะกับภาษานั้นและแพลตฟอร์มนั้นท้ายโพสต์
+- ห้ามแต่งข้อมูลที่ไม่มีในต้นฉบับ เช่น ราคา ส่วนลด คุณสมบัติ หรือช่องทางติดต่อ ที่ผู้ใช้ไม่ได้ให้มา ให้ใช้เฉพาะข้อมูลในต้นฉบับเท่านั้น
+- คงตัวเลขราคา/โปรโมชันให้ตรงต้นฉบับ (อาจระบุสกุลเงินเดิมเป็นบาทได้)
+
+โพสต์ต้นฉบับ (ภาษาไทย):
+${post}
+
+ตอบเป็น JSON object เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown
+key คือชื่อภาษาภาษาไทย (${langList})
+value คือโพสต์ขายฉบับเต็มในภาษานั้น (พร้อม CTA)
+
+ตัวอย่างรูปแบบ:
+{"อังกฤษ":"...","จีน":"..."}`;
+
+  try {
+    const result = await GeminiKit.text(prompt, { json: true, system });
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    const ordered = [];
+    for (const lang of checked) {
+      const text = result[lang] || result[lang.toLowerCase()];
+      if (text) ordered.push({ lang, text: String(text) });
+    }
+    if (!ordered.length) throw new Error('ไม่พบคำแปล ลองใหม่อีกครั้ง');
+    lastResults = ordered;
+
+    let html = '<div class="toolbar"><button onclick="copyAll()">📋 คัดลอกทั้งหมด</button><button onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button></div>';
+    ordered.forEach((r, i) => {
+      const flag = flagMap[r.lang] || '';
+      html += `<div class="result-card">
+        <div class="lang-label">${flag} ${esc(r.lang)}</div>
+        <div class="content">${esc(r.text)}</div>
+        <button class="copy" data-idx="${i}" onclick="cp(this)">คัดลอก</button>
+      </div>`;
+    });
+    out.innerHTML = html;
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function cp(b) {
+  const idx = +b.dataset.idx;
+  const r = lastResults && lastResults[idx];
+  if (!r) return;
+  GeminiKit.copy(r.text);
+  b.textContent = '✓';
+  setTimeout(() => b.textContent = 'คัดลอก', 1200);
+}
+
+function buildAllText() {
+  if (!lastResults) return '';
+  return lastResults.map(r => `===== ${r.lang} =====\n${r.text}`).join('\n\n');
+}
+
+function copyAll() {
+  const txt = buildAllText();
+  if (!txt) { GeminiKit.toast('ยังไม่มีผลให้คัดลอก'); return; }
+  GeminiKit.copy(txt);
+}
+
+function downloadAll() {
+  const txt = buildAllText();
+  if (!txt) { GeminiKit.toast('ยังไม่มีผลให้ดาวน์โหลด'); return; }
+  GeminiKit.download('โพสต์หลายภาษา.txt', txt, 'text/plain');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+</script>
+</body></html>

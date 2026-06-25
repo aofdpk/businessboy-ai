@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สร้างแบนเนอร์โฆษณา</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#ff0099;--bg2:#493240;--accent:#db2777;--soft:#fce7f3;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;color:var(--ink);background:#fff}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{flex:1;min-width:110px;border:2px solid var(--soft);background:#fff;border-radius:12px;padding:9px 6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);text-align:center;line-height:1.35;transition:all .15s}
+.chip small{display:block;font-size:11px;font-weight:500;opacity:.8}
+.chip.active{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.drop{border:2px dashed var(--accent);border-radius:13px;padding:20px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px;background:var(--soft);transition:background .2s}
+.drop:hover{background:#fad9ed}
+.drop img{max-width:100%;max-height:140px;border-radius:10px;object-fit:contain;margin-top:10px}
+.drop .filename{font-size:12px;margin-top:6px;color:var(--accent);font-weight:600}
+.result-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.result-card img{width:100%;border-radius:12px;display:block}
+.result-actions{display:flex;gap:10px;margin-top:12px}
+.result-actions a,.result-actions button{flex:1;border:none;border-radius:11px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none;display:block}
+.btn-dl{background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.btn-regen{background:var(--soft);color:var(--accent)}
+.warn-box{background:#fce7f3;border:1.5px solid #f9a8d4;border-radius:13px;padding:12px 14px;font-size:13px;color:#9d174d;line-height:1.6;margin-bottom:14px}
+.warn-box strong{display:block;margin-bottom:2px}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.6}
+.synthid-note{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สร้างแบนเนอร์โฆษณา 📢</h1>
+    <p>ใส่ข้อความโปร + สไตล์ → AI สร้างภาพแบนเนอร์ให้เลย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ข้อความโปรโมชั่น / คำโฆษณา</label>
+      <textarea id="promo" placeholder="เช่น ลด 50% เฉพาะวันนี้! ส่งฟรีทั่วไทย สั่งด่วนเลย"></textarea>
+    </div>
+    <div class="field">
+      <label>สไตล์แบนเนอร์</label>
+      <select id="style">
+        <option value="สดใสสีสันจัดจ้าน เหมาะโซเชียลมีเดีย">🎨 สดใส / โซเชียลมีเดีย</option>
+        <option value="หรูหราสีเข้ม มินิมอล โทนทอง-ดำ">✨ หรูหรา / มินิมอล</option>
+        <option value="น่ารักพาสเทล สไตล์เกาหลี ตัวการ์ตูน">🌸 น่ารัก / พาสเทล</option>
+        <option value="ดุดัน กราฟิกแข็งแรง สีแดง-ดำ เหมือนโปสเตอร์ลดราคา">🔥 ดุดัน / เซล</option>
+        <option value="ธุรกิจมืออาชีพ สะอาด ฟอนต์ชัด พื้นขาว">💼 มืออาชีพ / คลีน</option>
+        <option value="เทรนดี้ Y2K สีนีออน กราฟิกเรโทร">🌈 Y2K / นีออน</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>อัตราส่วนภาพ (เลือกตามแพลตฟอร์ม)</label>
+      <div class="chips" id="ratioChips">
+        <div class="chip active" data-ratio="1:1" onclick="pickRatio(this)">▢ 1:1<small>Shopee / Lazada</small></div>
+        <div class="chip" data-ratio="4:5" onclick="pickRatio(this)">▯ 4:5<small>IG / Facebook</small></div>
+        <div class="chip" data-ratio="9:16" onclick="pickRatio(this)">▮ 9:16<small>Story / Reels</small></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>อัปโหลดโลโก้ / รูปสินค้า (ไม่บังคับ)</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div id="dropLabel">📁 แตะเพื่อเลือกรูป (PNG, JPG)</div>
+        <img id="preview" style="display:none">
+        <div id="fileName" class="filename"></div>
+        <div id="changeHint" class="filename" style="display:none;color:var(--muted);font-weight:500">แตะเพื่อเปลี่ยนรูปใหม่</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFile(this)">
+    </div>
+
+    <div class="warn-box">
+      <strong>⚠️ หมายเหตุเรื่องข้อความบนรูป</strong>
+      AI อาจแสดง<strong>ตัวอักษรไทยเพี้ยน</strong>บนภาพได้ แนะนำให้นำรูปที่ได้ไปใส่ข้อความเพิ่มเองใน Canva หรือ CapCut ภายหลัง
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ สร้างแบนเนอร์เลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let uploadedFile = null;
+let selectedRatio = '1:1';
+
+const RATIO_PROMPT = {
+  '1:1': 'อัตราส่วนภาพ square 1:1 (จัตุรัส) เหมาะสำหรับ Shopee/Lazada feed, จัดวางองค์ประกอบให้สมดุลตรงกลาง',
+  '4:5': 'อัตราส่วนภาพ portrait 4:5 (แนวตั้ง) เหมาะสำหรับ Instagram/Facebook feed',
+  '9:16': 'อัตราส่วนภาพ vertical 9:16 (แนวตั้งเต็มจอ) เหมาะสำหรับ Story/Reels, เผื่อพื้นที่ด้านบนและล่างสำหรับ UI'
+};
+
+function pickRatio(el) {
+  selectedRatio = el.dataset.ratio;
+  document.querySelectorAll('#ratioChips .chip').forEach(c => c.classList.toggle('active', c === el));
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  uploadedFile = file;
+  const preview = document.getElementById('preview');
+  const label = document.getElementById('dropLabel');
+  const fileName = document.getElementById('fileName');
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    label.style.display = 'none';
+    fileName.textContent = file.name;
+    document.getElementById('changeHint').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function run() {
+  const promo = document.getElementById('promo').value.trim();
+  const style = document.getElementById('style').value;
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+
+  if (!promo) { GeminiKit.toast('ใส่ข้อความโปรโมชั่นก่อนนะ'); return; }
+
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังวาดแบนเนอร์...</div>';
+
+  let prompt = 'สร้างภาพแบนเนอร์โฆษณาสินค้าออนไลน์ไทย';
+  prompt += ' สไตล์: ' + style + '.';
+  prompt += ' ข้อความในแบนเนอร์: "' + promo + '".';
+  if (uploadedFile) {
+    prompt += ' นำโลโก้หรือรูปสินค้าที่แนบมาใส่ในแบนเนอร์อย่างเด่นชัด ห้ามบิดเบือนรูปทรงหรือเปลี่ยนสีของสินค้า เก็บโลโก้/แบรนด์/ฉลากให้อ่านออกและเหมือนเดิมทุกประการ';
+  }
+  prompt += ' ' + (RATIO_PROMPT[selectedRatio] || RATIO_PROMPT['1:1']) + '.';
+  prompt += ' กราฟิกคุณภาพสูง photorealistic, sharp focus, จัดวางสวยพร้อมใช้งานบน e-commerce, แสงสวยน่าสนใจ โดดเด่น สะดุดตา ห้ามมีตัวอักษรเกินจำเป็นหรือลายน้ำ/watermark.';
+
+  try {
+    const inputFiles = uploadedFile ? [uploadedFile] : [];
+    const dataURL = await GeminiKit.generateImage(prompt, inputFiles);
+    if (!dataURL || typeof dataURL !== 'string' || !dataURL.startsWith('data:image')) {
+      throw new Error('AI ไม่สามารถสร้างรูปได้ในตอนนี้ (อาจติดนโยบายเนื้อหา หรือระบบไม่ว่าง) ลองปรับข้อความหรือกด "สร้างใหม่อีกครั้ง"');
+    }
+
+    const ts = Date.now();
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    const img = document.createElement('img');
+    img.alt = 'แบนเนอร์โฆษณา';
+    img.src = dataURL;
+    card.appendChild(img);
+
+    const actions = document.createElement('div');
+    actions.className = 'result-actions';
+
+    const dl = document.createElement('a');
+    dl.className = 'btn-dl';
+    dl.textContent = '💾 ดาวน์โหลด';
+    dl.href = dataURL;
+    dl.download = 'banner-' + selectedRatio.replace(':','x') + '-' + ts + '.png';
+
+    const regen = document.createElement('button');
+    regen.className = 'btn-regen';
+    regen.textContent = '🔄 สร้างใหม่อีกครั้ง';
+    regen.onclick = run;
+
+    actions.appendChild(dl);
+    actions.appendChild(regen);
+    card.appendChild(actions);
+
+    const note = document.createElement('p');
+    note.className = 'synthid-note';
+    note.textContent = 'รูปภาพมี SynthID watermark จาก Google';
+    card.appendChild(note);
+
+    out.innerHTML = '';
+    out.appendChild(card);
+    out.insertAdjacentHTML('beforeend', `
+      <div class="warn-box" style="margin-top:0">
+        <strong>💡 เคล็ดลับ</strong>
+        ถ้าข้อความบนรูปเพี้ยน ให้นำภาพนี้ไปเปิดใน <strong>Canva</strong> หรือ <strong>CapCut</strong> แล้วพิมพ์ข้อความทับเองได้เลย
+      </div>
+    `);
+  } catch(e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '<br><button class="btn-regen" style="margin-top:10px;width:100%;padding:11px;border:none;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit" onclick="run()">🔄 ลองสร้างใหม่อีกครั้ง</button></div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+</script>
+</body></html>

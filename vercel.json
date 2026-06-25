@@ -1,0 +1,177 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/caption",
+      "destination": "/01-caption.html"
+    },
+    {
+      "source": "/all-in-one",
+      "destination": "/02-all-from-one-photo.html"
+    },
+    {
+      "source": "/studio",
+      "destination": "/03-product-studio.html"
+    },
+    {
+      "source": "/slip",
+      "destination": "/04-slip-scanner.html"
+    },
+    {
+      "source": "/edit",
+      "destination": "/05-edit-advisor.html"
+    },
+    {
+      "source": "/spy",
+      "destination": "/06-competitor-analysis.html"
+    },
+    {
+      "source": "/brand-name",
+      "destination": "/07-brand-name.html"
+    },
+    {
+      "source": "/story",
+      "destination": "/08-brand-story.html"
+    },
+    {
+      "source": "/live",
+      "destination": "/09-live-script.html"
+    },
+    {
+      "source": "/ads",
+      "destination": "/10-fb-ads.html"
+    },
+    {
+      "source": "/chat",
+      "destination": "/11-chat-reply.html"
+    },
+    {
+      "source": "/faq",
+      "destination": "/12-faq-maker.html"
+    },
+    {
+      "source": "/calendar",
+      "destination": "/13-content-calendar.html"
+    },
+    {
+      "source": "/seo",
+      "destination": "/14-seo-listing.html"
+    },
+    {
+      "source": "/translate",
+      "destination": "/15-translate.html"
+    },
+    {
+      "source": "/followup",
+      "destination": "/16-followup.html"
+    },
+    {
+      "source": "/reels",
+      "destination": "/17-reels-script.html"
+    },
+    {
+      "source": "/tone",
+      "destination": "/18-tone-shift.html"
+    },
+    {
+      "source": "/pricing",
+      "destination": "/19-pricing-package.html"
+    },
+    {
+      "source": "/photo-check",
+      "destination": "/20-product-photo-check.html"
+    },
+    {
+      "source": "/extract",
+      "destination": "/21-extract-text.html"
+    },
+    {
+      "source": "/ad-decode",
+      "destination": "/22-ad-decode.html"
+    },
+    {
+      "source": "/colors",
+      "destination": "/23-color-palette.html"
+    },
+    {
+      "source": "/ux",
+      "destination": "/24-ux-review.html"
+    },
+    {
+      "source": "/rip",
+      "destination": "/25-script-rip.html"
+    },
+    {
+      "source": "/highlight",
+      "destination": "/26-highlight-finder.html"
+    },
+    {
+      "source": "/ad-check",
+      "destination": "/27-ad-precheck.html"
+    },
+    {
+      "source": "/backdrop",
+      "destination": "/28-backdrop.html"
+    },
+    {
+      "source": "/banner",
+      "destination": "/29-ad-banner.html"
+    },
+    {
+      "source": "/bg-remove",
+      "destination": "/30-bg-remove.html"
+    },
+    {
+      "source": "/logo",
+      "destination": "/31-logo-maker.html"
+    },
+    {
+      "source": "/model",
+      "destination": "/32-ai-model.html"
+    },
+    {
+      "source": "/mockup",
+      "destination": "/33-mockup.html"
+    },
+    {
+      "source": "/thumbnail",
+      "destination": "/34-thumbnail.html"
+    },
+    {
+      "source": "/transcribe",
+      "destination": "/35-transcribe.html"
+    },
+    {
+      "source": "/voice-order",
+      "destination": "/36-voice-order.html"
+    },
+    {
+      "source": "/voice-content",
+      "destination": "/37-voice-to-content.html"
+    },
+    {
+      "source": "/reviews",
+      "destination": "/38-review-insight.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "microphone=(self), camera=()"
+        }
+      ]
+    }
+  ]
+}

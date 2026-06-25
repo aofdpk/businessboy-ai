@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ชื่อ+คำอธิบายสินค้า SEO 🛍️</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#f7971e;--bg2:#ffd200;--accent:#d97706;--soft:#fef3c7;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;color:var(--ink);background:#fff}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-section{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative}
+.result-section h3{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.result-text{font-size:15px;line-height:1.7;white-space:pre-wrap;color:var(--ink);padding-right:60px}
+.copy-btn{position:absolute;top:10px;right:10px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.bullets{list-style:none;padding:0;padding-right:60px}
+.bullets li{font-size:15px;line-height:1.7;padding:4px 0;border-bottom:1px solid var(--soft);color:var(--ink)}
+.bullets li:last-child{border-bottom:none}
+.bullets li::before{content:"✅ ";font-size:14px}
+.keywords{display:flex;flex-wrap:wrap;gap:7px;padding-right:60px}
+.kw-tag{background:var(--soft);color:var(--accent);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500}
+.error{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+#output{margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.chip.active{background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border-color:transparent}
+.toolbar{display:flex;gap:10px;margin-bottom:14px}
+.toolbar button{flex:1;border:none;border-radius:13px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 8px 20px rgba(0,0,0,.1)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ชื่อ+คำอธิบายสินค้า SEO 🛍️</h1>
+    <p>ใส่ข้อมูลสินค้า → ได้ listing ขายดีพร้อมใช้</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ชื่อ / ประเภทสินค้า</label>
+      <input id="product" type="text" placeholder="เช่น เซรั่มวิตามินซี ขนาด 30ml">
+    </div>
+    <div class="field">
+      <label>จุดเด่นสินค้า (ระบุให้ชัด)</label>
+      <textarea id="features" placeholder="เช่น ผิวกระจ่างใส ไม่มีส่วนผสมแอลกอฮอล์ ผ่านการทดสอบผิวแพ้ง่าย ขนาดพกพา ราคาคุ้ม"></textarea>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์ม</label>
+      <select id="platform">
+        <option value="Shopee">Shopee</option>
+        <option value="Lazada">Lazada</option>
+        <option value="TikTok Shop">TikTok Shop</option>
+        <option value="Facebook Marketplace">Facebook Marketplace</option>
+        <option value="LINE Shopping">LINE Shopping</option>
+        <option value="เว็บไซต์ร้านค้า">เว็บไซต์ร้านค้า</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>กลุ่มลูกค้า / ราคา (ใส่หรือไม่ก็ได้)</label>
+      <input id="audience" type="text" placeholder="เช่น ผู้หญิงวัยทำงาน งบ 300-500 บาท">
+    </div>
+    <div class="field">
+      <label>โทนการเขียน</label>
+      <div class="chips" id="toneChips">
+        <button type="button" class="chip active" data-tone="ขายของกระตุ้นซื้อ">🔥 กระตุ้นซื้อ</button>
+        <button type="button" class="chip" data-tone="พรีเมียมหรูหรา">💎 พรีเมียม</button>
+        <button type="button" class="chip" data-tone="เป็นกันเองสนุก">😊 เป็นกันเอง</button>
+        <button type="button" class="chip" data-tone="น่าเชื่อถือให้ข้อมูล">📋 น่าเชื่อถือ</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ สร้าง SEO Listing เลย</button>
+  <div id="output"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedTone = 'ขายของกระตุ้นซื้อ';
+document.getElementById('toneChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#toneChips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  selectedTone = chip.dataset.tone;
+});
+
+let lastResult = null;
+
+async function run() {
+  const product = document.getElementById('product').value.trim();
+  const features = document.getElementById('features').value.trim();
+  const platform = document.getElementById('platform').value;
+  const audience = document.getElementById('audience').value.trim();
+  const tone = selectedTone;
+
+  if (!product) { GeminiKit.toast('ใส่ชื่อสินค้าก่อนนะ'); return; }
+  if (!features) { GeminiKit.toast('ระบุจุดเด่นสินค้าด้วยจ้า'); return; }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังสร้าง SEO listing...</div>';
+
+  const system = `คุณคือนักเขียนคอนเทนต์ขายของออนไลน์และผู้เชี่ยวชาญ SEO มาร์เก็ตเพลสไทยมือโปร เข้าใจพฤติกรรมการค้นหาและการตัดสินใจซื้อของคนไทยลึกซึ้ง เขียนภาษาไทยที่เป็นธรรมชาติ อ่านแล้วอยากซื้อ และจัดวางคีย์เวิร์ดให้ติดค้นหาได้จริงโดยไม่ยัดคำจนอ่านไม่ลื่น ห้ามแต่งสรรพคุณหรือข้อมูลที่ผู้ใช้ไม่ได้ให้มา (เช่น ห้ามอ้างรางวัล มาตรฐาน อย. ส่วนผสม หรือผลลัพธ์ที่ไม่ได้ระบุ) ให้ขยายเฉพาะจากจุดเด่นที่ได้รับเท่านั้น`;
+
+  const prompt = `สร้าง listing สินค้าที่ติดค้นหาและขายดีสำหรับ ${platform}
+
+ข้อมูลสินค้า (ใช้เฉพาะข้อมูลนี้ ห้ามแต่งเพิ่ม):
+- สินค้า: ${product}
+- จุดเด่น: ${features}
+- แพลตฟอร์ม: ${platform}
+- กลุ่มลูกค้า/ราคา: ${audience || 'ไม่ระบุ — เขียนให้เหมาะกับลูกค้าทั่วไป'}
+- โทนการเขียน: ${tone}
+
+ข้อกำหนด:
+- เขียนให้เหมาะกับวิธีค้นหาและฟอร์แมตของ ${platform}
+- จัดวางคีย์เวิร์ดในชื่อและคำอธิบายอย่างเป็นธรรมชาติ
+- คำอธิบายต้องมี CTA ปิดการขายที่เหมาะกับแพลตฟอร์มในย่อหน้าสุดท้าย
+- ใช้โทน "${tone}" ตลอดทั้งชิ้น
+
+ตอบเป็น JSON เท่านั้น ตามโครงสร้างนี้:
+{
+  "title": "ชื่อสินค้าที่ติดค้นหา ยาวไม่เกิน 120 ตัวอักษร ใส่คีย์เวิร์ดสำคัญไว้ต้นชื่อ",
+  "bullets": ["จุดเด่น 1","จุดเด่น 2","จุดเด่น 3","จุดเด่น 4","จุดเด่น 5"],
+  "description": "คำอธิบายยาว 150-250 คำ เน้นประโยชน์ผู้ใช้ มีคีย์เวิร์ด อ่านง่าย กระตุ้นซื้อ ปิดท้ายด้วย CTA",
+  "keywords": ["คีย์เวิร์ด1","คีย์เวิร์ด2","คีย์เวิร์ด3","คีย์เวิร์ด4","คีย์เวิร์ด5","คีย์เวิร์ด6","คีย์เวิร์ด7","คีย์เวิร์ด8"],
+  "hashtags": ["#แท็ก1","#แท็ก2","#แท็ก3","#แท็ก4","#แท็ก5"]
+}`;
+
+  try {
+    const data = await GeminiKit.text(prompt, { json: true, system });
+    if (!data || typeof data !== 'object' || !data.title) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    const bullets = Array.isArray(data.bullets) ? data.bullets : [];
+    const keywords = Array.isArray(data.keywords) ? data.keywords : [];
+    const hashtags = Array.isArray(data.hashtags) ? data.hashtags : [];
+    const description = data.description || '';
+
+    lastResult = { product, platform, title: data.title, bullets, description, keywords, hashtags };
+
+    out.innerHTML = `
+      <div class="toolbar">
+        <button onclick="copyAll()">📋 คัดลอกทั้งหมด</button>
+        <button onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>
+      </div>
+      <div class="result-section">
+        <h3>📌 ชื่อสินค้า (Title)</h3>
+        <button class="copy-btn" data-copy="${esc(data.title)}" onclick="cp(this)">คัดลอก</button>
+        <div class="result-text">${esc(data.title)}</div>
+      </div>
+      <div class="result-section">
+        <h3>⭐ จุดเด่น (Bullet Points)</h3>
+        <button class="copy-btn" data-copy="${esc(bullets.map((b,i)=>`${i+1}. ${b}`).join('\n'))}" onclick="cp(this)">คัดลอก</button>
+        <ul class="bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>
+      </div>
+      <div class="result-section">
+        <h3>📝 คำอธิบายสินค้า (Description)</h3>
+        <button class="copy-btn" data-copy="${esc(description)}" onclick="cp(this)">คัดลอก</button>
+        <div class="result-text">${esc(description)}</div>
+      </div>
+      <div class="result-section">
+        <h3>🔍 คีย์เวิร์ด (Keywords)</h3>
+        <button class="copy-btn" data-copy="${esc(keywords.join(', '))}" onclick="cp(this)">คัดลอก</button>
+        <div class="keywords">${keywords.map(k => `<span class="kw-tag">${esc(k)}</span>`).join('')}</div>
+      </div>
+      ${hashtags.length ? `
+      <div class="result-section">
+        <h3>#️⃣ แฮชแท็ก (Hashtags)</h3>
+        <button class="copy-btn" data-copy="${esc(hashtags.join(' '))}" onclick="cp(this)">คัดลอก</button>
+        <div class="keywords">${hashtags.map(h => `<span class="kw-tag">${esc(h)}</span>`).join('')}</div>
+      </div>` : ''}
+    `;
+  } catch(e) {
+    out.innerHTML = `<div class="error">⚠️ ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function buildPlainText() {
+  if (!lastResult) return '';
+  const r = lastResult;
+  const lines = [];
+  lines.push('=== SEO LISTING: ' + r.platform + ' ===', '');
+  lines.push('[ชื่อสินค้า]', r.title, '');
+  if (r.bullets.length) { lines.push('[จุดเด่น]'); r.bullets.forEach((b,i)=>lines.push(`${i+1}. ${b}`)); lines.push(''); }
+  lines.push('[คำอธิบายสินค้า]', r.description, '');
+  if (r.keywords.length) lines.push('[คีย์เวิร์ด]', r.keywords.join(', '), '');
+  if (r.hashtags.length) lines.push('[แฮชแท็ก]', r.hashtags.join(' '), '');
+  return lines.join('\n').trim();
+}
+
+function copyAll() {
+  const text = buildPlainText();
+  if (!text) { GeminiKit.toast('ยังไม่มีผลลัพธ์ให้คัดลอก'); return; }
+  GeminiKit.copy(text);
+}
+
+function downloadAll() {
+  const text = buildPlainText();
+  if (!text) { GeminiKit.toast('ยังไม่มีผลลัพธ์ให้ดาวน์โหลด'); return; }
+  const name = (lastResult && lastResult.product ? lastResult.product : 'seo-listing').slice(0, 40).replace(/[\\/:*?"<>|]/g, '');
+  GeminiKit.download(`SEO-${name || 'listing'}.txt`, text, 'text/plain');
+}
+
+function cp(btn) {
+  GeminiKit.copy(btn.dataset.copy || '');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body></html>

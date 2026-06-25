@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ร่างตอบแชทลูกค้า</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#11998e;--bg2:#38ef7d;--accent:#10b981;--soft:#d1fae5;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;color:var(--ink);background:#fff}
+textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:90px}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.result{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative;white-space:pre-wrap;font-size:15px;line-height:1.7;padding-top:40px}
+.result .copy{position:absolute;top:10px;right:10px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.result .num{position:absolute;top:11px;left:14px;font-size:12px;font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.chip.on{border-color:var(--accent);background:var(--soft);color:var(--bg1);font-weight:600}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}
+.toolbar button{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--bg1);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ร่างตอบแชทลูกค้า 💬</h1>
+    <p>วางข้อความลูกค้า → AI ร่างคำตอบ 3 แบบให้เลือกใช้</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ข้อความของลูกค้า</label>
+      <textarea id="customerMsg" placeholder="วางข้อความที่ลูกค้าส่งมาตรงนี้เลย เช่น สินค้าตัวนี้มีสีอะไรบ้างคะ?"></textarea>
+    </div>
+
+    <div class="field">
+      <label>โทนแบรนด์</label>
+      <select id="tone">
+        <option value="สุภาพ">สุภาพ — ใช้ค่ะ/ครับ ดูน่าเชื่อถือ</option>
+        <option value="เป็นกันเอง">เป็นกันเอง — น้องๆ สนุก ลูกค้ารู้สึกใกล้ชิด</option>
+        <option value="เร่งปิดการขาย">เร่งปิดการขาย — เน้น CTA ให้โอน/สั่งเลย</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>ช่องทางแชท <span style="font-weight:400;color:#9ca3af">(ปรับสไตล์ให้เข้ากับแพลตฟอร์ม)</span></label>
+      <div class="chips" id="platChips">
+        <button type="button" class="chip on" data-val="Facebook">Facebook</button>
+        <button type="button" class="chip" data-val="Instagram">Instagram</button>
+        <button type="button" class="chip" data-val="TikTok">TikTok</button>
+        <button type="button" class="chip" data-val="LINE">LINE</button>
+        <button type="button" class="chip" data-val="Shopee/Lazada">Shopee/Lazada</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>ข้อมูลร้าน <span style="font-weight:400;color:#9ca3af">(ไม่บังคับ แต่ช่วยให้ตอบตรงมากขึ้น)</span></label>
+      <textarea id="shopInfo" placeholder="เช่น: ร้านขายเซรั่มออร์แกนิค ส่งฟรีทั่วไทย สั่งได้ทาง Line @myshop พร้อมส่งวันนี้" style="min-height:70px"></textarea>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ ร่างคำตอบให้เลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let platform = 'Facebook';
+document.getElementById('platChips').addEventListener('click', e => {
+  const c = e.target.closest('.chip');
+  if (!c) return;
+  document.querySelectorAll('#platChips .chip').forEach(x => x.classList.remove('on'));
+  c.classList.add('on');
+  platform = c.dataset.val;
+});
+
+let lastReplies = [];
+
+async function run() {
+  const customerMsg = document.getElementById('customerMsg').value.trim();
+  const tone = document.getElementById('tone').value;
+  const shopInfo = document.getElementById('shopInfo').value.trim();
+
+  if (!customerMsg) {
+    GeminiKit.toast('ใส่ข้อความลูกค้าก่อนนะ');
+    return;
+  }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  lastReplies = [];
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังร่างคำตอบ...</div>';
+
+  const shopPart = shopInfo
+    ? '\n\nข้อมูลร้าน (ใช้ได้เฉพาะข้อมูลนี้เท่านั้น): ' + shopInfo
+    : '';
+  const system = 'คุณคือนักการตลาดและแอดมินเพจขายของออนไลน์ไทยมือโปร ที่ปิดการขายผ่านแชทเก่งมาก ' +
+    'เข้าใจจิตวิทยาลูกค้าไทย พิมพ์ภาษาไทยเป็นธรรมชาติ อบอุ่น น่าเชื่อถือ และทำให้ลูกค้าอยากซื้อโดยไม่ดูยัดเยียด';
+
+  const prompt = `ลูกค้าทักแชทเข้ามาทางช่องทาง: "${platform}"
+โทนการตอบที่ต้องการ: "${tone}"${shopPart}
+
+ข้อความลูกค้า: "${customerMsg}"
+
+งานของคุณ: ร่างข้อความตอบกลับให้ 3 แบบที่ลูกค้าอ่านแล้วอยากซื้อ โดยทุกแบบต้อง:
+- ใช้โทน "${tone}" และเหมาะกับสไตล์การคุยบน ${platform} (ความยาว/อิโมจิ/ความเป็นทางการให้พอดีกับแพลตฟอร์มนี้)
+- ตอบตรงคำถาม/ความกังวลของลูกค้าก่อนเสมอ แล้วค่อยเสริมแรงจูงใจ
+- จบด้วย CTA ที่ชัดและทำง่าย (เช่น ชวนสั่ง/โอน/กดสั่ง/ขอที่อยู่) ให้เหมาะกับ ${platform}
+- แต่ละแบบต่างกันชัดเจน: เช่น แบบสั้นกระชับ / แบบอบอุ่นให้ข้อมูลครบ / แบบเร่งปิดการขายมี urgency
+ข้อห้ามเด็ดขาด: ห้ามแต่งข้อมูลที่ผู้ใช้ไม่ได้ให้ (เช่น ราคา โปรโมชั่น ระยะเวลาส่ง สี/ไซซ์) ถ้าไม่รู้ให้ใช้วิธีถามกลับหรือชวนคุยต่อแทนการมั่ว
+
+ตอบเป็น JSON array ของ string 3 ตัวเท่านั้น (แต่ละตัวคือข้อความตอบกลับที่พร้อมก๊อปวางส่งได้เลย) ไม่ต้องมีคำอธิบายอื่น`;
+
+  try {
+    const arr = await GeminiKit.text(prompt, {json: true, system});
+    if (!Array.isArray(arr) || arr.length === 0) {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+    lastReplies = arr.map(c => (c == null ? '' : c).toString());
+    out.innerHTML =
+      '<div class="toolbar">' +
+        '<button onclick="copyAll()">📋 คัดลอกทั้งหมด</button>' +
+        '<button onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>' +
+      '</div>' +
+      lastReplies.map((c, i) =>
+        '<div class="result">' +
+          '<span class="num">แบบที่ ' + (i + 1) + '</span>' +
+          '<button class="copy" data-i="' + i + '" onclick="cp(this)">คัดลอก</button>' +
+          esc(c) +
+        '</div>'
+      ).join('');
+  } catch(e) {
+    out.innerHTML = '<div class="err">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function cp(b) {
+  const i = +b.dataset.i;
+  GeminiKit.copy(lastReplies[i] || '');
+}
+
+function copyAll() {
+  if (!lastReplies.length) return;
+  const text = lastReplies.map((c, i) => 'แบบที่ ' + (i + 1) + '\n' + c).join('\n\n──────────\n\n');
+  GeminiKit.copy(text);
+}
+
+function downloadAll() {
+  if (!lastReplies.length) return;
+  const text = lastReplies.map((c, i) => 'แบบที่ ' + (i + 1) + '\n' + c).join('\n\n──────────\n\n');
+  GeminiKit.download('ร่างตอบแชทลูกค้า.txt', text, 'text/plain');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

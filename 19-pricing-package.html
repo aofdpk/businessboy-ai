@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สร้างแพ็กเกจราคา 💎</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0f2027;--bg2:#2c5364;--accent:#0891b2;--soft:#e0f2fe;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:480px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;color:var(--ink);background:#fff}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25);transition:opacity .2s}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#output{margin-top:16px}
+.pkg-row{display:flex;gap:10px;align-items:stretch;margin-bottom:16px}
+.pkg-card{flex:1;background:#fff;border-radius:18px;padding:16px 12px;box-shadow:0 8px 22px rgba(0,0,0,.14);display:flex;flex-direction:column;border:2px solid transparent;transition:transform .2s}
+.pkg-card.recommended{border-color:var(--accent);transform:scale(1.04);box-shadow:0 14px 32px rgba(8,145,178,.28);position:relative}
+.badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 11px;white-space:nowrap}
+.pkg-name{font-size:13px;font-weight:700;color:var(--muted);text-align:center;margin-bottom:4px;margin-top:6px}
+.pkg-price{font-size:22px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:10px;line-height:1.2}
+.pkg-items{list-style:none;font-size:12px;color:var(--ink);line-height:1.8;flex:1;margin-bottom:10px}
+.pkg-items li::before{content:"✓ ";color:var(--accent);font-weight:700}
+.pkg-pitch{font-size:11px;color:var(--muted);text-align:center;font-style:italic;border-top:1px solid var(--soft);padding-top:8px;margin-top:auto;line-height:1.5}
+.act-row{display:flex;gap:8px;margin-bottom:10px}
+.act-btn{flex:1;border:2px solid var(--accent);background:#fff;color:var(--accent);border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.act-btn:hover{background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:20px;padding:7px 13px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;user-select:none}
+.chip.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.err{background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.6}
+@media(max-width:380px){.pkg-price{font-size:18px}.pkg-card{padding:12px 8px}}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สร้างแพ็กเกจราคา 💎</h1>
+    <p>บอกสินค้า ต้นทุน กลุ่มลูกค้า → AI ออกแบบ 3 ระดับให้เลย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>สินค้า/บริการของคุณ</label>
+      <input id="product" placeholder="เช่น คอร์สสอนทำขนม, บริการถ่ายภาพ, ผลิตภัณฑ์ดูแลผิว">
+    </div>
+    <div class="field">
+      <label>ต้นทุนคร่าวๆ (ต่อชิ้น/ต่อครั้ง)</label>
+      <input id="cost" placeholder="เช่น 200 บาท, ไม่มีต้นทุน, ประมาณ 500–800 บาท">
+    </div>
+    <div class="field">
+      <label>กลุ่มลูกค้าเป้าหมาย</label>
+      <textarea id="audience" placeholder="เช่น แม่บ้านวัย 30–45 ปี, นักศึกษา, เจ้าของธุรกิจ SME"></textarea>
+    </div>
+    <div class="field">
+      <label>ช่องทางขายหลัก (เลือกได้)</label>
+      <div class="chips" id="platformChips">
+        <span class="chip on" data-v="Facebook">Facebook</span>
+        <span class="chip" data-v="Instagram">Instagram</span>
+        <span class="chip" data-v="TikTok">TikTok</span>
+        <span class="chip" data-v="LINE OA">LINE</span>
+        <span class="chip" data-v="Shopee/Lazada">Shopee</span>
+        <span class="chip" data-v="หน้าร้าน/ออฟไลน์">หน้าร้าน</span>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>โทนการขาย (เลือกได้)</label>
+      <div class="chips" id="toneChips">
+        <span class="chip on" data-v="เป็นกันเอง น่าเชื่อถือ">เป็นกันเอง</span>
+        <span class="chip" data-v="หรูหรา พรีเมียม">หรูหรา</span>
+        <span class="chip" data-v="เร่งด่วน กระตุ้นให้รีบซื้อ">เร่งด่วน</span>
+        <span class="chip" data-v="สนุก ขี้เล่น">สนุก</span>
+        <span class="chip" data-v="มืออาชีพ ทางการ">มืออาชีพ</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ สร้างแพ็กเกจราคาเลย</button>
+  <div id="output"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+// single-select chips
+document.querySelectorAll('.chips').forEach(group=>{
+  group.addEventListener('click',e=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    group.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+    chip.classList.add('on');
+  });
+});
+function chipValue(id){
+  const on = document.querySelector('#'+id+' .chip.on');
+  return on ? on.getAttribute('data-v') : '';
+}
+
+async function run(){
+  const product = document.getElementById('product').value.trim();
+  const cost = document.getElementById('cost').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+  const platform = chipValue('platformChips');
+  const tone = chipValue('toneChips');
+
+  if(!product){GeminiKit.toast('ใส่ชื่อสินค้า/บริการก่อนนะ');return}
+  if(!audience){GeminiKit.toast('ระบุกลุ่มลูกค้าด้วยนะ');return}
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังออกแบบแพ็กเกจราคา...</div>';
+
+  const system = `คุณคือนักการตลาดและที่ปรึกษากลยุทธ์ราคา (pricing strategist) ขายของออนไลน์ไทยมือโปร เชี่ยวชาญ value-based pricing, การจัดแพ็กเกจแบบ tiered (good-better-best) และ price anchoring ที่ดันให้คนเลือกแพ็กเกจกลาง คุณเขียนคำขายภาษาไทยที่อ่านแล้วเห็นภาพและอยากซื้อ ไม่ใช่ภาษาการตลาดน้ำท่วมทุ่ง สำคัญมาก: ใช้เฉพาะข้อมูลที่ผู้ใช้ให้มา ห้ามแต่งคุณสมบัติ/บริการ/ตัวเลขที่ผู้ใช้ไม่ได้ระบุขึ้นมาเอง ถ้าไม่รู้ให้เสนอแบบทั่วไปที่อิงสินค้าจริง`;
+
+  const prompt = `ออกแบบแพ็กเกจราคา 3 ระดับ (good-better-best) สำหรับ:
+- สินค้า/บริการ: ${product}
+- ต้นทุนคร่าวๆ: ${cost || 'ไม่ระบุ'}
+- กลุ่มลูกค้า: ${audience}
+- ช่องทางขายหลัก: ${platform || 'ทั่วไป'}
+- โทนคำขาย: ${tone || 'เป็นกันเอง น่าเชื่อถือ'}
+
+หลักการ:
+- ตั้งราคาให้สมเหตุสมผลกับตลาดไทยและต้นทุนที่ให้มา (ถ้ามี) วางราคาให้แพ็กเกจกลางดูคุ้มที่สุด (price anchoring)
+- แต่ละแพ็กเกจไล่ระดับคุณค่าชัดเจน แพ็กเกจสูงกว่าต้องได้มากกว่าจริง
+- pitch เป็นคำโน้มน้าวสั้น 1 ประโยค โทน "${tone || 'เป็นกันเอง น่าเชื่อถือ'}" เจาะ insight ของ "${audience}" และเหมาะกับการโพสต์ขายบน ${platform || 'ช่องทางออนไลน์'}
+- ใส่ cta (call to action สั้นๆ) ที่กระตุ้นให้ทักแชต/สั่งซื้อทันที เหมาะกับ ${platform || 'ช่องทางออนไลน์'}
+
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น รูปแบบ:
+{"packages":[{"name":"ชื่อแพ็กเกจ","price":"ราคาพร้อมหน่วย เช่น 299 บาท","items":["สิ่งที่ได้ 1","สิ่งที่ได้ 2","สิ่งที่ได้ 3"],"pitch":"คำโน้มน้าวสั้นๆ 1 ประโยค","cta":"คำกระตุ้นให้สั่งซื้อสั้นๆ"}]}
+
+กำหนด 3 แพ็กเกจ:
+1. ระดับเริ่มต้น (entry-level ราคาเข้าถึงง่าย)
+2. ระดับแนะนำ (mid-tier คุ้มค่าที่สุด ควรขายดีที่สุด)
+3. ระดับพรีเมียม (premium ครบครันที่สุด)
+
+items อย่างน้อย 3 รายการต่อแพ็กเกจ และต้องอิงจากสินค้า/บริการจริงที่ผู้ใช้ให้มาเท่านั้น`;
+
+  try{
+    const data = await GeminiKit.text(prompt, {json:true, system});
+    if(!data || !Array.isArray(data.packages) || data.packages.length < 3){
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    const pkgs = data.packages;
+    const labels = ['เริ่มต้น','แนะนำ','พรีเมียม'];
+
+    let html = '<div class="pkg-row">';
+    pkgs.forEach((p, i) => {
+      const isRec = i === 1;
+      html += `<div class="pkg-card${isRec?' recommended':''}">`;
+      if(isRec) html += `<div class="badge">⭐ แนะนำ</div>`;
+      html += `<div class="pkg-name">${esc(p.name||labels[i])}</div>`;
+      html += `<div class="pkg-price">${esc(p.price||'-')}</div>`;
+      html += `<ul class="pkg-items">`;
+      const items = Array.isArray(p.items) ? p.items : [];
+      items.forEach(item => {
+        html += `<li>${esc(item)}</li>`;
+      });
+      html += `</ul>`;
+      if(p.pitch) html += `<div class="pkg-pitch">${esc(p.pitch)}</div>`;
+      if(p.cta) html += `<div class="pkg-pitch" style="font-style:normal;font-weight:600;color:var(--accent);border-top:none;padding-top:4px">👉 ${esc(p.cta)}</div>`;
+      html += `</div>`;
+    });
+    html += '</div>';
+
+    // build full text for copy / download
+    const allText = pkgs.map((p,i)=>{
+      const items = Array.isArray(p.items)?p.items:[];
+      let block = `【 แพ็กเกจ${labels[i]} 】 ${p.name||''} — ${p.price||''}\n`;
+      block += items.map(x=>'  ✓ '+x).join('\n');
+      if(p.pitch) block += `\n  “${p.pitch}”`;
+      if(p.cta) block += `\n  👉 ${p.cta}`;
+      return block;
+    }).join('\n\n');
+    window._allText = allText;
+
+    html += `<div class="act-row">
+      <button class="act-btn" onclick="copyAll()">📋 คัดลอกทั้งหมด</button>
+      <button class="act-btn" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>
+    </div>`;
+
+    out.innerHTML = html;
+
+  }catch(e){
+    out.innerHTML = `<div class="err">⚠️ ${esc(e.message)}</div>`;
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function copyAll(){
+  if(!window._allText){GeminiKit.toast('ยังไม่มีผลให้คัดลอก');return}
+  GeminiKit.copy(window._allText);
+}
+
+function downloadAll(){
+  if(!window._allText){GeminiKit.toast('ยังไม่มีผลให้ดาวน์โหลด');return}
+  GeminiKit.download('แพ็กเกจราคา.txt', window._allText, 'text/plain');
+}
+</script>
+</body></html>

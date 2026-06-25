@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ครบจบจาก 1 รูป 🪄 (AI)</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg1:#f7971e;--bg2:#d4145a;--card:#fff;--ink:#1f2937;--muted:#6b7280;--soft:#fdf2f8;--accent:#d4145a}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+  .wrap{max-width:460px;margin:0 auto}
+  header{text-align:center;color:#fff;margin-bottom:18px}
+  header h1{font-size:26px;font-weight:800;text-shadow:0 3px 12px rgba(0,0,0,.2)}
+  header p{font-size:13px;opacity:.95;margin-top:4px}
+  .card{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+  .drop{border:2.5px dashed #f0c0d4;border-radius:16px;padding:26px;text-align:center;cursor:pointer;transition:.2s;color:var(--muted)}
+  .drop:hover{border-color:var(--accent);background:var(--soft)}
+  .drop .ic{font-size:38px}
+  .preview{width:100%;border-radius:14px;margin-bottom:12px;display:none}
+  .btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#f7971e,#d4145a);color:#fff;box-shadow:0 10px 24px rgba(212,20,90,.4)}
+  .btn:disabled{opacity:.6}
+  .lbl{font-size:13px;font-weight:600;color:var(--ink);margin:12px 0 6px;display:block}
+  .inp,.sel{width:100%;border:1.5px solid #f0c0d4;border-radius:11px;padding:11px 12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;outline:none;transition:.2s}
+  .inp:focus,.sel:focus{border-color:var(--accent)}
+  .row{display:flex;gap:8px}
+  .row>div{flex:1}
+  .sec{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+  .sec h3{font-size:15px;margin-bottom:10px;color:var(--accent);display:flex;align-items:center;gap:6px}
+  .item{background:var(--soft);border-radius:11px;padding:11px 13px;margin-bottom:8px;font-size:14px;line-height:1.6;position:relative;white-space:pre-wrap}
+  .item .copy{position:absolute;top:8px;right:8px;border:none;background:#fff;color:var(--accent);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+  .loading{text-align:center;color:#fff;padding:20px;font-size:15px}
+  .spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tag{display:inline-block;background:var(--soft);color:var(--accent);border-radius:8px;padding:4px 10px;font-size:13px;margin:3px 3px 0 0;font-weight:500}
+  .bar{display:flex;gap:8px;margin-bottom:14px}
+  .bar button{flex:1;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  .bar .b1{background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+  .bar .b2{background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ครบจบจาก 1 รูป 🪄</h1>
+    <p>อัปรูปสินค้า 1 รูป → AI ออกชุดคอนเทนต์ขายให้ครบ</p>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+      <div class="ic">📸</div>
+      <div>แตะเพื่ออัปรูปสินค้า</div>
+    </div>
+    <img class="preview" id="preview">
+    <input type="file" id="file" accept="image/*" hidden onchange="onFile(event)">
+
+    <div class="row">
+      <div>
+        <label class="lbl">แพลตฟอร์ม</label>
+        <select class="sel" id="platform">
+          <option value="Facebook">Facebook</option>
+          <option value="TikTok">TikTok</option>
+          <option value="Instagram">Instagram</option>
+          <option value="LINE / LINE OA">LINE</option>
+          <option value="Shopee / Lazada">Shopee/Lazada</option>
+          <option value="ทุกแพลตฟอร์มผสมกัน">ผสมทุกที่</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">โทนการขาย</label>
+        <select class="sel" id="tone">
+          <option value="สนุก เป็นกันเอง ขายแบบเพื่อนคุย">สนุก เป็นกันเอง</option>
+          <option value="พรีเมียม หรู น่าเชื่อถือ">พรีเมียม หรู</option>
+          <option value="เร่งด่วน กระตุ้นให้รีบซื้อ โปรจำกัด">เร่งปิดการขาย</option>
+          <option value="ให้ความรู้ สร้างความน่าเชื่อถือ">ให้ความรู้</option>
+          <option value="ตลก ขำๆ ไวรัล">ตลก ไวรัล</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="lbl">บริบทร้าน (ใส่เท่าที่มี เว้นได้ ยิ่งใส่ผลยิ่งตรง)</label>
+    <input class="inp" id="brand" placeholder="ชื่อแบรนด์/ร้าน เช่น ครูพี่พัฒน์" style="margin-bottom:8px">
+    <div class="row">
+      <div><input class="inp" id="price" placeholder="ราคา เช่น 290 บาท"></div>
+      <div><input class="inp" id="promo" placeholder="โปร เช่น ส่งฟรี/ซื้อ1แถม1"></div>
+    </div>
+    <input class="inp" id="usp" placeholder="จุดขายเด่น เช่น กันน้ำ ใช้ทน รีวิวดี (ถ้ามี)" style="margin-top:8px">
+  </div>
+
+  <button class="btn" id="go" onclick="run()" disabled>🪄 เสกชุดคอนเทนต์</button>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+let file=null;
+let lastResult=null;
+function onFile(e){
+  file=e.target.files[0]; if(!file)return;
+  const img=document.getElementById('preview');
+  img.src=URL.createObjectURL(file); img.style.display='block';
+  document.getElementById('drop').style.display='none';
+  document.getElementById('go').disabled=false;
+}
+function val(id){return (document.getElementById(id).value||'').trim()}
+async function run(){
+  if(!file){GeminiKit.toast('อัปรูปสินค้าก่อนนะ');return}
+  const out=document.getElementById('output');
+  const btn=document.getElementById('go');btn.disabled=true;
+  out.innerHTML='<div class="loading"><div class="spinner"></div>AI กำลังดูรูปแล้วคิดคอนเทนต์ให้...</div>';
+
+  const platform=val('platform'), tone=val('tone');
+  const brand=val('brand'), price=val('price'), promo=val('promo'), usp=val('usp');
+  let ctx='';
+  if(brand) ctx+=`\n- ชื่อแบรนด์/ร้าน: ${brand}`;
+  if(price) ctx+=`\n- ราคา: ${price}`;
+  if(promo) ctx+=`\n- โปรโมชั่น: ${promo}`;
+  if(usp)   ctx+=`\n- จุดขายเด่น: ${usp}`;
+  const ctxBlock = ctx ? `\nข้อมูลร้านจริงที่เจ้าของให้มา (ใช้ให้ตรง ห้ามเปลี่ยน):${ctx}` : '\nเจ้าของยังไม่ได้ให้ข้อมูลร้าน — ห้ามแต่งราคา/โปร/ชื่อแบรนด์ขึ้นเอง ถ้าต้องอ้างให้เว้นช่องว่าง [ ] ให้เจ้าของเติม';
+
+  const prompt=`คุณคือนักการตลาดออนไลน์ไทยมือโปรที่ขายของออนไลน์มาเป็นพันออเดอร์ เชี่ยวชาญการเขียนคอนเทนต์ปิดการขายบน ${platform}
+ดูรูปสินค้านี้ให้ละเอียด แล้วสร้างชุดคอนเทนต์ขายของภาษาไทยที่ "เอาไปโพสต์ขายได้ทันที"
+
+กฎเหล็ก:
+- เขียนโทน: ${tone}
+- เขียนให้เหมาะกับธรรมชาติของ ${platform} โดยเฉพาะ
+- ใช้ภาษาไทยที่คนไทยพูดจริง อ่านลื่น มี emoji พองาม
+- อิงจากสิ่งที่ "เห็นในรูปจริง" เท่านั้น ห้ามเดา/แต่งสรรพคุณที่ไม่มีหลักฐาน เช่น สี วัสดุ ขนาด ฟีเจอร์
+- ทุกชิ้นต้องมี CTA (เรียกให้ทัก/สั่งซื้อ/กดลิงก์) ชัดเจน${ctxBlock}
+
+ตอบเป็น JSON object เท่านั้น ตามโครงนี้:
+{
+ "product": "ทายว่าสินค้านี้คืออะไรจากรูป สั้นๆ ตรงประเด็น",
+ "captions": ["แคปชั่นพร้อมโพสต์ขายได้ทันที 3 อัน แต่ละอันมี hook บรรทัดแรกสะดุด + เนื้อขาย + CTA + emoji + hashtag"],
+ "angles": ["5 มุมการเล่า/ไอเดียโพสต์ที่ต่างกัน เช่น มุมปัญหา-วิธีแก้, รีวิวลูกค้า, ก่อน-หลัง, เปรียบเทียบ, โปรเร่งด่วน — บอกสั้นๆ ว่าโพสต์แนวไหนพูดว่าอะไร"],
+ "adCopy": "ข้อความโฆษณายิงแอด 1 ชุด เขียนแยกชัดเป็น Hook: / Body: / CTA:",
+ "objections": ["3 ข้อโต้แย้งที่ลูกค้ามักลังเล (เช่น แพง, ไม่มั่นใจคุณภาพ) พร้อมประโยคตอบกลับปิดการขาย"],
+ "hashtags": ["hashtag ที่เกี่ยวข้องและคนไทยค้นจริง 8 ตัว ไม่ต้องมี #"],
+ "thumbnailIdea": "ไอเดียทำปกคลิป/ภาพโฆษณา บรรยายองค์ประกอบ + ข้อความบนภาพที่ควรใส่"
+}`;
+  try{
+    const r=await GeminiKit.vision(prompt,[file],{json:true});
+    if(!r){throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่')}
+    lastResult=r;
+    renderResult(r);
+  }catch(e){
+    out.innerHTML=`<div class="sec" style="color:#dc2626">⚠️ ${esc(e.message)}</div>`;
+  }finally{btn.disabled=false}
+}
+function renderResult(r){
+  let h='<div class="bar">'
+    +'<button class="b1" onclick="copyAll()">📋 คัดลอกทั้งหมด</button>'
+    +'<button class="b2" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>'
+    +'</div>';
+  if(r.product)h+=`<div class="sec"><h3>🔍 AI เห็นว่านี่คือ</h3><div class="item">${esc(r.product)}</div></div>`;
+  if(r.captions&&r.captions.length)h+=section('📝 แคปชั่นพร้อมโพสต์',r.captions);
+  if(r.angles&&r.angles.length)h+=section('💡 5 มุมโพสต์',r.angles);
+  if(r.adCopy)h+=`<div class="sec"><h3>📣 ข้อความยิงแอด</h3>${itemHtml(r.adCopy)}</div>`;
+  if(r.objections&&r.objections.length)h+=section('🛡️ รับมือคำลังเล (ปิดการขาย)',r.objections);
+  if(r.hashtags&&r.hashtags.length){
+    const tagText='#'+r.hashtags.join(' #');
+    h+=`<div class="sec"><h3># Hashtag</h3><div>${r.hashtags.map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div>`
+      +`<div style="text-align:right;margin-top:8px"><button class="copy" style="position:static" onclick="copyRaw(this)" data-raw="${escAttr(tagText)}">คัดลอกทั้งชุด</button></div></div>`;
+  }
+  if(r.thumbnailIdea)h+=`<div class="sec"><h3>🎬 ไอเดียปก/ภาพโฆษณา</h3>${itemHtml(r.thumbnailIdea)}</div>`;
+  document.getElementById('output').innerHTML=h;
+}
+function section(title,arr){return `<div class="sec"><h3>${title}</h3>${arr.map(itemHtml).join('')}</div>`}
+function itemHtml(t){const s=(t==null?'':String(t));return `<div class="item"><button class="copy" onclick="copyRaw(this)" data-raw="${escAttr(s)}">คัดลอก</button>${esc(s)}</div>`}
+function copyRaw(b){GeminiKit.copy(b.getAttribute('data-raw')||'')}
+function buildAllText(){
+  const r=lastResult; if(!r)return '';
+  const L=[];
+  if(r.product)L.push('🔍 สินค้า: '+r.product,'');
+  if(r.captions&&r.captions.length){L.push('📝 แคปชั่นพร้อมโพสต์');r.captions.forEach((c,i)=>L.push((i+1)+'. '+c,''));}
+  if(r.angles&&r.angles.length){L.push('💡 5 มุมโพสต์');r.angles.forEach((c,i)=>L.push((i+1)+'. '+c));L.push('');}
+  if(r.adCopy)L.push('📣 ข้อความยิงแอด',r.adCopy,'');
+  if(r.objections&&r.objections.length){L.push('🛡️ รับมือคำลังเล');r.objections.forEach((c,i)=>L.push((i+1)+'. '+c));L.push('');}
+  if(r.hashtags&&r.hashtags.length)L.push('# Hashtag','#'+r.hashtags.join(' #'),'');
+  if(r.thumbnailIdea)L.push('🎬 ไอเดียปก/ภาพโฆษณา',r.thumbnailIdea);
+  return L.join('\n').trim();
+}
+function copyAll(){const t=buildAllText();if(!t){GeminiKit.toast('ยังไม่มีผลลัพธ์');return}GeminiKit.copy(t)}
+function downloadAll(){const t=buildAllText();if(!t){GeminiKit.toast('ยังไม่มีผลลัพธ์');return}GeminiKit.download('คอนเทนต์ครบจบจาก1รูป.txt',t,'text/plain')}
+function esc(s){return(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function escAttr(s){return(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+</script>
+</body>
+</html>

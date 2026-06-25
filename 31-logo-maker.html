@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ออกแบบโลโก้เบื้องต้น</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#232526;--bg2:#414345;--accent:#6366f1;--soft:#eef0ff;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;background:#fff;color:var(--ink)}
+input:focus,select:focus{border-color:var(--accent)}
+.color-row{display:flex;gap:10px;align-items:center}
+.color-row input[type="color"]{width:52px;height:48px;padding:4px;border-radius:13px;cursor:pointer;flex-shrink:0}
+.color-row input[type="text"]{flex:1}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25);margin-bottom:10px}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-outline{width:100%;border:2px solid var(--accent);border-radius:14px;padding:13px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);margin-bottom:10px}
+.btn-outline:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:32px 22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+.result-card img{width:100%;border-radius:14px;display:block;margin-bottom:14px;background:#f3f4f6}
+.result-actions{display:flex;gap:10px}
+.result-actions a,.result-actions button{flex:1;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none}
+.btn-dl{background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff}
+.btn-regen{background:var(--soft);color:var(--accent);border:2px solid var(--accent)}
+.warn-box{background:#fffbeb;border:1.5px solid #fbbf24;border-radius:13px;padding:12px 14px;font-size:13px;color:#92400e;line-height:1.6;margin-bottom:14px}
+.warn-box .icon{font-size:15px;margin-right:4px}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;color:#dc2626;font-size:15px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.synthid-note{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1;min-width:90px;border:2px solid var(--soft);border-radius:12px;padding:9px 8px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--ink);text-align:center;font-family:inherit;line-height:1.3;transition:all .15s}
+.chip small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.chip.active{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.chip.active small{color:var(--accent)}
+.upload-zone{border:2px dashed var(--soft);border-radius:13px;padding:16px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px;background:#fafaff}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-preview{position:relative;display:inline-block;margin-top:4px}
+.upload-preview img{max-width:100%;max-height:140px;border-radius:11px;display:block}
+.upload-preview .rm{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:15px;cursor:pointer;line-height:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ออกแบบโลโก้เบื้องต้น ✏️</h1>
+    <p>ใส่ข้อมูลแบรนด์ → AI ร่างโลโก้ให้ทันที</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ชื่อแบรนด์ / ร้าน</label>
+      <input id="brand" type="text" placeholder="เช่น ร้านน้องหมี, Luna Cafe">
+    </div>
+    <div class="field">
+      <label>ประเภทธุรกิจ</label>
+      <input id="biz" type="text" placeholder="เช่น ร้านกาแฟ, คลินิกความงาม, ขายเสื้อผ้า">
+    </div>
+    <div class="field">
+      <label>สไตล์โลโก้</label>
+      <select id="style">
+        <option value="มินิมอล">มินิมอล — เรียบ เก๋ ทันสมัย</option>
+        <option value="วินเทจ">วินเทจ — คลาสสิก มีเสน่ห์</option>
+        <option value="โมเดิร์น">โมเดิร์น — สดใส กล้าหาญ</option>
+        <option value="น่ารัก">น่ารัก — ตัวการ์ตูน สนุกสนาน</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>สีหลักที่ต้องการ</label>
+      <div class="color-row">
+        <input type="color" id="colorPicker" value="#6366f1" oninput="syncColor(this)">
+        <input type="text" id="colorText" value="#6366f1" placeholder="#6366f1" oninput="syncColorText(this)">
+      </div>
+    </div>
+    <div class="field">
+      <label>อัตราส่วนภาพ (เลือกให้ตรงกับที่จะใช้)</label>
+      <div class="chips" id="ratioChips">
+        <div class="chip active" data-ratio="1:1" onclick="pickRatio(this)">1:1<small>Shopee/Lazada/โปรไฟล์</small></div>
+        <div class="chip" data-ratio="4:5" onclick="pickRatio(this)">4:5<small>โพสต์ IG/Feed</small></div>
+        <div class="chip" data-ratio="9:16" onclick="pickRatio(this)">9:16<small>Story/Reels</small></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>รูปอ้างอิง (ถ้ามี) — โลโก้เดิม/ภาพแบรนด์ ให้ AI ต่อยอด</label>
+      <input type="file" id="refFile" accept="image/*" style="display:none" onchange="onRefPick(this)">
+      <div id="refZone" class="upload-zone" onclick="document.getElementById('refFile').click()">📎 แตะเพื่อเลือกรูปอ้างอิง (ไม่บังคับ)</div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <span class="icon">⚠️</span><strong>หมายเหตุ:</strong> ตัวอักษรในโลโก้ที่ AI สร้างอาจไม่เป๊ะ โดยเฉพาะภาษาไทย ให้ใช้เป็น <strong>แนวคิดและดีไซน์เริ่มต้น</strong> แล้วนำไปแก้ไขกับนักออกแบบหรือโปรแกรม Canva ต่อได้เลย
+  </div>
+
+  <button class="btn" id="goBtn" onclick="generate()">🎨 ออกแบบโลโก้เลย</button>
+
+  <div id="output"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+function syncColor(el){
+  document.getElementById('colorText').value = el.value;
+}
+function syncColorText(el){
+  const v = el.value.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(v)){
+    document.getElementById('colorPicker').value = v;
+  }
+}
+
+let selectedRatio = '1:1';
+function pickRatio(el){
+  selectedRatio = el.dataset.ratio;
+  document.querySelectorAll('#ratioChips .chip').forEach(c=>c.classList.toggle('active', c===el));
+}
+
+// แผนที่อัตราส่วน -> ข้อความ framing สำหรับ prompt
+const RATIO_HINT = {
+  '1:1':  'square 1:1 aspect ratio, centered composition (ideal for Shopee/Lazada thumbnails and profile pictures)',
+  '4:5':  'vertical 4:5 aspect ratio portrait framing (ideal for Instagram/Facebook feed posts)',
+  '9:16': 'tall vertical 9:16 aspect ratio framing with the logo centered and clear margins (ideal for Story/Reels)'
+};
+
+let refFile = null;
+function onRefPick(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  refFile = f;
+  const url = URL.createObjectURL(f);
+  const zone = document.getElementById('refZone');
+  zone.classList.remove('upload-zone');
+  zone.innerHTML = `<div class="upload-preview"><img src="${url}" alt="รูปอ้างอิง"><button type="button" class="rm" onclick="clearRef(event)">✕</button></div>`;
+  zone.onclick = null;
+}
+function clearRef(ev){
+  if(ev) ev.stopPropagation();
+  refFile = null;
+  document.getElementById('refFile').value = '';
+  const zone = document.getElementById('refZone');
+  zone.className = 'upload-zone';
+  zone.innerHTML = '📎 แตะเพื่อเลือกรูปอ้างอิง (ไม่บังคับ)';
+  zone.onclick = ()=>document.getElementById('refFile').click();
+}
+
+function buildPrompt(){
+  const brand = document.getElementById('brand').value.trim();
+  const biz   = document.getElementById('biz').value.trim();
+  const style = document.getElementById('style').value;
+  const color = document.getElementById('colorText').value.trim() || document.getElementById('colorPicker').value;
+  const ratioHint = RATIO_HINT[selectedRatio] || RATIO_HINT['1:1'];
+
+  let p = `Design a professional logo for a business called "${brand}" which is a ${biz}.
+Style: ${style} logo design.
+Primary color: ${color}.
+Framing: ${ratioHint}.
+The logo should be clean, high quality, photorealistic rendering, sharp focus, e-commerce ready, on a clean white background.
+Include the brand name "${brand}" as text in the logo if possible, with readable, well-formed lettering.
+Make it suitable for use as a business logo — balanced composition, centered, with icon/symbol element above or beside the text.
+No extra text, captions, watermark, or elements outside the logo boundary.`;
+  if(refFile){
+    p += `\nUse the attached reference image as inspiration for the brand's look. Keep any existing label/branding readable and unchanged, do not distort or recolor the product.`;
+  }
+  return p;
+}
+
+let lastDataURL = null;
+let lastBrand = '';
+
+// ตรวจว่าเป็น data:image จริง ไม่ใช่ null/ค่าว่าง
+function isValidImage(d){
+  return typeof d === 'string' && d.indexOf('data:image') === 0;
+}
+
+async function generate(){
+  const brand = document.getElementById('brand').value.trim();
+  const biz   = document.getElementById('biz').value.trim();
+  if(!brand){ GeminiKit.toast('ใส่ชื่อแบรนด์ก่อนนะ'); return; }
+  if(!biz)  { GeminiKit.toast('บอกประเภทธุรกิจด้วยนะ'); return; }
+
+  lastBrand = brand;
+  const out = document.getElementById('output');
+  const btn = document.getElementById('goBtn');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังร่างโลโก้... รอสักครู่นะ 🎨</div>';
+
+  try{
+    const prompt = buildPrompt();
+    const inputs = refFile ? [refFile] : [];
+    const dataURL = await GeminiKit.generateImage(prompt, inputs);
+    if(!isValidImage(dataURL)) throw new Error('AI ไม่ได้ส่งรูปกลับมา (อาจติดเงื่อนไขเนื้อหา) ลองปรับชื่อ/สไตล์ แล้วกดสร้างใหม่อีกครั้ง');
+    lastDataURL = dataURL;
+    showResult(dataURL, brand);
+  } catch(e){
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally{
+    btn.disabled = false;
+  }
+}
+
+function showResult(dataURL, brand){
+  const out = document.getElementById('output');
+  const safeName = brand.replace(/[^a-zA-Z0-9ก-๙]/g,'_') || 'logo';
+  out.innerHTML = `
+    <div class="result-card">
+      <img src="${dataURL}" alt="โลโก้ ${esc(brand)}">
+      <div class="result-actions">
+        <a class="result-actions btn-dl" id="dlBtn" download="${safeName}_logo.png" href="${dataURL}">⬇️ ดาวน์โหลด</a>
+        <button class="result-actions btn-regen" onclick="regenerate()">🔄 สร้างใหม่อีกครั้ง</button>
+      </div>
+      <p class="synthid-note">🔍 รูปมี watermark SynthID (ไม่กระทบการใช้งาน)</p>
+    </div>
+    <div class="warn-box" style="margin-top:0">
+      <span class="icon">💡</span><strong>เคล็ดลับ:</strong> ถ้าตัวอักษรในโลโก้ผิดเพี้ยน แนะนำให้ใช้รูปเป็นแนวคิดดีไซน์ แล้วใส่ชื่อร้านด้วยฟอนต์จริงใน Canva หรือโปรแกรมตัดต่อ
+    </div>`;
+}
+
+async function regenerate(){
+  const brand = document.getElementById('brand').value.trim();
+  const biz   = document.getElementById('biz').value.trim();
+  if(!brand || !biz){ GeminiKit.toast('กรอกข้อมูลก่อนนะ'); return; }
+
+  const out = document.getElementById('output');
+  const regenBtn = document.querySelector('.btn-regen');
+  if(regenBtn) regenBtn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังสร้างแบบใหม่... 🎨</div>';
+
+  try{
+    const prompt = buildPrompt();
+    const inputs = refFile ? [refFile] : [];
+    const dataURL = await GeminiKit.generateImage(prompt, inputs);
+    if(!isValidImage(dataURL)) throw new Error('AI ไม่ได้ส่งรูปกลับมา (อาจติดเงื่อนไขเนื้อหา) ลองปรับชื่อ/สไตล์ แล้วกดสร้างใหม่อีกครั้ง');
+    lastDataURL = dataURL;
+    showResult(dataURL, brand);
+  } catch(e){
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  }
+}
+</script>
+</body></html>

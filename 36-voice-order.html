@@ -1,0 +1,333 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ถอดเสียงคุยลูกค้า → ออเดอร์ 📞</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0b486b;--bg2:#f56217;--accent:#ea580c;--soft:#fff3ed;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.drop{border:2px dashed var(--accent);border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;transition:background .2s;background:var(--soft)}
+.drop:hover{background:#ffe8d6}
+.drop-icon{font-size:36px;margin-bottom:8px}
+.drop-label{font-size:15px;font-weight:600;color:var(--accent)}
+.drop-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.preview-audio{width:100%;margin-top:12px;border-radius:10px;outline:none}
+.preview-name{font-size:13px;color:var(--muted);margin-top:8px;text-align:center;word-break:break-all}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stage-text{font-size:13px;opacity:.85;margin-top:6px}
+.result-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.result-card h3{font-size:15px;font-weight:700;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.summary-text{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap}
+.orders-table{width:100%;border-collapse:collapse;font-size:14px}
+.orders-table th{background:var(--soft);color:var(--accent);font-weight:700;padding:8px 10px;text-align:left;font-size:13px}
+.orders-table td{padding:8px 10px;border-bottom:1px solid #f3f4f6;vertical-align:top}
+.orders-table tr:last-child td{border-bottom:none}
+.orders-table .qty{font-weight:700;color:var(--accent);text-align:center}
+.customer-grid{display:grid;gap:8px}
+.customer-row{display:flex;gap:8px;align-items:flex-start}
+.customer-key{font-size:12px;color:var(--muted);font-weight:600;min-width:60px;padding-top:1px}
+.customer-val{font-size:14px;color:var(--ink);flex:1;line-height:1.5}
+.copy-btn{border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px}
+.copy-btn:hover{background:#ffe8d6}
+.copy-btn-full{display:block;width:100%;margin-top:10px;border:none;background:var(--soft);color:var(--accent);border-radius:12px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.copy-btn-full:hover{background:#ffe8d6}
+.act-row{display:flex;gap:8px;margin-top:10px}
+.act-btn{flex:1;border:none;background:var(--soft);color:var(--accent);border-radius:10px;padding:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.act-btn:hover{background:#ffe8d6}
+.act-row-full{display:flex;gap:8px;margin-top:10px}
+.act-row-full .btn-grad{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;background:linear-gradient(135deg,var(--bg1),var(--accent))}
+.act-row-full .btn-soft{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--soft);color:var(--accent)}
+.act-row-full .btn-soft:hover{background:#ffe8d6}
+.error-card{background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px 16px;color:#dc2626;font-size:14px;line-height:1.6}
+.warn{font-size:12px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ถอดเสียงคุยลูกค้า 📞</h1>
+    <p>อัปไฟล์เสียง → AI สรุปออเดอร์ให้ทันที</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ไฟล์เสียงหรือวอยซ์ลูกค้า</label>
+      <div class="drop" id="drop" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">🎙️</div>
+        <div class="drop-label">แตะเพื่อเลือกไฟล์เสียง</div>
+        <div class="drop-sub">รองรับ MP3, M4A, WAV, OGG, MP4 ฯลฯ</div>
+        <input type="file" id="fileInput" accept="audio/*,video/*" hidden onchange="onFileChange(this)">
+      </div>
+      <div id="previewBox"></div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()" disabled>🔍 ถอดเสียงและสรุปออเดอร์</button>
+  <p class="warn">คลิปยิ่งสั้นยิ่งเร็ว — แนะนำไม่เกิน 5 นาที</p>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+
+function onFileChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const MB = file.size / (1024 * 1024);
+  if (MB > 80) {
+    GeminiKit.toast('⚠️ ไฟล์ใหญ่ ' + MB.toFixed(0) + 'MB อาจอัปช้า/ไม่ผ่าน แนะนำตัดให้สั้นลงหรือบีบไฟล์ก่อน');
+  } else if (MB > 40) {
+    GeminiKit.toast('ไฟล์ ' + MB.toFixed(0) + 'MB อาจใช้เวลาประมวลผลสักครู่');
+  }
+  selectedFile = file;
+  const box = document.getElementById('previewBox');
+  const isVideo = file.type.startsWith('video/');
+  const url = URL.createObjectURL(file);
+  box.innerHTML = (isVideo
+    ? '<video class="preview-audio" controls src="' + esc(url) + '"></video>'
+    : '<audio class="preview-audio" controls src="' + esc(url) + '"></audio>')
+    + '<div class="preview-name">📄 ' + esc(file.name) + '</div>';
+  document.getElementById('go').disabled = false;
+}
+
+async function run() {
+  if (!selectedFile) { GeminiKit.toast('เลือกไฟล์เสียงก่อนนะ'); return; }
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div><div id="stageMsg">กำลังอัปโหลดไฟล์...</div></div>';
+
+  const prompt = `คุณคือ "แอดมินร้านค้าออนไลน์มืออาชีพ" ที่จดออเดอร์จากการคุยกับลูกค้ามากว่า 10 ปี แม่นยำเรื่องรายการ/จำนวน/ที่อยู่จัดส่งมาก
+ฟังเสียงสนทนากับลูกค้านี้ แล้วถอดเป็นออเดอร์ที่พร้อมแพ็คส่งได้ทันที ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก JSON
+
+หลักการสำคัญ:
+- จำนวน (qty): ฟังให้ชัด แยกระหว่าง "สอง/2", "โหล=12", "แพ็ค", "คู่=2" ให้ถูก ถ้าไม่ได้ระบุชัดให้ใช้ 1 และใส่ใน note ว่า "ไม่ได้ระบุจำนวนชัดเจน"
+- สินค้า (item): ใช้ชื่อที่ลูกค้าพูดจริง ถ้ามีสี/ขนาด/รส/รุ่น ให้ใส่ใน note
+- เบอร์โทร (phone): normalize เป็นเลขล้วน 10 หลักรูปแบบ 0xxxxxxxxx (ตัดเว้นวรรค/ขีดออก) ถ้าได้ยินไม่ครบให้ใส่เท่าที่ได้ยินและหมายเหตุไว้
+- ที่อยู่ (address): เรียบเรียงให้เป็นที่อยู่จัดส่งที่อ่านรู้เรื่อง (บ้านเลขที่ ซอย ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์) เท่าที่มีในเสียง
+- ชื่อ (name): ชื่อผู้รับ/ลูกค้า
+- payment: วิธีชำระเงินถ้าพูดถึง (โอน/ปลายทาง/บัตร) ไม่งั้น ''
+- total: ยอดรวมเป็นตัวเลขถ้าพูดถึง ไม่งั้น 0
+- followups: รายการสิ่งที่แอดมินควรทำต่อ/ต้องถามเพิ่ม (เช่น ขอเลขที่อยู่ให้ครบ, ยืนยันสี) เป็น array ของข้อความสั้นๆ
+
+โครงสร้าง:
+{
+  "summary": "สรุปบทสนทนาสั้นๆ ภาษาไทย เน้นสิ่งที่ลูกค้าต้องการและข้อตกลง",
+  "orders": [
+    {"item": "ชื่อสินค้า", "qty": จำนวน (number), "note": "สี/ขนาด/รส/หมายเหตุ หรือ ''"}
+  ],
+  "customer": {
+    "name": "ชื่อผู้รับ หรือ ''",
+    "phone": "เบอร์โทร 0xxxxxxxxx หรือ ''",
+    "address": "ที่อยู่จัดส่งเรียบเรียงแล้ว หรือ ''",
+    "payment": "วิธีชำระเงิน หรือ ''",
+    "total": ยอดรวม (number, ไม่มีให้ใส่ 0)
+  },
+  "followups": ["สิ่งที่ต้องทำต่อ/ต้องถามเพิ่ม"]
+}
+ถ้าข้อมูลใดไม่มีในเสียง ให้ใส่ค่าว่างหรือ 0 ตามประเภท ห้ามเดาที่อยู่หรือเบอร์ที่ไม่ได้ยิน ตอบ JSON เท่านั้น`;
+
+  try {
+    const data = await GeminiKit.media(prompt, selectedFile, (stage, txt) => {
+      const el = document.getElementById('stageMsg');
+      if (el) {
+        const msgs = {
+          upload: 'กำลังอัปโหลดไฟล์เสียง...',
+          process: 'AI กำลังฟังและวิเคราะห์...',
+          analyze: 'เกือบเสร็จแล้ว...'
+        };
+        el.textContent = msgs[stage] || txt || 'กำลังประมวลผล...';
+      }
+    });
+
+    // GeminiKit.media returns string; parse JSON manually
+    let result;
+    try {
+      const cleaned = data.replace(/```json/gi, '').replace(/```/g, '').trim();
+      result = JSON.parse(cleaned);
+    } catch (pe) {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    if (!result || typeof result !== 'object') {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    renderResult(result);
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderResult(r) {
+  const out = document.getElementById('output');
+  const orders = Array.isArray(r.orders) ? r.orders : [];
+  const customer = r.customer || {};
+
+  // Build orders table rows
+  let orderRows = '';
+  if (orders.length === 0) {
+    orderRows = '<tr><td colspan="3" style="text-align:center;color:var(--muted)">ไม่พบรายการสินค้า</td></tr>';
+  } else {
+    orders.forEach((o, i) => {
+      orderRows += '<tr>'
+        + '<td>' + esc(o.item || '-') + '</td>'
+        + '<td class="qty">' + esc(String(o.qty ?? '-')) + '</td>'
+        + '<td style="color:var(--muted);font-size:13px">' + esc(o.note || '-') + '</td>'
+        + '</tr>';
+    });
+  }
+
+  const followups = Array.isArray(r.followups) ? r.followups.filter(Boolean) : [];
+
+  // Build per-section texts
+  const summaryText = (r.summary || 'ไม่มีข้อมูล');
+  const ordersText = buildOrdersText(orders);
+  const customerText = buildCustomerText(customer);
+  const fullText = buildCopyText(r, orders, customer, followups);
+
+  // stash texts for handlers
+  window._vo = { summary: summaryText, orders: ordersText, customer: customerText, full: fullText };
+
+  let customerExtra = '';
+  if (customer.payment) customerExtra += customerRow('ชำระเงิน', customer.payment);
+  if (customer.total) customerExtra += customerRow('ยอดรวม', Number(customer.total).toLocaleString('th-TH') + ' บาท');
+
+  let followupsCard = '';
+  if (followups.length) {
+    let items = followups.map(f => '<li style="margin-bottom:4px">' + esc(f) + '</li>').join('');
+    followupsCard =
+      '<div class="result-card">'
+      + '<h3>✅ สิ่งที่ต้องทำต่อ</h3>'
+      + '<ul style="font-size:14px;line-height:1.6;padding-left:20px;color:var(--ink)">' + items + '</ul>'
+      + '</div>';
+  }
+
+  out.innerHTML =
+    // Summary
+    '<div class="result-card">'
+    + '<h3>📝 สรุปบทสนทนา</h3>'
+    + '<div class="summary-text">' + esc(summaryText) + '</div>'
+    + sectionActions('summary', 'สรุปบทสนทนา')
+    + '</div>'
+
+    // Orders table
+    + '<div class="result-card">'
+    + '<h3>🛒 รายการสั่งซื้อ</h3>'
+    + '<table class="orders-table"><thead><tr><th>สินค้า</th><th style="text-align:center">จำนวน</th><th>หมายเหตุ</th></tr></thead>'
+    + '<tbody>' + orderRows + '</tbody></table>'
+    + sectionActions('orders', 'รายการสั่งซื้อ')
+    + '</div>'
+
+    // Customer info
+    + '<div class="result-card">'
+    + '<h3>👤 ข้อมูลลูกค้า</h3>'
+    + '<div class="customer-grid">'
+    + customerRow('ชื่อ', customer.name)
+    + customerRow('เบอร์', customer.phone)
+    + customerRow('ที่อยู่', customer.address)
+    + customerExtra
+    + '</div>'
+    + sectionActions('customer', 'ข้อมูลลูกค้า')
+    + '</div>'
+
+    // Follow-ups
+    + followupsCard
+
+    // Copy / download all
+    + '<div class="act-row-full">'
+    + '<button class="btn-soft" onclick="copyAll()">📋 คัดลอกทั้งหมด</button>'
+    + '<button class="btn-grad" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>'
+    + '</div>';
+}
+
+function sectionActions(key, label) {
+  return '<div class="act-row">'
+    + '<button class="act-btn" onclick="copySection(\'' + key + '\')">📋 คัดลอก</button>'
+    + '<button class="act-btn" onclick="downloadSection(\'' + key + '\',\'' + esc(label) + '\')">⬇️ .txt</button>'
+    + '</div>';
+}
+
+function copySection(key) {
+  const t = (window._vo && window._vo[key]) || '';
+  GeminiKit.copy(t);
+}
+
+function downloadSection(key, label) {
+  const t = (window._vo && window._vo[key]) || '';
+  GeminiKit.download('ออเดอร์-' + label + '.txt', t, 'text/plain');
+}
+
+function downloadAll() {
+  const t = (window._vo && window._vo.full) || '';
+  GeminiKit.download('ออเดอร์ลูกค้า.txt', t, 'text/plain');
+}
+
+function buildOrdersText(orders) {
+  if (!orders.length) return 'ไม่พบรายการสินค้า';
+  return orders.map((o, i) =>
+    (i + 1) + '. ' + (o.item || '-') + ' x' + (o.qty ?? '-') + (o.note ? ' (' + o.note + ')' : '')
+  ).join('\n');
+}
+
+function buildCustomerText(customer) {
+  let lines = [];
+  lines.push('ชื่อ: ' + (customer.name || 'ไม่ระบุ'));
+  lines.push('เบอร์: ' + (customer.phone || 'ไม่ระบุ'));
+  lines.push('ที่อยู่: ' + (customer.address || 'ไม่ระบุ'));
+  if (customer.payment) lines.push('ชำระเงิน: ' + customer.payment);
+  if (customer.total) lines.push('ยอดรวม: ' + Number(customer.total).toLocaleString('th-TH') + ' บาท');
+  return lines.join('\n');
+}
+
+function customerRow(key, val) {
+  return '<div class="customer-row">'
+    + '<span class="customer-key">' + esc(key) + '</span>'
+    + '<span class="customer-val">' + esc(val || 'ไม่ระบุ') + '</span>'
+    + '</div>';
+}
+
+function buildCopyText(r, orders, customer, followups) {
+  let lines = [];
+  lines.push('=== สรุปบทสนทนา ===');
+  lines.push(r.summary || 'ไม่มีข้อมูล');
+  lines.push('');
+  lines.push('=== รายการสั่งซื้อ ===');
+  lines.push(buildOrdersText(orders));
+  lines.push('');
+  lines.push('=== ข้อมูลลูกค้า ===');
+  lines.push(buildCustomerText(customer));
+  if (followups && followups.length) {
+    lines.push('');
+    lines.push('=== สิ่งที่ต้องทำต่อ ===');
+    followups.forEach((f, i) => lines.push('- ' + f));
+  }
+  return lines.join('\n');
+}
+
+function copyAll() {
+  GeminiKit.copy((window._vo && window._vo.full) || '');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

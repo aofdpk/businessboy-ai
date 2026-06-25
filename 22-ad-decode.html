@@ -1,0 +1,382 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ถอดสูตรความปังโฆษณา 🔥</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#cb356b;--bg2:#bd3f32;--accent:#dc2626;--soft:#fff1f2;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+input[type=text],select{width:100%;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 13px;font-size:15px;font-family:inherit;color:var(--ink);background:#fff;outline:none;transition:border-color .2s}
+input[type=text]:focus,select:focus{border-color:var(--accent)}
+.drop{border:2px dashed var(--accent);border-radius:16px;padding:28px 18px;text-align:center;cursor:pointer;background:var(--soft);transition:background .2s}
+.drop:hover{background:#ffe4e6}
+.drop .icon{font-size:36px;margin-bottom:8px}
+.drop .hint{font-size:14px;color:var(--muted)}
+.drop .hint strong{color:var(--accent)}
+#preview-wrap{margin-top:14px;display:none;position:relative}
+#preview-wrap img{width:100%;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.15);display:block;cursor:pointer}
+.change-img{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);color:#fff;border:none;border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;backdrop-filter:blur(2px)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25);transition:opacity .2s}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.result-card .section-title{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.result-card .section-body{font-size:15px;line-height:1.75;color:var(--ink);white-space:pre-wrap}
+.result-card.full{padding-bottom:12px}
+.result-card.highlight{border:2px solid var(--accent);background:linear-gradient(180deg,#fff,#fff5f6)}
+.list-item{display:flex;gap:10px;margin-bottom:8px;font-size:14px;line-height:1.6;color:var(--ink)}
+.list-item:last-child{margin-bottom:0}
+.list-bullet{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);margin-top:2px}
+.rewrite-box{background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.rewrite-box:last-of-type{margin-bottom:0}
+.rewrite-box .rw-label{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:5px;letter-spacing:.4px}
+.copy-row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.copy-btn{border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.action-row{display:flex;gap:10px;margin:4px 0 14px}
+.action-row button{flex:1;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.error-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.6}
+.empty-state{background:rgba(255,255,255,.14);border:1px dashed rgba(255,255,255,.5);border-radius:16px;padding:18px;color:#fff;font-size:13.5px;line-height:1.8}
+.empty-state b{font-weight:600}
+.empty-state .es-title{font-size:15px;font-weight:600;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ถอดสูตรความปังโฆษณา 🔥</h1>
+    <p>อัปรูปโฆษณาคู่แข่ง → AI ถอดสูตร + เขียนโฆษณาเวอร์ชันร้านเราให้ลอกไปใช้ได้เลย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>1. อัปรูปโฆษณาที่ต้องการวิเคราะห์</label>
+      <div class="drop" id="drop" onclick="document.getElementById('file-input').click()">
+        <div class="icon">📸</div>
+        <div class="hint">แตะเพื่อเลือกรูป<br><strong>รองรับ JPG, PNG, WEBP</strong></div>
+      </div>
+      <input type="file" id="file-input" accept="image/*" hidden onchange="handleFile(this.files[0])">
+      <div id="preview-wrap">
+        <img id="preview" alt="ตัวอย่างโฆษณา" onclick="document.getElementById('file-input').click()">
+        <button class="change-img" onclick="document.getElementById('file-input').click()">เปลี่ยนรูป</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>2. สินค้า / ร้านของฉันคือ (ยิ่งละเอียด AI ยิ่งช่วยได้ตรง)</label>
+      <input type="text" id="myProduct" placeholder="เช่น ครีมบำรุงหน้าสำหรับคนเป็นสิว, คอร์สสอนทำขนมออนไลน์">
+    </div>
+
+    <div class="field">
+      <label>3. ขายหลักบนแพลตฟอร์มไหน</label>
+      <select id="platform">
+        <option value="Facebook">Facebook</option>
+        <option value="Instagram">Instagram</option>
+        <option value="TikTok">TikTok</option>
+        <option value="Shopee/Lazada">Shopee / Lazada</option>
+        <option value="LINE / LINE OA">LINE / LINE OA</option>
+        <option value="หลายช่องทาง">หลายช่องทาง</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🔍 ถอดสูตรความปัง</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+let lastResult = null;
+
+function handleFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('preview').src = e.target.result;
+    document.getElementById('preview-wrap').style.display = 'block';
+    document.getElementById('drop').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function esc(s) {
+  return asText(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+// แปลงค่าใดๆ ให้เป็น string อย่างปลอดภัย (กัน AI คืน object → [object Object])
+function asText(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) return v.map(asText).join(' ');
+  if (typeof v === 'object') {
+    // ดึง field ที่เป็นข้อความออกมา แทนการโชว์ [object Object]
+    const vals = Object.values(v).filter(x => typeof x === 'string');
+    if (vals.length) return vals.join(' — ');
+    try { return JSON.stringify(v); } catch(e){ return ''; }
+  }
+  return String(v);
+}
+
+// คัดลอกแบบทนทาน — ใช้ GeminiKit.copy (clipboard + fallback + toast ในตัว)
+function copyText(text, btn) {
+  text = asText(text);
+  if (btn) {
+    const prev = btn.dataset.label || btn.textContent;
+    btn.dataset.label = prev;
+    btn.textContent = '✓ คัดลอกแล้ว';
+    setTimeout(() => { btn.textContent = prev; }, 1400);
+  }
+  GeminiKit.copy(text);
+}
+
+// คัดลอกจาก element โดยอ่าน innerText (ปลอดภัยจาก ", \, ` ทั้งหมด)
+function copyFromEl(id, btn) {
+  const el = document.getElementById(id);
+  copyText(el ? el.innerText : '', btn);
+}
+
+function emptyState() {
+  return `<div class="empty-state">
+    <div class="es-title">📋 อัปรูปโฆษณาแล้วกดถอดสูตร AI จะคืนให้:</div>
+    🎣 <b>Hook</b> จุดที่ทำให้คนหยุดดู · 🖼️ <b>องค์ประกอบภาพ</b> · ✍️ <b>Copywriting</b> ·
+    🎨 <b>การใช้สี</b> · 💡 <b>ทำไมถึงปัง</b> · 🚀 <b>เอาไปใช้กับร้านเรา</b> ·
+    🔥 <b>แคปชั่นเวอร์ชันร้านเรา</b> ที่ลอกสูตรมาให้ก๊อปลงโฆษณาได้ทันที
+  </div>`;
+}
+
+function renderResults(data) {
+  let html = '';
+
+  // flag: ถ้า AI อ่านรูปไม่ออก/ไม่ชัด ให้เตือนก่อน ไม่หลอกว่าวิเคราะห์ได้ครบ
+  const conf = asText(data.confidence).toLowerCase();
+  const lowConf = conf === 'low' || conf === 'ต่ำ' || data.readable === false;
+  if (lowConf) {
+    html += `<div class="error-card" style="color:#b45309;background:#fffbeb">
+      ⚠️ <b>AI อ่านรูปนี้ได้ไม่ชัด</b> — ผลด้านล่างอาจคลาดเคลื่อน
+      ${data.unreadableReason ? '<br><span style="font-size:13px">'+esc(data.unreadableReason)+'</span>' : ''}
+      <br><span style="font-size:13px">ลองอัปรูปที่คมชัด/ตัวอักษรอ่านออก แล้วถอดสูตรอีกครั้งนะ</span>
+    </div>`;
+  }
+
+  // ปุ่มรวม: คัดลอกทั้งหมด + ดาวน์โหลด (txt / csv)
+  html += `<div class="action-row">
+    <button onclick="copyAll(this)">📋 คัดลอกทั้งหมด</button>
+    <button onclick="downloadAll()">⬇️ .txt</button>
+    <button onclick="downloadCsv()">📊 .csv</button>
+  </div>`;
+
+  const single = (icon, title, key, value) => {
+    html += `<div class="result-card">
+      <div class="section-title">${icon} ${title}</div>
+      <div class="section-body" id="txt-${key}">${esc(value)}</div>
+      <div class="copy-row"><button class="copy-btn" onclick="copyFromEl('txt-${key}', this)">คัดลอก</button></div>
+    </div>`;
+  };
+
+  single('🎣', 'Hook / จุดดึงดูด', 'hook', data.hook);
+  single('🖼️', 'องค์ประกอบภาพ', 'visual', data.visual);
+  single('✍️', 'Copywriting / ข้อความโฆษณา', 'copy', data.copywriting);
+  single('🎨', 'การใช้สี', 'colors', data.colors);
+
+  // Why (array) — อ่านจาก DOM ผ่าน id, ไม่ฝังข้อความลง onclick
+  if (Array.isArray(data.why) && data.why.length) {
+    html += `<div class="result-card full">
+      <div class="section-title">💡 ทำไมถึงสะดุดตา</div>
+      <div id="txt-why">`;
+    data.why.forEach((item, i) => {
+      html += `<div class="list-item"><div class="list-bullet">${i+1}</div><div>${esc(item)}</div></div>`;
+    });
+    html += `</div>
+      <div class="copy-row"><button class="copy-btn" onclick="copyFromEl('txt-why', this)">คัดลอก</button></div>
+    </div>`;
+  }
+
+  // Apply to you (array)
+  if (Array.isArray(data.applyToYou) && data.applyToYou.length) {
+    html += `<div class="result-card full">
+      <div class="section-title">🚀 เอาไปใช้กับร้านเรายังไง</div>
+      <div id="txt-apply">`;
+    data.applyToYou.forEach((item, i) => {
+      html += `<div class="list-item"><div class="list-bullet">${i+1}</div><div>${esc(item)}</div></div>`;
+    });
+    html += `</div>
+      <div class="copy-row"><button class="copy-btn" onclick="copyFromEl('txt-apply', this)">คัดลอก</button></div>
+    </div>`;
+  }
+
+  // Ad rewrite (array) — แคปชั่นเวอร์ชันร้านเรา เอาไปลงได้เลย
+  if (Array.isArray(data.adRewrite) && data.adRewrite.length) {
+    html += `<div class="result-card full highlight">
+      <div class="section-title">🔥 แคปชั่นเวอร์ชันร้านเรา (ลอกสูตรมาให้แล้ว)</div>
+      <div id="txt-rewrite">`;
+    data.adRewrite.forEach((item, i) => {
+      html += `<div class="rewrite-box"><div class="rw-label">แบบที่ ${i+1}</div>${esc(item)}</div>`;
+    });
+    html += `</div>
+      <div class="copy-row"><button class="copy-btn" onclick="copyFromEl('txt-rewrite', this)">คัดลอกแคปชั่น</button></div>
+    </div>`;
+  }
+
+  // ราคาที่เห็นในรูป (แยกออกมาเป็นฟิลด์ actionable)
+  if (asText(data.price).trim()) {
+    single('💰', 'ราคาที่เห็นในรูป', 'price', data.price);
+  }
+
+  // ข้อความดิบที่ AI อ่านได้จากรูป (rawText) + ปุ่มดาวน์โหลดเฉพาะส่วนนี้
+  if (asText(data.rawText).trim()) {
+    html += `<div class="result-card full">
+      <div class="section-title">📝 ข้อความที่อ่านได้จากรูป (raw)</div>
+      <div class="section-body" id="txt-raw">${esc(data.rawText)}</div>
+      <div class="copy-row">
+        <button class="copy-btn" onclick="downloadRaw()">⬇️ .txt</button>
+        <button class="copy-btn" onclick="copyFromEl('txt-raw', this)">คัดลอก</button>
+      </div>
+    </div>`;
+  }
+
+  return html;
+}
+
+// รวมผลทั้งหมดเป็นข้อความเดียว (ใช้ทั้ง copy + download)
+function buildPlainText(data) {
+  if (!data) return '';
+  const lines = [];
+  const L = (icon, title, val) => { lines.push(`【 ${icon} ${title} 】`, asText(val).trim(), ''); };
+  const arr = (icon, title, list, prefix) => {
+    lines.push(`【 ${icon} ${title} 】`);
+    list.forEach((it, i) => lines.push(`${prefix ? prefix : (i+1)+'.'} ${asText(it).trim()}`));
+    lines.push('');
+  };
+  if (data.hook) L('🎣','Hook / จุดดึงดูด', data.hook);
+  if (data.visual) L('🖼️','องค์ประกอบภาพ', data.visual);
+  if (data.copywriting) L('✍️','Copywriting', data.copywriting);
+  if (data.colors) L('🎨','การใช้สี', data.colors);
+  if (Array.isArray(data.why) && data.why.length) arr('💡','ทำไมถึงสะดุดตา', data.why);
+  if (Array.isArray(data.applyToYou) && data.applyToYou.length) arr('🚀','เอาไปใช้กับร้านเรา', data.applyToYou);
+  if (Array.isArray(data.adRewrite) && data.adRewrite.length) {
+    lines.push('【 🔥 แคปชั่นเวอร์ชันร้านเรา 】');
+    data.adRewrite.forEach((it, i) => lines.push(`--- แบบที่ ${i+1} ---`, asText(it).trim(), ''));
+  }
+  if (asText(data.price).trim()) L('💰','ราคาที่เห็นในรูป', data.price);
+  if (asText(data.rawText).trim()) L('📝','ข้อความที่อ่านได้จากรูป', data.rawText);
+  return lines.join('\n').trim();
+}
+
+function copyAll(btn) {
+  copyText(buildPlainText(lastResult), btn);
+}
+
+function downloadAll() {
+  const text = buildPlainText(lastResult);
+  if (!text) { GeminiKit.toast('ยังไม่มีผลลัพธ์ให้ดาวน์โหลด'); return; }
+  GeminiKit.download('ถอดสูตรโฆษณา.txt', text, 'text/plain');
+}
+
+// escape ค่าเดี่ยวสำหรับ CSV (หุ้ม " และ escape " ภายใน)
+function csvCell(v) {
+  const s = asText(v).replace(/\r?\n/g, ' ').trim();
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+// ดาวน์โหลดผลแบบ CSV: 1 หัวข้อ = 1 แถว (เปิดใน Excel/Sheets ได้)
+function downloadCsv() {
+  const d = lastResult;
+  if (!d) { GeminiKit.toast('ยังไม่มีผลลัพธ์ให้ดาวน์โหลด'); return; }
+  const rows = [['หัวข้อ','เนื้อหา']];
+  const push = (title, val) => { const t = asText(val).trim(); if (t) rows.push([title, t]); };
+  push('Hook / จุดดึงดูด', d.hook);
+  push('องค์ประกอบภาพ', d.visual);
+  push('Copywriting', d.copywriting);
+  push('การใช้สี', d.colors);
+  if (Array.isArray(d.why)) d.why.forEach((it,i) => push('ทำไมถึงปัง #'+(i+1), it));
+  if (Array.isArray(d.applyToYou)) d.applyToYou.forEach((it,i) => push('เอาไปใช้ #'+(i+1), it));
+  if (Array.isArray(d.adRewrite)) d.adRewrite.forEach((it,i) => push('แคปชั่นร้านเรา แบบที่ '+(i+1), it));
+  push('ราคาที่เห็นในรูป', d.price);
+  push('ข้อความที่อ่านได้จากรูป (rawText)', d.rawText);
+  const csv = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  GeminiKit.download('ถอดสูตรโฆษณา.csv', csv, 'text/csv');
+}
+
+// ดาวน์โหลดเฉพาะข้อความดิบที่ AI อ่านได้จากรูป (rawText)
+function downloadRaw() {
+  const raw = asText(lastResult && lastResult.rawText).trim();
+  if (!raw) { GeminiKit.toast('ไม่มีข้อความในรูปให้ดาวน์โหลด'); return; }
+  GeminiKit.download('ข้อความในรูปโฆษณา.txt', raw, 'text/plain');
+}
+
+async function run() {
+  if (!selectedFile) {
+    GeminiKit.toast('กรุณาอัปรูปโฆษณาก่อนนะ');
+    return;
+  }
+
+  const myProduct = (document.getElementById('myProduct').value || '').trim();
+  const platform = document.getElementById('platform').value;
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังถอดสูตรความปัง...</div>';
+
+  const myContext = myProduct
+    ? `ร้านของผู้ใช้ขาย: "${myProduct}" และขายหลักบน ${platform}. ทุกคำแนะนำใน applyToYou และ adRewrite ต้องอิงกับสินค้านี้และโทนการขายของแพลตฟอร์มนี้โดยตรง ไม่เอาคำแนะนำกว้างๆ`
+    : `ผู้ใช้ยังไม่ได้ระบุสินค้า ให้คำแนะนำใน applyToYou และ adRewrite แบบที่ SME ไทยทั่วไปนำไปปรับใช้ได้ทันที โดยอิงโทนการขายบน ${platform}`;
+
+  const system = 'คุณคือผู้ช่วยการตลาดของร้านค้าออนไลน์ไทย เป็น creative strategist สาย performance ads ที่เชี่ยวชาญการถอดสูตรโฆษณาคู่แข่งและเขียนแคปชั่นขายของภาษาไทยที่กดแล้วซื้อ. ตอบเป็นภาษาไทยที่เป็นธรรมชาติ เอาไปใช้ได้จริง กระชับ ตรงประเด็น. กฎเหล็ก: วิเคราะห์เฉพาะสิ่งที่ "เห็นจริงในรูป" เท่านั้น ห้ามเดา ห้ามแต่งข้อมูล แบรนด์ ราคา หรือข้อความที่ไม่ปรากฏในรูป. ถ้ารูปเบลอ/อ่านไม่ออก/ไม่ใช่โฆษณา ให้บอกตามตรงผ่าน field confidence และ readable.';
+
+  const prompt = `อ่านและวิเคราะห์ "โฆษณาในรูปนี้" แล้วตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่นหุ้ม ตาม schema นี้ (ทุกค่าเป็นภาษาไทย):
+{
+  "readable": true/false  (อ่านรูปออกและเป็นโฆษณา/ภาพการตลาดจริงไหม),
+  "confidence": "high" | "medium" | "low"  (มั่นใจแค่ไหนว่าอ่านรูปได้ครบ),
+  "unreadableReason": "ถ้าอ่านไม่ออก บอกเหตุผลสั้นๆ เช่น รูปเบลอ/ไม่มีข้อความ/ไม่ใช่โฆษณา ไม่งั้นเว้นว่าง",
+  "rawText": "ข้อความทั้งหมดที่อ่านได้จริงจากในรูป ถอดออกมาตามจริง (ถ้าไม่มีข้อความให้เว้นว่าง ห้ามแต่ง)",
+  "price": "ราคา/โปรโมชันที่ปรากฏในรูปเท่านั้น เช่น 290 บาท, ลด 50%, 1 แถม 1 (ถ้าไม่เห็นราคาในรูปให้เว้นว่าง ห้ามเดา)",
+  "hook": "จุดดึงดูดหลักที่ทำให้คนหยุดดู คืออะไรและทำงานยังไง (string)",
+  "visual": "วิเคราะห์องค์ประกอบภาพ เช่น layout, รูปถ่าย/กราฟิก, ข้อความบนรูป, จุดโฟกัสสายตา (string)",
+  "copywriting": "วิเคราะห์ headline, body copy, CTA และเทคนิคจิตวิทยาที่ใช้ (string)",
+  "colors": "วิเคราะห์การใช้สีและสีช่วยสื่ออารมณ์/แบรนด์ยังไง (string)",
+  "why": ["เหตุผลที่ 1 ว่าทำไมโฆษณานี้ถึงสะดุดตาและได้ผล", "เหตุผลที่ 2", "เหตุผลที่ 3"],
+  "applyToYou": ["วิธีนำเทคนิคนี้ไปใช้กับร้านของผู้ใช้ ข้อที่ 1 (เจาะจง ลงมือทำได้ทันที)", "ข้อที่ 2", "ข้อที่ 3"],
+  "adRewrite": ["แคปชั่น/ข้อความโฆษณาฉบับเต็มเวอร์ชันร้านของผู้ใช้ ที่ลอกสูตรความปังของโฆษณานี้มา พร้อม hook + เนื้อหา + CTA ก๊อปลงโพสต์ได้ทันที แบบที่ 1", "อีกแบบที่ใช้มุม/โทนต่างออกไป แบบที่ 2"]
+}
+
+บริบทร้านของผู้ใช้: ${myContext}
+ข้อกำหนดสำคัญ:
+- วิเคราะห์เฉพาะสิ่งที่เห็นในรูปจริง ห้ามเดา/แต่งราคา แบรนด์ หรือข้อความที่ไม่มีในรูป.
+- ถ้า readable เป็น false ให้ใส่ unreadableReason และเว้น field วิเคราะห์อื่นเป็นค่าว่าง/อาร์เรย์ว่างได้.
+- ทุก string ห้ามใส่ markdown code fence, ตอบ JSON ดิบล้วนๆ.
+- adRewrite ต้องเป็นข้อความโฆษณาจริงที่พร้อมโพสต์บน ${platform} ไม่ใช่คำอธิบายว่าควรเขียนยังไง.`;
+
+  try {
+    const result = await GeminiKit.vision(prompt, [selectedFile], {json: true, system});
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+    lastResult = result;
+    out.innerHTML = renderResults(result);
+  } catch(e) {
+    lastResult = null;
+    out.innerHTML = `<div class="error-card">⚠️ ${esc(e.message || 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง')}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// แสดง empty state ตอนเปิดครั้งแรก
+document.getElementById('output').innerHTML = emptyState();
+</script>
+</body></html>

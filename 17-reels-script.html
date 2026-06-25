@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สคริปต์ TikTok/Reels 🎞️</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#000428;--bg2:#004e92;--accent:#2563eb;--soft:#dbeafe;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;background:#fff;color:var(--ink)}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hook-card{background:linear-gradient(135deg,var(--bg1),var(--accent));border-radius:16px;padding:18px;margin-bottom:14px;color:#fff;position:relative}
+.hook-label{font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.hook-text{font-size:17px;font-weight:700;line-height:1.5}
+.hook-card .copy{position:absolute;top:12px;right:12px;border:none;background:rgba(255,255,255,.2);color:#fff;border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.scene-table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:4px}
+.scene-table th{background:var(--soft);color:var(--accent);font-weight:700;padding:10px 8px;text-align:left;font-size:12px}
+.scene-table th:first-child{border-radius:10px 0 0 0;width:32px;text-align:center}
+.scene-table th:last-child{border-radius:0 10px 0 0}
+.scene-table td{padding:10px 8px;border-bottom:1px solid #f3f4f6;vertical-align:top;line-height:1.5}
+.scene-table td:first-child{text-align:center;font-weight:700;color:var(--accent)}
+.scene-table tr:last-child td{border-bottom:none}
+.cta-card{background:var(--soft);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.cta-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.cta-text{font-size:15px;font-weight:600;color:var(--ink)}
+.copy-all-btn{width:100%;border:2px solid var(--accent);border-radius:14px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);margin-bottom:8px}
+.copy-all-btn:hover{background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.chip.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สคริปต์ TikTok/Reels 🎞️</h1>
+    <p>ใส่หัวข้อ → ได้สคริปต์พร้อมถ่าย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>หัวข้อ / สินค้า / บริการ</label>
+      <input id="topic" placeholder="เช่น ครีมกันแดด SPF50 สำหรับคนขับรถ">
+    </div>
+    <div class="field">
+      <label>สไตล์วิดีโอ</label>
+      <select id="style">
+        <option value="ขายตรง">🛒 ขายตรง — ตรงประเด็น โน้มน้าวใจ</option>
+        <option value="เล่าเรื่อง">📖 เล่าเรื่อง — story-driven อารมณ์</option>
+        <option value="ตลก">😂 ตลก — humor ขำขัน ติดหู</option>
+        <option value="ให้ความรู้">🎓 ให้ความรู้ — edutainment มีสาระ</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์ม (ปรับจังหวะ/ความยาว/CTA ให้เหมาะ)</label>
+      <div class="chips" id="platformChips">
+        <div class="chip active" data-val="TikTok" onclick="pickChip(this,'platformChips')">TikTok</div>
+        <div class="chip" data-val="Instagram Reels" onclick="pickChip(this,'platformChips')">IG Reels</div>
+        <div class="chip" data-val="Facebook Reels" onclick="pickChip(this,'platformChips')">FB Reels</div>
+        <div class="chip" data-val="YouTube Shorts" onclick="pickChip(this,'platformChips')">YT Shorts</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>ความยาวเป้าหมาย</label>
+      <div class="chips" id="lenChips">
+        <div class="chip" data-val="15–20 วินาที" onclick="pickChip(this,'lenChips')">สั้น 15–20 วิ</div>
+        <div class="chip active" data-val="30–45 วินาที" onclick="pickChip(this,'lenChips')">กลาง 30–45 วิ</div>
+        <div class="chip" data-val="45–60 วินาที" onclick="pickChip(this,'lenChips')">ยาว 45–60 วิ</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🎬 สร้างสคริปต์เลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+function pickChip(el, groupId){
+  document.querySelectorAll('#'+groupId+' .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+function chipVal(groupId){
+  const a = document.querySelector('#'+groupId+' .chip.active');
+  return a ? a.dataset.val : '';
+}
+
+let lastFullScript = '';
+
+async function run(){
+  const topic = document.getElementById('topic').value.trim();
+  const style = document.getElementById('style').value;
+  const platform = chipVal('platformChips');
+  const length = chipVal('lenChips');
+  if(!topic){ GeminiKit.toast('ใส่หัวข้อหรือชื่อสินค้าก่อนนะ'); return; }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังเขียนสคริปต์...</div>';
+
+  const system = `คุณคือนักเขียนคอนเทนต์วิดีโอสั้นและนักการตลาดขายของออนไลน์ไทยมือโปร ที่ปั้นคลิปไวรัลมาแล้วนับพันคลิป เชี่ยวชาญการเขียน hook ที่หยุดนิ้วคนดูใน 3 วินาทีแรก จังหวะการเล่าที่คนดูจนจบ และ CTA ที่กระตุ้นให้คนซื้อ/ทักแชต/ติดตามจริง เขียนภาษาไทยที่เป็นธรรมชาติ พูดกับกลุ่มเป้าหมายเหมือนคุยกับเพื่อน เน้นประโยชน์ที่ลูกค้าได้ (ไม่ใช่แค่ฟีเจอร์) ห้ามแต่งสรรพคุณเกินจริงหรือกล่าวอ้างที่ผิดกฎหมาย อย.`;
+
+  const prompt = `เขียนสคริปต์วิดีโอสั้นภาษาไทยสำหรับ: "${topic}"
+แพลตฟอร์ม: ${platform} (ปรับจังหวะ ภาษา และ CTA ให้เข้ากับธรรมชาติของแพลตฟอร์มนี้)
+สไตล์: ${style}
+ความยาววิดีโอเป้าหมาย: ${length}
+
+ข้อกำหนดคุณภาพ:
+- Hook 3 วิแรกต้องสะดุด หยุดนิ้ว ใช้คำถาม/ตัวเลข/ความขัดแย้ง/ปัญหาที่กลุ่มเป้าหมายเจอจริง
+- แต่ละ scene ต้องถ่ายทำได้จริง ระบุภาพ/แอ็กชั่นชัด และมีบทพูด/ข้อความบนจอที่ลื่นไหลต่อเนื่องกัน เน้นประโยชน์ที่ลูกค้าได้รับ
+- CTA ตอนท้ายต้องชัดเจน กระตุ้นการกระทำเดียว (กดติดตาม/ทักแชต/กดลิงก์/คอมเมนต์) ให้เหมาะกับ ${platform}
+- โทนภาษาขายของไทยที่อ่านแล้วอยากซื้อ แต่ไม่ฮาร์ดเซลล์จนน่ารำคาญ
+- ใช้เฉพาะข้อมูลที่ผู้ใช้ให้มาเท่านั้น ห้ามแต่งราคา โปรโมชัน หรือสรรพคุณที่ผู้ใช้ไม่ได้ระบุ
+
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น schema ดังนี้:
+{
+  "hook": "ประโยคดึงดูด 3 วิแรก (กระชับ น่าสนใจ)",
+  "scenes": [
+    {"visual": "คำอธิบายภาพ/แอ็กชั่น", "vo": "เสียงพูดหรือข้อความบนจอ"}
+  ],
+  "cta": "คำกระตุ้นให้กดติดตาม/ซื้อ/คอมเมนต์ ตอนท้าย",
+  "caption": "แคปชันสำหรับโพสต์ใต้คลิป พร้อมแฮชแท็กไทยที่เกี่ยวข้อง 3–5 อัน"
+}
+จำนวน scenes: 4–6 scene เหมาะกับความยาว ${length}`;
+
+  try{
+    const data = await GeminiKit.text(prompt, {json:true, system});
+    if(!data || typeof data !== 'object' || !data.hook || !Array.isArray(data.scenes)){
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    const fullScript = buildFullScript(topic, style, platform, length, data);
+    lastFullScript = fullScript;
+
+    out.innerHTML = `
+      <div class="hook-card">
+        <div class="hook-label">🎣 Hook — 3 วิแรก</div>
+        <div class="hook-text">${esc(data.hook)}</div>
+        <button class="copy" data-copy="${escAttr(data.hook)}" onclick="cpText(this)">คัดลอก</button>
+      </div>
+
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px">🎬 ฉาก (${data.scenes.length} scene)</div>
+        <table class="scene-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ภาพ / แอ็กชั่น</th>
+              <th>เสียง / ข้อความบนจอ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.scenes.map((s,i)=>`<tr>
+              <td>${i+1}</td>
+              <td>${esc(s.visual||'')}</td>
+              <td>${esc(s.vo||'')}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cta-card">
+        <div class="cta-label">📣 CTA — ท้ายวิดีโอ</div>
+        <div class="cta-text">${esc(data.cta)}</div>
+      </div>
+
+      ${data.caption ? `<div class="cta-card">
+        <div class="cta-label">✍️ แคปชัน + แฮชแท็ก</div>
+        <div class="cta-text" style="font-weight:500;white-space:pre-wrap">${esc(data.caption)}</div>
+        <button class="copy-all-btn" style="margin-top:10px;margin-bottom:0" data-copy="${escAttr(data.caption)}" onclick="cpText(this)">📋 คัดลอกแคปชัน</button>
+      </div>` : ''}
+
+      <button class="copy-all-btn" onclick="cpAll()">📋 คัดลอกทั้งหมด</button>
+      <button class="copy-all-btn" onclick="dlScript()">⬇️ ดาวน์โหลด .txt</button>
+    `;
+  } catch(e){
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function buildFullScript(topic, style, platform, length, data){
+  let lines = [];
+  lines.push(`=== สคริปต์วิดีโอสั้น (${platform}) ===`);
+  lines.push(`หัวข้อ: ${topic}`);
+  lines.push(`สไตล์: ${style} | ความยาว: ${length}`);
+  lines.push(``);
+  lines.push(`🎣 HOOK (3 วิแรก)`);
+  lines.push(data.hook);
+  lines.push(``);
+  lines.push(`🎬 SCENES`);
+  data.scenes.forEach((s,i)=>{
+    lines.push(`Scene ${i+1}:`);
+    lines.push(`  ภาพ: ${s.visual||''}`);
+    lines.push(`  เสียง/ข้อความ: ${s.vo||''}`);
+  });
+  lines.push(``);
+  lines.push(`📣 CTA`);
+  lines.push(data.cta);
+  if(data.caption){
+    lines.push(``);
+    lines.push(`✍️ แคปชัน + แฮชแท็ก`);
+    lines.push(data.caption);
+  }
+  return lines.join('\n');
+}
+
+function cpText(btn){
+  GeminiKit.copy(btn.dataset.copy || '');
+}
+
+function cpAll(){
+  GeminiKit.copy(lastFullScript);
+}
+
+function dlScript(){
+  GeminiKit.download('สคริปต์-reels.txt', lastFullScript, 'text/plain');
+}
+
+function esc(s){
+  return (s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function escAttr(s){
+  return esc(s).replace(/"/g,'&quot;');
+}
+</script>
+</body></html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ถอดป้าย/เมนู/ฉลาก</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#136a8a;--bg2:#267871;--accent:#0f766e;--soft:#f0fdfa;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.drop{border:2px dashed #a7f3d0;border-radius:13px;padding:28px 14px;text-align:center;cursor:pointer;background:var(--soft);transition:border-color .2s}
+.drop:hover{border-color:var(--accent)}
+.drop .icon{font-size:36px;margin-bottom:8px}
+.drop p{font-size:14px;color:var(--muted)}
+.drop p strong{color:var(--accent)}
+.previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.previews img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid var(--soft)}
+.mode-row{display:flex;gap:8px;margin-bottom:14px}
+.mode-btn{flex:1;border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:12px;padding:10px 6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;line-height:1.3}
+.mode-btn .e{font-size:18px;display:block;margin-bottom:3px}
+.mode-btn.on{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+select,input[type=text]{width:100%;border:2px solid var(--soft);border-radius:12px;padding:11px 12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;outline:none}
+select:focus,input[type=text]:focus{border-color:var(--accent)}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.result-card h3{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.result-card h3 span{font-size:13px;color:var(--muted);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:8px 10px;font-size:12px;color:var(--muted);font-weight:500;border-bottom:2px solid var(--soft)}
+td{padding:9px 10px;border-bottom:1px solid #f3f4f6;vertical-align:top;line-height:1.5}
+td.k{font-weight:600;color:var(--ink)}
+td.price{font-weight:700;color:var(--accent);white-space:nowrap;text-align:right}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.flagged td{background:#fff7ed}
+.flag-tag{display:inline-block;background:#fef3c7;color:#b45309;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600;margin-left:4px}
+.summary{font-size:13px;color:var(--muted);margin-bottom:10px;background:var(--soft);border-radius:10px;padding:8px 12px}
+.summary b{color:var(--accent)}
+.raw-box{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--ink);max-height:220px;overflow-y:auto}
+.copy-btn{border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.copy-btn:hover{background:#ccfbf1}
+.dl-btn{border:none;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border-radius:9px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.err{background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px;line-height:1.6}
+.empty{background:#fff;border-radius:16px;padding:22px 18px;box-shadow:0 8px 20px rgba(0,0,0,.1);text-align:center}
+.empty .e{font-size:40px;margin-bottom:8px}
+.empty h4{font-size:16px;color:var(--ink);margin-bottom:6px}
+.empty p{font-size:13px;color:var(--muted);line-height:1.7}
+.empty ul{text-align:left;font-size:13px;color:var(--muted);margin:10px auto 0;max-width:280px;line-height:1.9;padding-left:18px}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ถอดป้าย/เมนู/ฉลาก 📋</h1>
+    <p>ถ่ายรูปมาเลย → AI อ่านข้อความ + จัดเป็นตารางให้</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>เลือกประเภทรูป (ช่วยให้ AI อ่านแม่นขึ้น)</label>
+      <div class="mode-row">
+        <button type="button" class="mode-btn on" data-mode="menu" onclick="setMode('menu')"><span class="e">🍜</span>ป้าย/เมนู<br>/ฉลาก</button>
+        <button type="button" class="mode-btn" data-mode="slip" onclick="setMode('slip')"><span class="e">🧾</span>สลิป<br>โอนเงิน</button>
+        <button type="button" class="mode-btn" data-mode="namecard" onclick="setMode('namecard')"><span class="e">📇</span>นามบัตร<br>/รายชื่อ</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>อัปโหลดรูปภาพ (หลายใบได้)</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">📷</div>
+        <p><strong>แตะเพื่อเลือกรูป</strong></p>
+        <p id="dropHint">ป้ายสินค้า เมนูอาหาร ฉลาก</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden onchange="onFiles(this.files)">
+      <div class="previews" id="previews"></div>
+    </div>
+
+    <div class="field">
+      <label>บริบทเพิ่มเติม (ไม่ใส่ก็ได้)</label>
+      <input type="text" id="ctx" placeholder="เช่น เมนูร้านกาแฟ, ป้ายภาษาจีน, สลิปธนาคารกสิกร">
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🔍 ถอดข้อความเลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFiles = [];
+let mode = 'menu';
+
+const MODE_HINT = {
+  menu: 'ป้ายสินค้า เมนูอาหาร ฉลาก',
+  slip: 'สลิปโอนเงิน ใบเสร็จ ใบกำกับภาษี',
+  namecard: 'นามบัตร รายชื่อ ใบสมัคร'
+};
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  document.getElementById('dropHint').textContent = MODE_HINT[m] || '';
+}
+
+function onFiles(files) {
+  selectedFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+  const prev = document.getElementById('previews');
+  prev.innerHTML = '';
+  selectedFiles.forEach(f => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    prev.appendChild(img);
+  });
+}
+
+// drag & drop support
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#a7f3d0'; });
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.borderColor = '#a7f3d0';
+  onFiles(e.dataTransfer.files);
+});
+
+function buildPrompt() {
+  const ctx = document.getElementById('ctx').value.trim();
+  const ctxLine = ctx ? `\nบริบทจากผู้ใช้ (ใช้ช่วยตีความ): "${ctx}"` : '';
+
+  const base = `คุณคือผู้ช่วยร้านค้าออนไลน์ไทยที่อ่านรูปและถอดข้อความได้แม่นยำมาก
+กฎเหล็ก:
+- อ่านเฉพาะข้อความที่ "เห็นจริงในรูป" เท่านั้น ห้ามเดา ห้ามแต่งเติม ห้ามเติมข้อมูลที่ไม่ปรากฏ
+- ถ้าตรงไหนอ่านไม่ออก/เบลอ/ถูกบัง ให้ใส่ค่าว่าง "" และทำเครื่องหมายว่าอ่านไม่ครบ
+- ตัวเลข/ราคา ให้คงค่าตามที่เห็น อย่าปัดเศษเอง${ctxLine}`;
+
+  if (mode === 'slip') {
+    return `${base}
+
+งาน: สแกนสลิปโอนเงิน/ใบเสร็จ แต่ละรูปคือ 1 ใบ ตอบเป็น JSON เท่านั้น:
+{"mode":"slip","slips":[{
+  "ref":"เลขอ้างอิง/รหัสรายการ (ตามที่เห็น ถ้าไม่มีใส่ \\"\\")",
+  "amount":"ยอดเงินเป็นตัวเลขล้วน ไม่มีคอมมา ไม่มีบาท เช่น 1250.00 (ถ้าอ่านไม่ออกใส่ \\"\\")",
+  "datetime":"วันเวลาโอน ตามที่เห็น",
+  "from":"ชื่อ/บัญชีผู้โอน",
+  "to":"ชื่อ/บัญชีผู้รับ",
+  "bank":"ธนาคาร/ช่องทาง",
+  "incomplete":true/false (true ถ้ามีช่องสำคัญอ่านไม่ครบ เช่น ref หรือ amount หาย),
+  "note":"สิ่งที่อ่านไม่ออกหรือควรเช็ค (ถ้าไม่มีใส่ \\"\\")"
+}],"rawText":"ข้อความดิบทั้งหมดจากทุกรูปต่อกัน"}
+- amount ต้องเป็นเลขล้วนเสมอ (normalize เอาคอมมา/สัญลักษณ์เงินออก)
+- ถ้าไม่มีสลิปในรูปเลย ให้ slips เป็น []`;
+  }
+
+  if (mode === 'namecard') {
+    return `${base}
+
+งาน: ถอดนามบัตร/รายชื่อ/ผู้ติดต่อจากรูป ตอบเป็น JSON เท่านั้น:
+{"mode":"namecard","contacts":[{
+  "name":"ชื่อ-สกุล","org":"บริษัท/ร้าน","title":"ตำแหน่ง",
+  "phone":"เบอร์โทร","line":"LINE ID","email":"อีเมล","address":"ที่อยู่",
+  "incomplete":true/false
+}],"rawText":"ข้อความดิบทั้งหมดจากทุกรูปต่อกัน"}
+- ช่องไหนไม่เห็นในรูปให้ใส่ "" ห้ามเดา
+- ถ้าไม่มีรายชื่อในรูป ให้ contacts เป็น []`;
+  }
+
+  // menu / sign / label
+  return `${base}
+
+งาน: ถอดป้ายสินค้า/เมนูอาหาร/ฉลาก ตอบเป็น JSON เท่านั้น:
+{"mode":"menu","items":[{
+  "name":"ชื่อรายการ/สินค้า",
+  "price":"ราคาเป็นตัวเลขล้วน ไม่มีบาท เช่น 45 หรือ 45/60 (ถ้าไม่เห็นราคาใส่ \\"\\")",
+  "detail":"รายละเอียดอื่น เช่น ขนาด/หน่วย/ส่วนผสม/โปรโมชั่น (ไม่ต้องซ้ำกับราคา)",
+  "incomplete":true/false (true ถ้าอ่านชื่อหรือราคาไม่ชัด)
+}],"rawText":"ข้อความดิบทั้งหมดจากทุกรูปต่อกัน"}
+- แยก "ราคา" ออกจาก "รายละเอียด" ให้ชัด อย่ายัดรวมกัน
+- ถ้าไม่มีรายการแยกชัด ให้ items เป็น [] แต่ยังคืน rawText`;
+}
+
+async function run() {
+  if (!selectedFiles.length) { GeminiKit.toast('เลือกรูปก่อนนะ'); return; }
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังอ่านข้อความ...</div>';
+
+  try {
+    const data = await GeminiKit.vision(buildPrompt(), selectedFiles, { json: true });
+    if (!data || typeof data !== 'object') throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    const rawText = typeof data.rawText === 'string' ? data.rawText : '';
+    window._extractData = { mode, rawText, raw: data };
+
+    let html = '';
+    if (mode === 'slip') html += renderSlips(data, rawText);
+    else if (mode === 'namecard') html += renderContacts(data, rawText);
+    else html += renderItems(data, rawText);
+
+    // raw text block (always, with download)
+    if (rawText.trim()) {
+      html += `<div class="result-card">
+        <h3>ข้อความดิบทั้งหมด (rawText)</h3>
+        <div class="raw-box">${esc(rawText)}</div>
+        <div class="actions">
+          <button class="copy-btn" onclick="cpRaw()">📋 คัดลอกข้อความ</button>
+          <button class="dl-btn" onclick="dlRaw()">⬇️ โหลด .txt</button>
+        </div>
+      </div>`;
+    }
+
+    out.innerHTML = html || emptyState();
+
+  } catch (e) {
+    out.innerHTML = '<div class="err">⚠️ ' + esc(e.message || 'เกิดข้อผิดพลาด') + '<br><span style="color:var(--muted);font-size:13px">ลองถ่ายรูปให้ชัดขึ้น หรือถ่ายใกล้ตัวอักษรมากขึ้นแล้วลองใหม่</span></div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- renderers ---------- */
+
+function emptyState() {
+  return `<div class="empty">
+    <div class="e">🔍</div>
+    <h4>AI อ่านรูปนี้ไม่ออก</h4>
+    <p>ไม่เจอข้อความที่ชัดพอจะถอดได้ ลองดู:</p>
+    <ul>
+      <li>ถ่ายใกล้ ๆ ให้ตัวอักษรเต็มเฟรม</li>
+      <li>หลีกเลี่ยงแสงสะท้อน/เงา/ภาพเบลอ</li>
+      <li>ถ่ายตรง ๆ ไม่เอียงมาก</li>
+      <li>เลือกประเภทรูปด้านบนให้ตรง แล้วกดถอดใหม่</li>
+    </ul>
+  </div>`;
+}
+
+function renderItems(data, rawText) {
+  const items = Array.isArray(data.items) ? data.items : [];
+  if (!items.length) return rawText.trim() ? '' : emptyState();
+  const flagged = items.filter(i => i.incomplete).length;
+  let html = `<div class="result-card">
+    <h3>รายการที่พบ <span>${items.length} รายการ</span></h3>`;
+  if (flagged) html += `<div class="summary">⚠️ มี <b>${flagged}</b> รายการที่อ่านชื่อ/ราคาไม่ชัด (ไฮไลต์ไว้) — ควรตรวจซ้ำ</div>`;
+  html += `<table>
+      <thead><tr><th>ชื่อ</th><th>รายละเอียด</th><th style="text-align:right">ราคา</th></tr></thead>
+      <tbody>${items.map(it => `<tr class="${it.incomplete ? 'flagged' : ''}">
+        <td class="k">${esc(it.name || '')}${it.incomplete ? '<span class="flag-tag">เช็ค</span>' : ''}</td>
+        <td>${esc(it.detail || '')}</td>
+        <td class="price">${esc(it.price || '-')}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="actions">
+      <button class="copy-btn" onclick="cpTable()">📋 คัดลอกตาราง</button>
+      <button class="dl-btn" onclick="dlCSV()">⬇️ โหลด CSV</button>
+    </div>
+  </div>`;
+  return html;
+}
+
+function renderSlips(data, rawText) {
+  const slips = Array.isArray(data.slips) ? data.slips : [];
+  if (!slips.length) return rawText.trim() ? '' : emptyState();
+  const flagged = slips.filter(s => s.incomplete).length;
+  let html = `<div class="result-card">
+    <h3>สลิปที่สแกน <span>${slips.length} ใบ</span></h3>`;
+  if (flagged) html += `<div class="summary">⚠️ มี <b>${flagged}</b> ใบที่อ่านไม่ครบ (เลขอ้างอิง/ยอดเงินหาย) — ไฮไลต์ไว้ให้ตรวจซ้ำ</div>`;
+  html += `<table>
+      <thead><tr><th>เลขอ้างอิง</th><th style="text-align:right">ยอด (บาท)</th><th>วันเวลา</th></tr></thead>
+      <tbody>${slips.map(s => `<tr class="${s.incomplete ? 'flagged' : ''}">
+        <td class="k">${esc(s.ref || '—')}${s.incomplete ? '<span class="flag-tag">ไม่ครบ</span>' : ''}</td>
+        <td class="num price">${esc(s.amount || '—')}</td>
+        <td>${esc(s.datetime || '')}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="actions">
+      <button class="copy-btn" onclick="cpTable()">📋 คัดลอกตาราง</button>
+      <button class="dl-btn" onclick="dlCSV()">⬇️ โหลด CSV</button>
+    </div>
+  </div>`;
+  return html;
+}
+
+function renderContacts(data, rawText) {
+  const contacts = Array.isArray(data.contacts) ? data.contacts : [];
+  if (!contacts.length) return rawText.trim() ? '' : emptyState();
+  const flagged = contacts.filter(c => c.incomplete).length;
+  let html = `<div class="result-card">
+    <h3>รายชื่อที่พบ <span>${contacts.length} รายชื่อ</span></h3>`;
+  if (flagged) html += `<div class="summary">⚠️ มี <b>${flagged}</b> รายชื่อที่อ่านไม่ครบ — ไฮไลต์ไว้</div>`;
+  html += `<table>
+      <thead><tr><th>ชื่อ / บริษัท</th><th>โทร / LINE / อีเมล</th></tr></thead>
+      <tbody>${contacts.map(c => {
+        const ch = [c.phone, c.line, c.email].filter(Boolean).map(esc).join('<br>');
+        const top = [c.name, c.org, c.title].filter(Boolean).map(esc).join(' · ');
+        return `<tr class="${c.incomplete ? 'flagged' : ''}">
+          <td class="k">${top || '—'}${c.incomplete ? '<span class="flag-tag">เช็ค</span>' : ''}</td>
+          <td>${ch || '—'}</td></tr>`;
+      }).join('')}</tbody>
+    </table>
+    <div class="actions">
+      <button class="copy-btn" onclick="cpTable()">📋 คัดลอกตาราง</button>
+      <button class="dl-btn" onclick="dlCSV()">⬇️ โหลด CSV</button>
+    </div>
+  </div>`;
+  return html;
+}
+
+/* ---------- copy / download (ผ่าน GeminiKit) ---------- */
+
+function buildTSV() {
+  const d = window._extractData; if (!d) return '';
+  if (d.mode === 'slip') {
+    const s = d.raw.slips || [];
+    return 'เลขอ้างอิง\tยอดเงิน\tวันเวลา\tผู้โอน\tผู้รับ\tธนาคาร\tหมายเหตุ\n' +
+      s.map(x => [x.ref, x.amount, x.datetime, x.from, x.to, x.bank, x.note].map(v => (v || '')).join('\t')).join('\n');
+  }
+  if (d.mode === 'namecard') {
+    const c = d.raw.contacts || [];
+    return 'ชื่อ\tบริษัท\tตำแหน่ง\tโทร\tLINE\tอีเมล\tที่อยู่\n' +
+      c.map(x => [x.name, x.org, x.title, x.phone, x.line, x.email, x.address].map(v => (v || '')).join('\t')).join('\n');
+  }
+  const it = d.raw.items || [];
+  return 'ชื่อ\tราคา\tรายละเอียด\n' +
+    it.map(x => [x.name, x.price, x.detail].map(v => (v || '')).join('\t')).join('\n');
+}
+
+function buildCSV() {
+  const d = window._extractData; if (!d) return '';
+  const q = v => `"${(v == null ? '' : String(v)).replace(/"/g, '""')}"`;
+  const line = arr => arr.map(q).join(',');
+  if (d.mode === 'slip') {
+    const s = d.raw.slips || [];
+    return [line(['เลขอ้างอิง', 'ยอดเงิน', 'วันเวลา', 'ผู้โอน', 'ผู้รับ', 'ธนาคาร', 'อ่านไม่ครบ', 'หมายเหตุ'])]
+      .concat(s.map(x => line([x.ref, x.amount, x.datetime, x.from, x.to, x.bank, x.incomplete ? 'ใช่' : '', x.note]))).join('\n');
+  }
+  if (d.mode === 'namecard') {
+    const c = d.raw.contacts || [];
+    return [line(['ชื่อ', 'บริษัท', 'ตำแหน่ง', 'โทร', 'LINE', 'อีเมล', 'ที่อยู่'])]
+      .concat(c.map(x => line([x.name, x.org, x.title, x.phone, x.line, x.email, x.address]))).join('\n');
+  }
+  const it = d.raw.items || [];
+  return [line(['ชื่อ', 'ราคา', 'รายละเอียด', 'อ่านไม่ครบ'])]
+    .concat(it.map(x => line([x.name, x.price, x.detail, x.incomplete ? 'ใช่' : '']))).join('\n');
+}
+
+function cpTable() {
+  const tsv = buildTSV();
+  if (!tsv) return;
+  GeminiKit.copy(tsv);
+}
+
+function cpRaw() {
+  const d = window._extractData;
+  if (!d || !d.rawText) return;
+  GeminiKit.copy(d.rawText);
+}
+
+function dlCSV() {
+  const csv = buildCSV();
+  if (!csv) { GeminiKit.toast('ไม่มีตารางให้โหลด'); return; }
+  const name = { slip: 'สลิปโอนเงิน', namecard: 'รายชื่อ', menu: 'ถอดป้ายเมนู' }[window._extractData.mode] || 'extract';
+  GeminiKit.download(name + '.csv', '﻿' + csv, 'text/csv;charset=utf-8');
+}
+
+function dlRaw() {
+  const d = window._extractData;
+  if (!d || !d.rawText) { GeminiKit.toast('ไม่มีข้อความให้โหลด'); return; }
+  GeminiKit.download('ข้อความดิบ.txt', d.rawText, 'text/plain;charset=utf-8');
+}
+
+function esc(s) { return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+</script>
+</body></html>

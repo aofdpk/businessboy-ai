@@ -1,0 +1,195 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ตั้งชื่อแบรนด์/ร้าน</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#06beb6;--bg2:#48b1bf;--accent:#0891b2;--soft:#e0f7fa;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;color:var(--ink);background:#fff}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand-card{background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 8px 24px rgba(0,0,0,.13);margin-bottom:12px;position:relative}
+.brand-name{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:6px;padding-right:80px;word-break:break-word}
+.brand-meaning{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6}
+.brand-meaning span{font-weight:600;color:var(--ink)}
+.brand-slogan{font-size:14px;color:var(--ink);font-style:italic;background:var(--soft);border-radius:10px;padding:8px 12px;line-height:1.6}
+.copy-btn{position:absolute;top:14px;right:14px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.copy-btn:hover{background:var(--accent);color:#fff}
+.err{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+.count-badge{display:inline-block;background:rgba(255,255,255,.25);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.bulk{display:flex;gap:10px;margin-bottom:14px}
+.bulk button{flex:1;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.bulk button:hover{background:var(--soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ตั้งชื่อแบรนด์/ร้าน 🏷️</h1>
+    <p>บอกประเภทธุรกิจ → AI สร้างชื่อให้ 20 ชื่อพร้อมความหมาย</p>
+    <div class="count-badge">🤖 Powered by Gemini</div>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ประเภทธุรกิจ / สินค้า / บริการ</label>
+      <input id="business" placeholder="เช่น ร้านขนมไทย, คลินิกความงาม, ซักรีด">
+    </div>
+    <div class="field">
+      <label>คาแรกเตอร์แบรนด์ / กลุ่มเป้าหมาย</label>
+      <textarea id="character" placeholder="เช่น น่ารักอบอุ่น กลุ่มแม่บ้านวัย 30+ หรือ พรีเมียมหรู ลูกค้าออฟฟิศ"></textarea>
+    </div>
+    <div class="field">
+      <label>โทน / สไตล์ชื่อ</label>
+      <div class="chips" id="toneChips">
+        <button type="button" class="chip active" data-tone="ไทยแท้ อ่านง่าย">ไทยแท้</button>
+        <button type="button" class="chip" data-tone="โมเดิร์น ไทยผสมอังกฤษ">โมเดิร์น</button>
+        <button type="button" class="chip" data-tone="พรีเมียมหรู ดูแพง">พรีเมียม</button>
+        <button type="button" class="chip" data-tone="น่ารักสดใส เป็นกันเอง">น่ารัก</button>
+        <button type="button" class="chip" data-tone="มินิมอล เรียบเท่">มินิมอล</button>
+        <button type="button" class="chip" data-tone="ติดหูจำง่าย ขำๆ เล่นคำ">เล่นคำ</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>ช่องทางขายหลัก (ช่วยให้ชื่อค้นเจอ/ติดหู)</label>
+      <select id="platform">
+        <option value="">ทั่วไป (ทุกช่องทาง)</option>
+        <option value="Facebook">Facebook</option>
+        <option value="Instagram">Instagram</option>
+        <option value="TikTok">TikTok</option>
+        <option value="LINE / LINE OA">LINE</option>
+        <option value="Shopee / Lazada">Shopee / Lazada</option>
+        <option value="หน้าร้าน / ออฟไลน์">หน้าร้าน</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ สร้างชื่อแบรนด์เลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let lastResults = [];
+
+// เลือกโทนแบบ chip เดียว
+document.getElementById('toneChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#toneChips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+});
+
+function getTone() {
+  const active = document.querySelector('#toneChips .chip.active');
+  return active ? active.dataset.tone : 'ไทยแท้ อ่านง่าย';
+}
+
+async function run() {
+  const business = document.getElementById('business').value.trim();
+  const character = document.getElementById('character').value.trim();
+  const platform = document.getElementById('platform').value;
+  const tone = getTone();
+  if (!business) { GeminiKit.toast('ใส่ประเภทธุรกิจก่อนนะ'); return; }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  lastResults = [];
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังคิดชื่อเก๋ๆ ให้...</div>';
+
+  const system = 'คุณคือนักการตลาดและนักสร้างแบรนด์ขายของออนไลน์ไทยมือโปร เชี่ยวชาญการตั้งชื่อร้าน/แบรนด์ที่ติดหู จำง่าย ออกเสียงง่าย สะกดไม่งง ค้นหาเจอ และทำให้ลูกค้าคนไทยรู้สึกอยากซื้อทันที เข้าใจพฤติกรรมลูกค้าไทยและกระแสตลาดออนไลน์ลึกซึ้ง';
+
+  const prompt = `ตั้งชื่อแบรนด์/ร้านภาษาไทย (หรือไทยผสมอังกฤษถ้าโทนเหมาะ) จำนวน 20 ชื่อ สำหรับธุรกิจต่อไปนี้
+
+ธุรกิจ/สินค้า/บริการ: ${business}
+คาแรกเตอร์แบรนด์/กลุ่มเป้าหมาย: ${character || 'ทั่วไป'}
+โทน/สไตล์ชื่อที่ต้องการ: ${tone}
+ช่องทางขายหลัก: ${platform || 'ทั่วไปทุกช่องทาง'}
+
+เกณฑ์การตั้งชื่อ:
+- จำง่าย ออกเสียงง่าย พิมพ์ค้นหาเจอง่าย ไม่ยาวเกินไป (ส่วนใหญ่ 1-3 พยางค์/คำ)
+- โดดเด่น แตกต่าง ไม่ซ้ำชาวบ้าน และสื่อถึงตัวสินค้า/อารมณ์ของแบรนด์
+- เหมาะกับโทนและช่องทางขายที่ระบุ (เช่น TikTok/IG ควรติดหูสั้นๆ, Shopee ควรมีคีย์เวิร์ดสินค้าให้ค้นเจอ)
+- ความหมายต้องเป็นบวก ไม่พ้องเสียงคำหยาบหรือความหมายไม่ดี
+- สโลแกนต้องเป็นภาษาขายของไทยที่อ่านแล้วอยากซื้อ กระตุ้นการตัดสินใจ
+
+ห้ามแต่งข้อมูลธุรกิจที่ผู้ใช้ไม่ได้ให้มา ให้ยึดจากข้อมูลข้างต้นเท่านั้น
+ตอบเป็น JSON array เท่านั้น ไม่มีข้อความอื่นนอก array โดยแต่ละ element เป็น object รูปแบบนี้:
+{"name":"ชื่อแบรนด์","meaning":"ความหมาย/ที่มาของชื่อ 1-2 ประโยค","slogan":"สโลแกนสั้นกระชับภาษาไทยที่ทำให้ลูกค้าอยากซื้อ"}`;
+
+  try {
+    const arr = await GeminiKit.text(prompt, { json: true, system });
+    if (!Array.isArray(arr) || !arr.length) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    lastResults = arr;
+
+    const bulk = `<div class="bulk">
+      <button onclick="copyAll()">📋 คัดลอกทั้งหมด</button>
+      <button onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>
+    </div>`;
+
+    const cards = arr.map((item, i) => {
+      const name = esc(item.name || '');
+      const meaning = esc(item.meaning || '');
+      const slogan = esc(item.slogan || '');
+      return `<div class="brand-card">
+        <button class="copy-btn" data-idx="${i}" onclick="cpName(this)">คัดลอกชื่อ</button>
+        <div class="brand-name">${i + 1}. ${name}</div>
+        <div class="brand-meaning"><span>ความหมาย:</span> ${meaning}</div>
+        <div class="brand-slogan">💬 "${slogan}"</div>
+      </div>`;
+    }).join('');
+
+    out.innerHTML = bulk + cards;
+  } catch (e) {
+    out.innerHTML = '<div class="err">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function cpName(btn) {
+  const item = lastResults[+btn.dataset.idx];
+  if (!item) return;
+  GeminiKit.copy(item.name || '');
+}
+
+function buildAllText() {
+  return lastResults.map((item, i) =>
+    `${i + 1}. ${item.name || ''}\n   ความหมาย: ${item.meaning || ''}\n   สโลแกน: ${item.slogan || ''}`
+  ).join('\n\n');
+}
+
+function copyAll() {
+  if (!lastResults.length) return;
+  GeminiKit.copy(buildAllText());
+}
+
+function downloadAll() {
+  if (!lastResults.length) return;
+  GeminiKit.download('brand-names.txt', buildAllText(), 'text/plain');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

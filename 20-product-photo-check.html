@@ -1,0 +1,569 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ตรวจรูปสินค้าก่อนโพสต์</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#ff6e7f;--bg2:#bfe9ff;--accent:#ec4899;--soft:#fce7f3;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.mode-tabs{display:flex;gap:8px;margin-bottom:14px}
+.mode-tabs button{flex:1;border:2px solid var(--soft);background:#fff;border-radius:12px;padding:10px 6px;font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;line-height:1.3}
+.mode-tabs button .mi{font-size:20px;display:block;margin-bottom:2px}
+.mode-tabs button.active{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.mode-desc{font-size:12px;color:var(--muted);background:#fafafa;border-radius:10px;padding:8px 10px;margin-bottom:14px;line-height:1.5}
+input[type=text],select,textarea{width:100%;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 12px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff}
+input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:60px}
+.drop{border:2px dashed var(--soft);border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:var(--soft)}
+.drop:hover{border-color:var(--accent);background:#fdf2f8}
+.drop p{font-size:14px;color:var(--muted);margin-top:6px}
+.drop .icon{font-size:36px}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:13px;line-height:1;cursor:pointer}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}
+.toolbar button{flex:1;border:none;border-radius:12px;padding:11px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.toolbar button:active{transform:scale(.97)}
+.score-card{background:#fff;border-radius:20px;padding:22px 18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px;text-align:center}
+.score-num{font-size:64px;font-weight:700;line-height:1;background:linear-gradient(135deg,var(--bg1),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.score-label{font-size:14px;color:var(--muted);margin-top:4px}
+.score-bar-wrap{background:#f3f4f6;border-radius:99px;height:10px;margin:12px 0 4px;overflow:hidden}
+.score-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--bg1),var(--accent));transition:width .8s ease}
+.section-card{background:#fff;border-radius:18px;padding:16px 18px;box-shadow:0 8px 20px rgba(0,0,0,.1);margin-bottom:12px}
+.section-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.section-title.good{color:#16a34a}
+.section-title.improve{color:#d97706}
+.section-title.retake{color:#2563eb}
+ul.ai-list{list-style:none;padding:0}
+ul.ai-list li{font-size:14px;line-height:1.65;padding:6px 0;border-bottom:1px solid #f3f4f6;color:var(--ink)}
+ul.ai-list li:last-child{border-bottom:none}
+ul.ai-list li::before{margin-right:6px}
+.good-list li::before{content:'✅'}
+.improve-list li::before{content:'⚠️'}
+.retake-list li::before{content:'💡'}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.data{width:100%;border-collapse:collapse;font-size:13px}
+table.data th,table.data td{padding:8px 10px;text-align:left;border-bottom:1px solid #f3f4f6;white-space:nowrap}
+table.data th{color:var(--muted);font-weight:600;font-size:12px;background:#fafafa}
+table.data td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+table.data tr.flagged{background:#fef2f2}
+table.data tr.flagged td{color:#dc2626}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px}
+.badge.ok{background:#dcfce7;color:#16a34a}
+.badge.warn{background:#fef3c7;color:#d97706}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--soft);border-radius:12px;margin-top:10px;font-weight:700;font-size:15px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:14px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:600;text-align:right}
+.raw-box{background:#f9fafb;border:1px solid #eee;border-radius:12px;padding:12px;font-size:13px;line-height:1.6;white-space:pre-wrap;max-height:200px;overflow:auto;color:#374151;margin-top:8px}
+.empty-card{background:#fff;border-radius:18px;padding:24px 18px;box-shadow:0 12px 30px rgba(0,0,0,.12);text-align:center}
+.empty-card .ico{font-size:46px}
+.empty-card h3{font-size:17px;margin:8px 0 6px}
+.empty-card p{font-size:13px;color:var(--muted);line-height:1.6}
+.empty-card ul{text-align:left;max-width:280px;margin:12px auto 0;font-size:13px;color:var(--muted);line-height:1.7;padding-left:18px}
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5}
+.err-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ตรวจรูปก่อนโพสต์ / สแกนรูป 📷</h1>
+    <p>AI อ่านรูปให้ — ตรวจรูปสินค้า • สแกนสลิปโอนเงิน • ถอดป้าย/เมนู</p>
+  </header>
+
+  <div class="card">
+    <div class="mode-tabs" id="modeTabs">
+      <button type="button" data-mode="product" class="active" onclick="setMode('product')"><span class="mi">🛍️</span>รูปสินค้า</button>
+      <button type="button" data-mode="slip" onclick="setMode('slip')"><span class="mi">🧾</span>สแกนสลิป</button>
+      <button type="button" data-mode="label" onclick="setMode('label')"><span class="mi">🔖</span>ป้าย/เมนู</button>
+    </div>
+    <div class="mode-desc" id="modeDesc"></div>
+
+    <div class="field" id="ctxField">
+      <label id="ctxLabel">บริบทเพิ่มเติม (ไม่บังคับ)</label>
+      <input type="text" id="ctxInput" placeholder="">
+    </div>
+
+    <div class="field" id="platformField">
+      <label>แพลตฟอร์มที่จะลงขาย (ไม่บังคับ)</label>
+      <select id="platformInput">
+        <option value="">— ไม่ระบุ —</option>
+        <option>Shopee</option>
+        <option>Lazada</option>
+        <option>TikTok Shop</option>
+        <option>Facebook / Marketplace</option>
+        <option>Instagram</option>
+        <option>LINE Shopping / LINE MyShop</option>
+        <option>เว็บไซต์ร้านตัวเอง</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label id="dropLabel">รูปสินค้าของคุณ</label>
+      <div class="drop" id="drop" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">🖼️</div>
+        <p id="dropText">กดเพื่อเลือกรูป<br><span style="font-size:12px">รองรับ JPG, PNG, WEBP — เลือกได้หลายรูป</span></p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" hidden multiple onchange="onFile(this)">
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🔍 ตรวจรูปเลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFiles = [];
+let mode = 'product';
+let lastResult = null; // { mode, data }
+
+const MODES = {
+  product: {
+    title: '🔍 ตรวจรูปเลย',
+    dropLabel: 'รูปสินค้าของคุณ',
+    dropText: 'กดเพื่อเลือกรูปสินค้า<br><span style="font-size:12px">รองรับ JPG, PNG, WEBP — เลือกได้หลายรูป</span>',
+    desc: 'อัปรูปสินค้า → AI ให้คะแนนความพร้อมขาย + บอกจุดเด่น จุดที่ต้องปรับ และวิธีถ่ายใหม่ให้ขายดีขึ้น',
+    ctxLabel: 'สินค้าคืออะไร / กลุ่มลูกค้า (ไม่บังคับ)',
+    ctxPlaceholder: 'เช่น ครีมกันแดด ขายแม่ๆ วัย 30+, เสื้อยืดสตรีทแวร์วัยรุ่น',
+    multiple: true
+  },
+  slip: {
+    title: '🧾 สแกนสลิปเลย',
+    dropLabel: 'รูปสลิปโอนเงิน',
+    dropText: 'กดเพื่อเลือกรูปสลิป<br><span style="font-size:12px">เลือกได้หลายใบพร้อมกัน → ได้ตาราง + ดาวน์โหลด CSV</span>',
+    desc: 'อัปสลิปโอนเงิน (ทีละหลายใบได้) → AI ถอดเป็นตาราง: วันเวลา, ยอดเงิน (เลขล้วน), เลขอ้างอิง, ธนาคาร พร้อมแฟลกใบที่อ่านไม่ครบ และดาวน์โหลด CSV เข้าบัญชีได้',
+    ctxLabel: 'หมายเหตุ (ไม่บังคับ)',
+    ctxPlaceholder: 'เช่น ยอดออเดอร์วันที่ 24, เช็คกับลูกค้าชื่อ...',
+    multiple: true
+  },
+  label: {
+    title: '🔖 ถอดข้อความเลย',
+    dropLabel: 'รูปป้ายราคา / เมนู / ฉลาก',
+    dropText: 'กดเพื่อเลือกรูปป้าย/เมนู<br><span style="font-size:12px">เลือกได้หลายรูป → ได้ตารางรายการ+ราคา และ rawText</span>',
+    desc: 'อัปรูปป้ายราคา เมนู หรือฉลากสินค้า → AI ถอดเป็นตาราง: ชื่อรายการ + ราคา (แยกออกจากกัน) + รายละเอียด พร้อมดาวน์โหลดข้อความดิบ (rawText) ไปใช้ต่อ',
+    ctxLabel: 'ป้าย/เมนูเกี่ยวกับอะไร (ไม่บังคับ)',
+    ctxPlaceholder: 'เช่น เมนูร้านกาแฟ, ป้ายราคาผักในตลาด',
+    multiple: true
+  }
+};
+
+function setMode(m) {
+  mode = m;
+  const cfg = MODES[m];
+  document.querySelectorAll('#modeTabs button').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  document.getElementById('modeDesc').innerHTML = esc(cfg.desc);
+  document.getElementById('dropLabel').textContent = cfg.dropLabel;
+  document.getElementById('dropText').innerHTML = cfg.dropText;
+  document.getElementById('ctxLabel').textContent = cfg.ctxLabel;
+  document.getElementById('ctxInput').placeholder = cfg.ctxPlaceholder;
+  document.getElementById('go').textContent = cfg.title;
+  document.getElementById('fileInput').multiple = !!cfg.multiple;
+  // platform input only meaningful for product mode
+  document.getElementById('platformField').style.display = (m === 'product') ? '' : 'none';
+  document.getElementById('output').innerHTML = '';
+  lastResult = null;
+}
+
+function onFile(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  if (MODES[mode].multiple) {
+    files.forEach(f => selectedFiles.push(f));
+  } else {
+    selectedFiles = files.slice(0, 1);
+  }
+  input.value = '';
+  renderThumbs();
+}
+
+function removeThumb(idx) {
+  selectedFiles.splice(idx, 1);
+  renderThumbs();
+}
+
+function renderThumbs() {
+  const box = document.getElementById('thumbs');
+  box.innerHTML = '';
+  selectedFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    const img = document.createElement('img');
+    img.alt = f.name;
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.readAsDataURL(f);
+    const rm = document.createElement('button');
+    rm.className = 'rm';
+    rm.type = 'button';
+    rm.textContent = '×';
+    rm.onclick = () => removeThumb(i);
+    div.appendChild(img);
+    div.appendChild(rm);
+    box.appendChild(div);
+  });
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function scoreEmoji(score) {
+  if (score >= 9) return '🌟';
+  if (score >= 7) return '😊';
+  if (score >= 5) return '😐';
+  return '😬';
+}
+function scoreText(score) {
+  if (score >= 9) return 'รูปสวยมาก พร้อมโพสต์!';
+  if (score >= 7) return 'รูปดี ปรับนิดหน่อยก็โพสต์ได้';
+  if (score >= 5) return 'พอใช้ได้ แต่ควรปรับก่อน';
+  return 'ยังไม่พร้อมโพสต์ ลองถ่ายใหม่';
+}
+
+// ---- helpers ----
+function ctxBlock() {
+  const ctx = document.getElementById('ctxInput').value.trim();
+  const plat = (mode === 'product') ? document.getElementById('platformInput').value.trim() : '';
+  let s = '';
+  if (ctx) s += `\nบริบทจากผู้ใช้: ${ctx}`;
+  if (plat) s += `\nแพลตฟอร์มที่จะลงขาย: ${plat} (ปรับคำแนะนำให้เหมาะกับแพลตฟอร์มนี้)`;
+  return s;
+}
+
+const NO_GUESS = 'กฎเหล็ก: วิเคราะห์เฉพาะสิ่งที่ "มองเห็นจริง" ในรูปเท่านั้น ห้ามเดา ห้ามแต่งข้อมูลที่ไม่ปรากฏในรูป ถ้าตรงไหนอ่านไม่ออกหรือไม่เห็น ให้ใส่ค่าว่าง ("") หรือ null และอย่าสมมติขึ้นมาเอง';
+
+function numClean(v) {
+  if (v == null) return '';
+  const m = ('' + v).replace(/[^0-9.\-]/g, '');
+  return m;
+}
+function fmtMoney(n) {
+  const x = Number(n);
+  if (!isFinite(x)) return '';
+  return x.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function copyText(txt) { GeminiKit.copy(txt); }
+
+// ---- run ----
+async function run() {
+  if (!selectedFiles.length) {
+    GeminiKit.toast('เลือกรูปก่อนนะ');
+    return;
+  }
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังอ่านรูป...</div>';
+  try {
+    if (mode === 'product') await runProduct(out);
+    else if (mode === 'slip') await runSlip(out);
+    else await runLabel(out);
+  } catch (e) {
+    out.innerHTML = '<div class="err-card">⚠️ ' + esc(e.message || 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง') + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function emptyState(ico, head, lines) {
+  return `<div class="empty-card"><div class="ico">${ico}</div><h3>${esc(head)}</h3>
+    <ul>${lines.map(l => '<li>' + esc(l) + '</li>').join('')}</ul></div>`;
+}
+
+// ================= PRODUCT =================
+async function runProduct(out) {
+  const prompt = `คุณคือผู้ช่วยร้านค้าออนไลน์ไทยมืออาชีพ ที่เชี่ยวชาญการถ่ายรูปสินค้าให้ขายดีบนแพลตฟอร์มไทย (Shopee/Lazada/TikTok/FB/IG)
+หน้าที่: ดูรูปสินค้าในภาพ แล้วประเมินความพร้อมในการโพสต์ขายจริง
+${NO_GUESS}${ctxBlock()}
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก JSON
+Schema:
+{
+  "isProduct": <true/false ภาพนี้เป็นรูปสินค้าที่ประเมินได้หรือไม่>,
+  "productGuess": <สินค้าที่เห็นในรูปคืออะไร สั้นๆ ถ้าไม่แน่ใจใส่ "">,
+  "score": <ตัวเลข 0-10 ความพร้อมโพสต์ขาย>,
+  "good": [<ข้อดีของรูปที่เห็นจริง 2-4 ข้อ ภาษาไทย>],
+  "improve": [<จุดที่ต้องปรับ พูดให้ลงมือทำได้ทันที (actionable) 2-4 ข้อ ภาษาไทย เช่น "ตัดฉากหลังรกออก ใช้พื้นขาวเรียบ">],
+  "retakeTips": [<วิธีถ่าย/แต่งใหม่ให้ขายดีขึ้น actionable 2-4 ข้อ ภาษาไทย>],
+  "suggestedCaption": <ข้อความแคปชั่น/จุดขายสั้นๆ 1 ประโยคจากสิ่งที่เห็นในรูป ถ้าให้ไม่ได้ใส่ "">
+}`;
+  const result = await GeminiKit.vision(prompt, selectedFiles, {json: true});
+  if (!result || typeof result.score === 'undefined') {
+    if (result && result.isProduct === false) {
+      out.innerHTML = emptyState('🤔', 'AI ดูแล้วนี่อาจไม่ใช่รูปสินค้า', [
+        'ลองอัปรูปที่เห็นตัวสินค้าชัดๆ',
+        'ถ่ายให้สินค้าอยู่กลางภาพ แสงสว่างพอ',
+        'หรือสลับไปโหมด "สแกนสลิป" / "ป้าย/เมนู" ถ้าเป็นเอกสาร'
+      ]);
+      return;
+    }
+    throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+  }
+  const score = Math.max(0, Math.min(10, Number(result.score) || 0));
+  const good = Array.isArray(result.good) ? result.good : [];
+  const improve = Array.isArray(result.improve) ? result.improve : [];
+  const retakeTips = Array.isArray(result.retakeTips) ? result.retakeTips : [];
+  const barWidth = (score / 10 * 100).toFixed(0);
+
+  let html = `
+    <div class="score-card">
+      <div class="score-num">${score.toFixed(1)}</div>
+      <div class="score-label">${scoreEmoji(score)} ${esc(scoreText(score))}</div>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${barWidth}%"></div></div>
+      <div style="font-size:12px;color:var(--muted)">คะแนน ${score.toFixed(1)} / 10${result.productGuess ? ' · ' + esc(result.productGuess) : ''}</div>
+    </div>`;
+
+  if (good.length) html += sectionList('good', '✅ จุดเด่นของรูป', good, 'good-list');
+  if (improve.length) html += sectionList('improve', '⚠️ จุดที่ควรปรับก่อนโพสต์', improve, 'improve-list');
+  if (retakeTips.length) html += sectionList('retake', '💡 วิธีถ่ายใหม่ให้ขายดีขึ้น', retakeTips, 'retake-list');
+
+  if (result.suggestedCaption) {
+    html += `<div class="section-card">
+      <div class="section-title good">📝 แคปชั่น/จุดขายที่แนะนำ</div>
+      <div style="font-size:14px;line-height:1.65">${esc(result.suggestedCaption)}</div></div>`;
+  }
+
+  // build plain-text report
+  let txt = `ผลตรวจรูปสินค้า — คะแนน ${score.toFixed(1)}/10 (${scoreText(score)})\n`;
+  if (result.productGuess) txt += `สินค้า: ${result.productGuess}\n`;
+  txt += `\n[จุดเด่น]\n` + good.map(g => '- ' + g).join('\n');
+  txt += `\n\n[จุดที่ควรปรับ]\n` + improve.map(g => '- ' + g).join('\n');
+  txt += `\n\n[วิธีถ่ายใหม่]\n` + retakeTips.map(g => '- ' + g).join('\n');
+  if (result.suggestedCaption) txt += `\n\n[แคปชั่นแนะนำ]\n${result.suggestedCaption}`;
+
+  out.innerHTML = toolbar([
+    {label: '📋 คัดลอกผล', txt: txt},
+    {label: '⬇️ ดาวน์โหลด .txt', dl: ['ผลตรวจรูปสินค้า.txt', txt, 'text/plain']}
+  ]) + html;
+  bindToolbar(out);
+}
+
+function sectionList(cls, title, arr, listCls) {
+  return `<div class="section-card">
+    <div class="section-title ${cls}">${esc(title)}</div>
+    <ul class="ai-list ${listCls}">${arr.map(x => '<li>' + esc(x) + '</li>').join('')}</ul>
+  </div>`;
+}
+
+// ================= SLIP =================
+async function runSlip(out) {
+  const prompt = `คุณคือผู้ช่วยร้านค้าออนไลน์ไทย ที่ช่วยกระทบยอดสลิปโอนเงิน
+ในรูปอาจมีสลิปโอนเงิน 1 ใบหรือหลายใบ (PromptPay/โอนธนาคาร/TrueMoney ฯลฯ) — ถอดข้อมูลแต่ละใบออกมา
+${NO_GUESS}${ctxBlock()}
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก JSON
+Schema:
+{
+  "anySlip": <true/false มีสลิปโอนเงินในรูปหรือไม่>,
+  "slips": [
+    {
+      "datetime": <วันและเวลาที่โอน ตามที่เห็น เช่น "24 มิ.ย. 67 14:32" ถ้าไม่เห็นใส่ "">,
+      "amount": <ยอดเงินเป็น "ตัวเลขล้วน" ไม่มีสัญลักษณ์/คอมม่า เช่น 1250.00 ถ้าอ่านไม่ได้ใส่ "">,
+      "ref": <เลขอ้างอิง/รหัสรายการ (Ref/Transaction No.) ตามที่เห็น ถ้าไม่เห็นใส่ "">,
+      "fromName": <ชื่อผู้โอน ถ้าเห็น ไม่เห็นใส่ "">,
+      "toName": <ชื่อผู้รับ ถ้าเห็น ไม่เห็นใส่ "">,
+      "bank": <ธนาคาร/ช่องทาง ถ้าเห็น ไม่เห็นใส่ "">,
+      "complete": <true ถ้าอ่านครบทั้ง ยอดเงิน+เลขอ้างอิง+วันเวลา, ไม่ครบใส่ false>,
+      "missing": [<ชื่อฟิลด์ที่อ่านไม่ได้ เช่น "เลขอ้างอิง","ยอดเงิน">]
+    }
+  ]
+}`;
+  const result = await GeminiKit.vision(prompt, selectedFiles, {json: true});
+  if (!result || result.anySlip === false || !Array.isArray(result.slips) || !result.slips.length) {
+    out.innerHTML = emptyState('🧾', 'อ่านสลิปไม่ได้ / ไม่พบสลิปในรูป', [
+      'ถ่าย/แคปสลิปให้เห็นยอดเงินและเลขอ้างอิงชัดๆ',
+      'อย่าให้แสงสะท้อนหรือนิ้วบังตัวเลข',
+      'ถ้าเป็นสลิปยาว ถ่ายให้เห็นครบทั้งใบ'
+    ]);
+    return;
+  }
+  const slips = result.slips.map(s => ({
+    datetime: s.datetime || '',
+    amount: numClean(s.amount),
+    ref: s.ref || '',
+    fromName: s.fromName || '',
+    toName: s.toName || '',
+    bank: s.bank || '',
+    complete: s.complete !== false && numClean(s.amount) && (s.ref || '').toString().trim(),
+    missing: Array.isArray(s.missing) ? s.missing : []
+  }));
+
+  let total = 0, flagged = 0;
+  slips.forEach(s => { if (s.amount) total += Number(s.amount) || 0; if (!s.complete) flagged++; });
+
+  let rows = slips.map((s, i) => {
+    const cls = s.complete ? '' : ' class="flagged"';
+    const flag = s.complete
+      ? '<span class="badge ok">ครบ</span>'
+      : '<span class="badge warn">อ่านไม่ครบ' + (s.missing.length ? ': ' + esc(s.missing.join(', ')) : '') + '</span>';
+    return `<tr${cls}>
+      <td>${i + 1}</td>
+      <td>${esc(s.datetime) || '—'}</td>
+      <td class="num">${s.amount ? esc(fmtMoney(s.amount)) : '—'}</td>
+      <td>${esc(s.ref) || '—'}</td>
+      <td>${esc(s.bank) || '—'}</td>
+      <td>${flag}</td>
+    </tr>`;
+  }).join('');
+
+  let html = `<div class="section-card">
+    <div class="section-title good">🧾 ผลสแกนสลิป ${slips.length} ใบ${flagged ? ' · <span style="color:#dc2626">มี ' + flagged + ' ใบอ่านไม่ครบ</span>' : ''}</div>
+    <div class="tbl-wrap"><table class="data">
+      <thead><tr><th>#</th><th>วันเวลา</th><th>ยอด (บาท)</th><th>เลขอ้างอิง</th><th>ธนาคาร</th><th>สถานะ</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="sum-row"><span>ยอดรวมที่อ่านได้</span><span>${esc(fmtMoney(total))} บาท</span></div>
+    ${flagged ? '<div class="note">⚠️ แถวสีแดง = AI อ่านไม่ครบ กรุณาตรวจสอบยอด/เลขอ้างอิงด้วยตาอีกครั้งก่อนนำไปกระทบยอด</div>' : ''}
+  </div>`;
+
+  // CSV
+  const csvHead = 'ลำดับ,วันเวลา,ยอดเงิน,เลขอ้างอิง,ธนาคาร,ผู้โอน,ผู้รับ,สถานะ';
+  const csvRows = slips.map((s, i) => [
+    i + 1,
+    csvCell(s.datetime),
+    s.amount || '',
+    csvCell(s.ref),
+    csvCell(s.bank),
+    csvCell(s.fromName),
+    csvCell(s.toName),
+    s.complete ? 'ครบ' : 'อ่านไม่ครบ:' + s.missing.join('|')
+  ].join(','));
+  const csv = '﻿' + [csvHead, ...csvRows].join('\r\n') + `\r\n,,${total},,,,,รวม`;
+
+  // text
+  const txt = slips.map((s, i) =>
+    `${i + 1}. ${s.datetime || '-'} | ${s.amount ? fmtMoney(s.amount) : '-'} บาท | Ref: ${s.ref || '-'} | ${s.bank || '-'}${s.complete ? '' : ' [อ่านไม่ครบ]'}`
+  ).join('\n') + `\n\nยอดรวมที่อ่านได้: ${fmtMoney(total)} บาท`;
+
+  out.innerHTML = toolbar([
+    {label: '📋 คัดลอกตาราง', txt: txt},
+    {label: '⬇️ ดาวน์โหลด CSV', dl: ['สแกนสลิป.csv', csv, 'text/csv']}
+  ]) + html;
+  bindToolbar(out);
+}
+
+function csvCell(v) {
+  v = (v == null ? '' : '' + v);
+  if (/[",\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+// ================= LABEL / MENU =================
+async function runLabel(out) {
+  const prompt = `คุณคือผู้ช่วยร้านค้าออนไลน์ไทย ที่ช่วยถอดข้อความจากรูปป้ายราคา เมนู หรือฉลากสินค้า
+ถอดรายการที่เห็น โดย "แยกราคาออกจากชื่อ/รายละเอียด" ให้ชัดเจน
+${NO_GUESS}${ctxBlock()}
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก JSON
+Schema:
+{
+  "anyText": <true/false อ่านข้อความจากรูปได้หรือไม่>,
+  "docType": <ชนิดเอกสาร เช่น "เมนูอาหาร","ป้ายราคา","ฉลากสินค้า" ถ้าไม่แน่ใจใส่ "">,
+  "items": [
+    {
+      "name": <ชื่อรายการ/สินค้า ตามที่เห็น>,
+      "price": <ราคาเป็น "ตัวเลขล้วน" ไม่มีสัญลักษณ์/บาท/คอมม่า ถ้าไม่มีราคาใส่ "">,
+      "unit": <หน่วย/ขนาด ถ้ามี เช่น "แก้ว","กก.","ขวด" ไม่มีใส่ "">,
+      "detail": <รายละเอียดอื่นๆ ที่ไม่ใช่ชื่อและราคา เช่น คำอธิบาย โปรโมชั่น ไม่มีใส่ "">
+    }
+  ],
+  "rawText": <ข้อความดิบทั้งหมดที่อ่านได้จากรูป ตามบรรทัดจริง>
+}`;
+  const result = await GeminiKit.vision(prompt, selectedFiles, {json: true});
+  if (!result || result.anyText === false || (!Array.isArray(result.items) && !result.rawText)) {
+    out.innerHTML = emptyState('🔖', 'อ่านข้อความจากรูปไม่ได้', [
+      'ถ่ายป้าย/เมนูให้ตัวหนังสือชัด ไม่เอียงมาก',
+      'หลีกเลี่ยงแสงสะท้อนและเงา',
+      'ถ้าตัวเล็ก ลองถ่ายแยกเป็นหลายรูปแล้วอัปทีละส่วน'
+    ]);
+    return;
+  }
+  const items = Array.isArray(result.items) ? result.items.map(it => ({
+    name: it.name || '',
+    price: numClean(it.price),
+    unit: it.unit || '',
+    detail: it.detail || ''
+  })) : [];
+  const rawText = result.rawText || '';
+
+  let html = '';
+  if (items.length) {
+    const rows = items.map((it, i) => `<tr>
+      <td>${i + 1}</td>
+      <td>${esc(it.name) || '—'}</td>
+      <td class="num">${it.price ? esc(it.price) : '—'}</td>
+      <td>${esc(it.unit) || '—'}</td>
+      <td>${esc(it.detail) || '—'}</td>
+    </tr>`).join('');
+    html += `<div class="section-card">
+      <div class="section-title good">🔖 ถอดรายการ ${items.length} รายการ${result.docType ? ' · ' + esc(result.docType) : ''}</div>
+      <div class="tbl-wrap"><table class="data">
+        <thead><tr><th>#</th><th>ชื่อรายการ</th><th>ราคา</th><th>หน่วย</th><th>รายละเอียด</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+  }
+  if (rawText) {
+    html += `<div class="section-card">
+      <div class="section-title retake">📄 ข้อความดิบ (rawText)</div>
+      <div class="raw-box">${esc(rawText)}</div>
+    </div>`;
+  }
+
+  const tools = [];
+  // CSV of items
+  if (items.length) {
+    const csvHead = 'ลำดับ,ชื่อรายการ,ราคา,หน่วย,รายละเอียด';
+    const csvRows = items.map((it, i) => [i + 1, csvCell(it.name), it.price || '', csvCell(it.unit), csvCell(it.detail)].join(','));
+    const csv = '﻿' + [csvHead, ...csvRows].join('\r\n');
+    tools.push({label: '📋 คัดลอกราคา', txt: items.map(it => `${it.name}\t${it.price || '-'}${it.unit ? ' /' + it.unit : ''}`).join('\n')});
+    tools.push({label: '⬇️ ดาวน์โหลด CSV', dl: ['รายการราคา.csv', csv, 'text/csv']});
+  }
+  if (rawText) {
+    tools.push({label: '📄 ดาวน์โหลด rawText', dl: ['rawText.txt', rawText, 'text/plain']});
+  }
+
+  out.innerHTML = (tools.length ? toolbar(tools) : '') + html;
+  bindToolbar(out);
+}
+
+// ================= TOOLBAR (copy/download) =================
+let _toolStore = [];
+function toolbar(items) {
+  _toolStore = items;
+  return '<div class="toolbar">' + items.map((it, i) =>
+    `<button type="button" data-tool="${i}">${esc(it.label)}</button>`
+  ).join('') + '</div>';
+}
+function bindToolbar(scope) {
+  scope.querySelectorAll('.toolbar button[data-tool]').forEach(b => {
+    const it = _toolStore[Number(b.dataset.tool)];
+    if (!it) return;
+    b.onclick = () => {
+      if (it.txt != null) GeminiKit.copy(it.txt);
+      else if (it.dl) GeminiKit.download(it.dl[0], it.dl[1], it.dl[2]);
+    };
+  });
+}
+
+// init
+setMode('product');
+</script>
+</body></html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สร้างปกคลิป/Thumbnail 🖥️</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#ee0979;--bg2:#ff6a00;--accent:#ea580c;--soft:#fff7ed;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;background:#fff;color:var(--ink)}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6;cursor:not-allowed}
+.drop{border:2px dashed #fbd5b5;border-radius:13px;padding:20px;text-align:center;cursor:pointer;background:var(--soft);transition:border-color .2s;position:relative}
+.drop:hover{border-color:var(--accent)}
+.drop-label{font-size:14px;color:var(--muted)}
+.drop-label span{font-weight:600;color:var(--accent)}
+.preview-img{width:100%;border-radius:10px;margin-top:10px;max-height:160px;object-fit:cover;display:none}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-wrap{background:#fff;border-radius:20px;padding:16px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-top:16px}
+.result-wrap h3{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--ink)}
+.thumb-container{width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.thumb-container img{width:100%;height:100%;object-fit:cover}
+.warn-box{background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:12px 14px;font-size:13px;color:#c2410c;margin-bottom:12px;line-height:1.6}
+.warn-box strong{font-weight:700}
+.dl-btn{display:block;width:100%;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#ee0979,#ff6a00);color:#fff;text-align:center;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-top:16px;color:#dc2626;font-size:15px;line-height:1.6;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1;min-width:90px;border:2px solid var(--soft);background:#fff;border-radius:12px;padding:9px 8px;font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-align:center;transition:all .15s;line-height:1.35}
+.chip b{display:block;font-size:14px;font-weight:700;color:var(--ink)}
+.chip.active{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.chip.active b{color:var(--accent)}
+.regen-btn{display:block;width:100%;border:2px solid var(--accent);border-radius:12px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);text-align:center;margin-bottom:10px}
+.regen-btn:disabled{opacity:.6;cursor:not-allowed}
+.change-img{display:inline-block;margin-top:8px;font-size:12px;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สร้างปกคลิป/Thumbnail 🖥️</h1>
+    <p>ใส่หัวข้อ + อารมณ์ → ได้รูปปกสวยพร้อมใช้</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>หัวข้อคลิป / ชื่อวิดีโอ</label>
+      <input id="title" type="text" placeholder="เช่น วิธีทำเงิน 1 ล้านจาก TikTok ใน 3 เดือน">
+    </div>
+    <div class="field">
+      <label>อารมณ์ที่ต้องการ</label>
+      <select id="mood">
+        <option value="ตื่นเต้น ดึงดูด อยากคลิก">🔥 ตื่นเต้น — ดึงดูดสายตา</option>
+        <option value="น่าเชื่อถือ เป็นมืออาชีพ สงบ">🎯 น่าเชื่อถือ — ดูเป็นผู้เชี่ยวชาญ</option>
+        <option value="สนุกสนาน ขำขัน ลูกเล่นเยอะ">😄 สนุก — เบาสมอง มีลูกเล่น</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>อัตราส่วนภาพ (แพลตฟอร์ม)</label>
+      <div class="chips" id="ratioChips">
+        <button type="button" class="chip active" data-ratio="16:9" onclick="setRatio(this)"><b>16:9</b>YouTube</button>
+        <button type="button" class="chip" data-ratio="1:1" onclick="setRatio(this)"><b>1:1</b>Shopee/Lazada</button>
+        <button type="button" class="chip" data-ratio="4:5" onclick="setRatio(this)"><b>4:5</b>IG Feed</button>
+        <button type="button" class="chip" data-ratio="9:16" onclick="setRatio(this)"><b>9:16</b>Story/Reels</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>อัปโหลดรูปหน้า/สินค้า (ไม่บังคับ)</label>
+      <div class="drop" id="drop" onclick="document.getElementById('fileIn').click()">
+        <div class="drop-label">แตะเพื่อเลือกรูป<br><span>รูปหน้า หรือรูปสินค้า</span></div>
+        <img id="preview" class="preview-img" alt="preview">
+        <input type="file" id="fileIn" accept="image/*" hidden onchange="handleFile(this)">
+      </div>
+      <span class="change-img" id="changeImg" style="display:none" onclick="document.getElementById('fileIn').click()">🔁 เปลี่ยนรูปต้นทาง</span>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🖼️ สร้าง Thumbnail เลย</button>
+  <p style="text-align:center;color:rgba(255,255,255,.75);font-size:12px;margin-top:8px">⚠️ ตัวอักษรไทยบนรูปอาจเพี้ยน แนะนำใส่ข้อความเองทีหลังด้วย Canva</p>
+
+  <div id="output"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+let ratio = '16:9';
+
+// แต่ละอัตราส่วน: คำสั่ง framing + ค่า aspect-ratio สำหรับ CSS แสดงผล
+const RATIOS = {
+  '16:9': {frame:'wide 16:9 landscape YouTube thumbnail, full-bleed composition', css:'16/9'},
+  '1:1':  {frame:'square 1:1 composition for Shopee/Lazada e-commerce listing, product centered', css:'1/1'},
+  '4:5':  {frame:'vertical 4:5 portrait composition for Instagram feed', css:'4/5'},
+  '9:16': {frame:'tall vertical 9:16 full-screen composition for Story/Reels, key elements in the safe center area', css:'9/16'}
+};
+
+function setRatio(el) {
+  ratio = el.dataset.ratio;
+  document.querySelectorAll('#ratioChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  selectedFile = file;
+  const preview = document.getElementById('preview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  document.querySelector('.drop-label').style.display = 'none';
+  document.getElementById('changeImg').style.display = 'inline-block';
+}
+
+function buildPrompt(title, mood) {
+  const r = RATIOS[ratio] || RATIOS['16:9'];
+  return `สร้าง thumbnail/ปกคลิป สไตล์ ${mood}
+หัวข้อคลิป: "${title}"
+ข้อกำหนด:
+- ${r.frame} (aspect ratio ${ratio}, เต็มภาพ ไม่มีขอบขาว)
+- มีข้อความภาษาอังกฤษที่สื่อถึงหัวข้อ (ตัวใหญ่ bold อ่านง่าย)
+- พื้นหลังดึงดูดสายตา มีความคมชัดสูง สีสันสดใสตัดกันชัด
+- มีองค์ประกอบกราฟิกที่น่าสนใจ ลูกศร วงกลม ดาว หรือเอฟเฟกต์ที่ทำให้อยากคลิก
+- ถ้ามีรูปต้นทาง ให้ใส่บุคคลหรือสินค้านั้นในรูปด้วย และห้ามบิดเบือนหรือเปลี่ยนสีสินค้า เก็บฉลาก/แบรนด์ให้อ่านออกและเหมือนเดิม
+ภาพต้องเป็น photorealistic, sharp focus, e-commerce ready, ไม่มี watermark หรือข้อความเกินจำเป็น สวยงาม professional ทันสมัย`;
+}
+
+async function run() {
+  const title = document.getElementById('title').value.trim();
+  const mood = document.getElementById('mood').value;
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+
+  if (!title) {
+    GeminiKit.toast('ใส่หัวข้อคลิปก่อนนะ');
+    return;
+  }
+
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังสร้าง Thumbnail...</div>';
+
+  const inputFiles = selectedFile ? [selectedFile] : [];
+  const prompt = buildPrompt(title, mood);
+
+  try {
+    const dataURL = await GeminiKit.generateImage(prompt, inputFiles);
+
+    // กัน null / ค่าว่าง / ไม่ใช่ data:image
+    if (typeof dataURL !== 'string' || !dataURL.startsWith('data:image')) {
+      throw new Error('AI ไม่สามารถสร้างรูปได้ในตอนนี้ ลองกด "สร้างใหม่อีกครั้ง" หรือปรับหัวข้อแล้วลองใหม่');
+    }
+
+    const ext = dataURL.startsWith('data:image/png') ? 'png' : 'jpg';
+    const filename = 'thumbnail-' + ratio.replace(':','x') + '-' + Date.now() + '.' + ext;
+    const css = (RATIOS[ratio] || RATIOS['16:9']).css;
+
+    out.innerHTML = `
+      <div class="result-wrap">
+        <h3>✅ Thumbnail พร้อมแล้ว! (${esc(ratio)})</h3>
+        <div class="thumb-container" style="aspect-ratio:${esc(css)}">
+          <img src="${esc(dataURL)}" alt="thumbnail">
+        </div>
+        <div class="warn-box">
+          <strong>⚠️ หมายเหตุ:</strong> รูปนี้มี watermark SynthID จาก Google<br>
+          ตัวอักษรไทยบนรูปอาจเพี้ยน — แนะนำใส่ข้อความไทยเองทีหลังด้วย Canva หรือ CapCut
+        </div>
+        <button class="regen-btn" id="regenBtn" onclick="run()">🔄 สร้างใหม่อีกครั้ง</button>
+        <a class="dl-btn" id="dlBtn" download="${esc(filename)}" href="${esc(dataURL)}">⬇️ ดาวน์โหลด Thumbnail</a>
+      </div>`;
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) +
+      '<br><button class="regen-btn" style="margin-top:12px" onclick="run()">🔄 ลองสร้างใหม่อีกครั้ง</button></div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+</script>
+</body></html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>รีทัช/ลบพื้นหลังสินค้า 🪄</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#1f4037;--bg2:#99f2c8;--accent:#10b981;--soft:#d1fae5;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.drop{border:2px dashed var(--soft);border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;background:#f9fffe;transition:border-color .2s}
+.drop:hover{border-color:var(--accent)}
+.drop-icon{font-size:36px;margin-bottom:8px}
+.drop-text{font-size:14px;color:var(--muted)}
+.drop-text strong{color:var(--accent)}
+.preview-box{margin-top:14px;display:none}
+.preview-box img{width:100%;border-radius:12px;object-fit:contain;max-height:220px;background:#f3f4f6}
+.preview-name{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.compare-item{background:#fff;border-radius:16px;padding:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);text-align:center}
+.compare-item img{width:100%;border-radius:10px;object-fit:contain;max-height:180px;background:#f3f4f6}
+.compare-label{font-size:12px;font-weight:600;margin-top:8px}
+.compare-label.before{color:var(--muted)}
+.compare-label.after{color:var(--accent)}
+.dl-btn{display:block;width:100%;border:none;border-radius:14px;padding:13px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.2);text-decoration:none;text-align:center;margin-bottom:10px}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--soft);background:#f9fffe;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink);font-family:inherit;transition:all .15s;text-align:center}
+.chip:hover{border-color:var(--accent)}
+.chip.active{background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border-color:transparent}
+.chip small{display:block;font-size:10px;opacity:.8;font-weight:400;margin-top:1px}
+.regen-btn{display:block;width:100%;border:1.5px solid var(--accent);border-radius:14px;padding:13px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);margin-bottom:10px}.regen-btn:disabled{opacity:.5;cursor:default}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>รีทัช/ลบพื้นหลังสินค้า 🪄</h1>
+    <p>อัปรูปสินค้า → AI ลบพื้นหลังให้สวยระดับสตูดิโอ</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>อัปโหลดรูปสินค้า</label>
+      <div class="drop" id="dropZone">
+        <div class="drop-icon">📦</div>
+        <div class="drop-text"><strong>แตะเพื่อเลือกรูป</strong><br>รองรับ JPG, PNG, WEBP</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <div class="preview-box" id="previewBox">
+        <img id="previewImg" src="" alt="preview">
+        <div class="preview-name" id="previewName"></div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:0">
+      <label>อัตราส่วนภาพ (เลือกตามแพลตฟอร์ม)</label>
+      <div class="chips" id="ratioChips">
+        <button type="button" class="chip active" data-ratio="1:1" onclick="pickRatio(this)">1:1<small>Shopee/Lazada</small></button>
+        <button type="button" class="chip" data-ratio="4:5" onclick="pickRatio(this)">4:5<small>IG Post</small></button>
+        <button type="button" class="chip" data-ratio="9:16" onclick="pickRatio(this)">9:16<small>Story/Reels</small></button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="goBtn" onclick="run()">🪄 ลบพื้นหลังเลย</button>
+  <p class="note">รูปผลลัพธ์มี watermark SynthID จาก Google</p>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+let selectedRatio = '1:1';
+
+const RATIO_HINT = {
+  '1:1': 'Square 1:1 aspect ratio, centered product, square format ideal for Shopee/Lazada thumbnails.',
+  '4:5': 'Vertical 4:5 (portrait) aspect ratio, product centered with balanced margins, ideal for Instagram feed posts.',
+  '9:16': 'Tall vertical 9:16 aspect ratio (full-screen portrait), product centered for Story/Reels format.'
+};
+
+function pickRatio(el){
+  selectedRatio = el.dataset.ratio;
+  document.querySelectorAll('#ratioChips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const previewBox = document.getElementById('previewBox');
+const previewImg = document.getElementById('previewImg');
+const previewName = document.getElementById('previewName');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files[0];
+  if (f) setFile(f);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--soft)'; });
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.borderColor = 'var(--soft)';
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) setFile(f);
+  else GeminiKit.toast('กรุณาเลือกไฟล์รูปภาพ');
+});
+
+function setFile(f) {
+  selectedFile = f;
+  const url = URL.createObjectURL(f);
+  previewImg.src = url;
+  previewName.textContent = f.name;
+  previewBox.style.display = 'block';
+  dropZone.querySelector('.drop-text').innerHTML = '<strong>เปลี่ยนรูป</strong> หรือลากวางใหม่';
+}
+
+function isImageURL(u){ return typeof u === 'string' && u.indexOf('data:image') === 0; }
+
+async function run() {
+  if (!selectedFile) { GeminiKit.toast('เลือกรูปสินค้าก่อนนะ'); return; }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('goBtn');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังลบพื้นหลัง...</div>';
+
+  const ratio = selectedRatio;
+  const fileForRun = selectedFile;
+  const beforeURL = URL.createObjectURL(fileForRun);
+
+  const prompt =
+    'ลบพื้นหลังรูปสินค้าในภาพนี้ให้เป็นพื้นขาวล้วนสะอาดระดับสตูดิโอ (pure white background) ' +
+    'คงรูปทรง สีสัน พื้นผิว และสัดส่วนของตัวสินค้าเดิมไว้อย่างแม่นยำ ' +
+    'แต่งแสงเงาให้คมชัดดูเป็นมืออาชีพ พร้อมนำไปใช้ขายของออนไลน์ได้ทันที. ' +
+    RATIO_HINT[ratio] + ' ' +
+    'photorealistic, sharp focus, e-commerce ready product photo, ' +
+    'do NOT distort, reshape, or recolor the product, ' +
+    'keep any label, logo and branding text readable and unchanged, ' +
+    'no extra text, no watermark, no shadow text, no decorative elements.';
+
+  try {
+    const resultURL = await GeminiKit.generateImage(prompt, [fileForRun]);
+    if (!isImageURL(resultURL)) throw new Error('AI ไม่ได้ส่งรูปกลับมา (อาจถูกตัวกรองบล็อก) ลองกด "สร้างใหม่อีกครั้ง" หรือเปลี่ยนรูปต้นทาง');
+
+    out.innerHTML = `
+      <div class="compare">
+        <div class="compare-item">
+          <img src="${esc(beforeURL)}" alt="ก่อน">
+          <div class="compare-label before">📷 รูปเดิม</div>
+        </div>
+        <div class="compare-item">
+          <img src="${esc(resultURL)}" alt="หลัง">
+          <div class="compare-label after">✨ ลบพื้นหลังแล้ว (${esc(ratio)})</div>
+        </div>
+      </div>
+      <a class="dl-btn" id="dlBtn" download="bg-removed-${esc(ratio.replace(':','x'))}.png">⬇️ ดาวน์โหลดรูป</a>
+      <button class="regen-btn" id="regenBtn" onclick="run()">🔄 สร้างใหม่อีกครั้ง</button>
+      <p class="note">รูปมี watermark SynthID จาก Google · ตัวอักษรไทยอาจแสดงไม่ถูกต้องหากรูปมีข้อความ</p>
+    `;
+
+    document.getElementById('dlBtn').href = resultURL;
+
+  } catch(e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>'
+      + '<button class="regen-btn" onclick="run()">🔄 ลองใหม่อีกครั้ง</button>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+</script>
+</body></html>

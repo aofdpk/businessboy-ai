@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ที่ปรึกษาตัดต่อ AI 🎬</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg1:#1a1a2e;--bg2:#16213e;--card:#fff;--ink:#1f2937;--muted:#6b7280;--soft:#eef2ff;--accent:#e94560}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+  .wrap{max-width:480px;margin:0 auto}
+  header{text-align:center;color:#fff;margin-bottom:18px}
+  header h1{font-size:25px;font-weight:700;text-shadow:0 3px 12px rgba(0,0,0,.3)}
+  header p{font-size:13px;opacity:.85;margin-top:4px}
+  .card{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.25);margin-bottom:16px}
+  .drop{border:2.5px dashed #c7d2fe;border-radius:16px;padding:24px;text-align:center;cursor:pointer;color:var(--muted)}
+  .drop:hover{border-color:var(--accent);background:var(--soft)}
+  .drop .ic{font-size:36px}
+  video{width:100%;border-radius:14px;display:none;margin-bottom:8px}
+  .fname{font-size:13px;color:var(--muted);text-align:center}
+  .btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#e94560,#ff6b6b);color:#fff;box-shadow:0 10px 24px rgba(233,69,96,.4)}
+  .btn:disabled{opacity:.6}
+  .sec{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+  .sec h3{font-size:15px;margin-bottom:10px;color:var(--accent)}
+  .ts{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--soft);font-size:14px;line-height:1.5}
+  .ts:last-child{border-bottom:none}
+  .ts .t{font-weight:700;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .item{font-size:14px;line-height:1.7;white-space:pre-wrap}
+  .loading{text-align:center;color:#fff;padding:24px;font-size:15px}
+  .spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .note{font-size:11px;color:rgba(255,255,255,.7);text-align:center;margin-top:8px;line-height:1.5}
+  .plat{margin-top:14px}
+  .plat label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .plat select{width:100%;padding:12px;border:1.5px solid #c7d2fe;border-radius:12px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff}
+  .acts{display:flex;gap:10px;margin-bottom:12px}
+  .acts .mini{flex:1;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--soft);color:var(--accent)}
+  .acts .mini:active{opacity:.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ที่ปรึกษาตัดต่อ AI 🎬</h1>
+    <p>แนบคลิปเต็ม → AI ดูทั้งคลิป บอกจุดตัด/ไฮไลต์</p>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+      <div class="ic">🎥</div><div>แตะอัปคลิป (mp4/mov)</div>
+    </div>
+    <video id="preview" controls></video>
+    <div class="fname" id="fname"></div>
+    <input type="file" id="file" accept="video/*" hidden onchange="onFile(event)">
+    <div class="plat">
+      <label>🎯 แพลตฟอร์มเป้าหมาย</label>
+      <select id="platform">
+        <option value="TikTok / Reels (แนวตั้ง สั้น เน้น hook)">TikTok / Reels</option>
+        <option value="Facebook (เน้นหยุดนิ้ว + คนไทยทั่วไป)">Facebook</option>
+        <option value="YouTube Shorts">YouTube Shorts</option>
+        <option value="YouTube (คลิปยาว)">YouTube (คลิปยาว)</option>
+        <option value="ไม่ระบุ (วิเคราะห์ทั่วไป)">ไม่ระบุ</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()" disabled>🎬 ให้ AI ดูแล้วแนะนำ</button>
+  <div class="note">คลิปยิ่งสั้น ยิ่งเร็วและประหยัดโทเคน · แนะนำคลิปไม่เกิน 2-3 นาทีตอนเดโม่</div>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+let file=null;
+let lastResult=null;
+function onFile(e){
+  file=e.target.files[0];if(!file)return;
+  const v=document.getElementById('preview');v.src=URL.createObjectURL(file);v.style.display='block';
+  document.getElementById('drop').style.display='none';
+  const mb=file.size/1048576;
+  document.getElementById('fname').textContent=file.name+' · '+mb.toFixed(1)+' MB';
+  document.getElementById('go').disabled=false;
+  if(mb>80)GeminiKit.toast('⚠️ ไฟล์ใหญ่ '+mb.toFixed(0)+' MB อาจอัปช้าและกินโทเคนมาก แนะนำตัดให้สั้นลงก่อน');
+}
+async function run(){
+  if(!file)return;
+  const out=document.getElementById('output');const btn=document.getElementById('go');btn.disabled=true;lastResult=null;
+  const platform=document.getElementById('platform').value;
+  const prompt=`คุณคือโปรดิวเซอร์/ครีเอเตอร์มืออาชีพระดับท็อปของไทย ที่เชี่ยวชาญคลิปสั้นขายของ มียอดวิวหลักล้านมาแล้ว
+แพลตฟอร์มเป้าหมาย: ${platform}
+ดูคลิปนี้ทั้งคลิปแล้ววิเคราะห์เพื่อช่วยตัดต่อให้ปังขึ้นและขายของได้จริง ใช้ timecode รูปแบบ mm:ss ชัดเจนเสมอ (เช่น 00:07)
+ตอบเป็น JSON object เท่านั้น (ภาษาไทย กระชับ ลงมือทำได้ทันที):
+{
+ "hook": "วิจารณ์ 3 วินาทีแรกว่าหยุดนิ้วได้ไหม ควรแก้ยังไง",
+ "hookRewrite": "เขียน hook 3 วินาทีแรกใหม่ให้ดึงดูดกว่าเดิม (พูดได้เลย ดัดแปลงใช้กับสินค้าตัวเองได้ทันที)",
+ "boring": [{"time":"mm:ss-mm:ss","why":"ทำไมช่วงนี้น่าเบื่อ/ควรตัดออก"}],
+ "highlights": [{"time":"mm:ss","why":"ทำไมช่วงนี้เด็ด ควรเก็บ/ดันเป็นไฮไลต์"}],
+ "cutSuggestion": "สรุปแนวทางตัดต่อทีละสเตป + ความยาวที่แนะนำสำหรับแพลตฟอร์มนี้",
+ "captionIdea": "แคปชั่น/ข้อความ overlay ที่ควรใส่ตอนต้นคลิป",
+ "cta": "Call-to-action ปิดท้ายที่กระตุ้นให้ทักแชท/สั่งซื้อ (พูดได้เลย)"
+}`;
+  out.innerHTML='<div class="loading"><div class="spinner"></div><span id="stage">กำลังเริ่ม...</span></div>';
+  const setStage=(...a)=>{const el=document.getElementById('stage');if(!el)return;
+    const arg=a.length>1?a[1]:a[0];
+    if(typeof arg==='string')el.textContent=arg;
+    else if(arg&&typeof arg==='object'&&arg.text)el.textContent=arg.text;
+  };
+  try{
+    const raw=await GeminiKit.video(prompt,file,setStage);
+    const r=parseJson(raw);
+    if(!r){out.innerHTML=`<div class="sec"><h3>ผลวิเคราะห์</h3><div class="item">${esc(raw)}</div></div>`;lastResult={_raw:raw};return}
+    lastResult=r;
+    render(r);
+  }catch(e){
+    out.innerHTML=`<div class="sec" style="color:#dc2626">⚠️ ${esc(e.message)}</div>`;
+  }finally{btn.disabled=false}
+}
+function render(r){
+  let h='<div class="acts"><button class="mini" onclick="copyAll()">📋 คัดลอกผลทั้งหมด</button><button class="mini" onclick="downloadTxt()">⬇️ ดาวน์โหลด .txt</button></div>';
+  if(r.hook)h+=`<div class="sec"><h3>🎯 3 วินาทีแรก</h3><div class="item">${esc(r.hook)}</div></div>`;
+  if(r.hookRewrite)h+=`<div class="sec"><h3>✍️ Hook เขียนใหม่ (ใช้ได้เลย)</h3><div class="item">${esc(r.hookRewrite)}</div></div>`;
+  if(r.highlights&&r.highlights.length)h+=`<div class="sec"><h3>⭐ ช่วงเด็ด (เก็บไว้)</h3>${r.highlights.map(x=>tsRow(x)).join('')}</div>`;
+  if(r.boring&&r.boring.length)h+=`<div class="sec"><h3>✂️ ช่วงควรตัด</h3>${r.boring.map(x=>tsRow(x)).join('')}</div>`;
+  if(r.cutSuggestion)h+=`<div class="sec"><h3>🎬 แนวทางตัดต่อ</h3><div class="item">${esc(r.cutSuggestion)}</div></div>`;
+  if(r.captionIdea)h+=`<div class="sec"><h3>📝 แคปชั่น/Hook ที่ควรใส่</h3><div class="item">${esc(r.captionIdea)}</div></div>`;
+  if(r.cta)h+=`<div class="sec"><h3>📣 CTA ปิดท้าย</h3><div class="item">${esc(r.cta)}</div></div>`;
+  document.getElementById('output').innerHTML=h;
+}
+function buildText(){
+  const r=lastResult;if(!r)return'';
+  if(r._raw)return r._raw;
+  const L=[];
+  L.push('=== ที่ปรึกษาตัดต่อ AI ===');
+  if(r.hook)L.push('\n[3 วินาทีแรก]\n'+r.hook);
+  if(r.hookRewrite)L.push('\n[Hook เขียนใหม่]\n'+r.hookRewrite);
+  if(r.highlights&&r.highlights.length)L.push('\n[ช่วงเด็ด (เก็บไว้)]\n'+r.highlights.map(x=>'• '+x.time+' — '+x.why).join('\n'));
+  if(r.boring&&r.boring.length)L.push('\n[ช่วงควรตัด]\n'+r.boring.map(x=>'• '+x.time+' — '+x.why).join('\n'));
+  if(r.cutSuggestion)L.push('\n[แนวทางตัดต่อ]\n'+r.cutSuggestion);
+  if(r.captionIdea)L.push('\n[แคปชั่น/Hook ที่ควรใส่]\n'+r.captionIdea);
+  if(r.cta)L.push('\n[CTA ปิดท้าย]\n'+r.cta);
+  return L.join('\n');
+}
+function copyAll(){const t=buildText();if(t)GeminiKit.copy(t)}
+function downloadTxt(){const t=buildText();if(t)GeminiKit.download('edit-advisor.txt',t,'text/plain')}
+function tsRow(x){return `<div class="ts"><span class="t">${esc(x.time)}</span><span>${esc(x.why)}</span></div>`}
+function parseJson(s){if(!s)return null;try{return JSON.parse(s)}catch(e){}const m=s.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e){}}return null}
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+</script>
+</body>
+</html>

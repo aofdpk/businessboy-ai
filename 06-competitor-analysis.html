@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>วิเคราะห์คู่แข่งจากภาพ 🕵️ (AI)</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg1:#283048;--bg2:#859398;--card:#fff;--ink:#1f2937;--muted:#6b7280;--soft:#eef2f7;--accent:#3b82f6}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+  .wrap{max-width:480px;margin:0 auto}
+  header{text-align:center;color:#fff;margin-bottom:18px}
+  header h1{font-size:24px;font-weight:700;text-shadow:0 3px 12px rgba(0,0,0,.25)}
+  header p{font-size:13px;opacity:.9;margin-top:4px}
+  .card{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.2);margin-bottom:16px}
+  .drop{border:2.5px dashed #cbd5e1;border-radius:16px;padding:24px;text-align:center;cursor:pointer;color:var(--muted)}
+  .drop:hover{border-color:var(--accent);background:var(--soft)}
+  .drop .ic{font-size:36px}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .thumbs img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:2px solid var(--soft)}
+  label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin:14px 0 6px}
+  input,select,textarea{width:100%;border:2px solid var(--soft);border-radius:12px;padding:11px 13px;font-size:14px;outline:none;font-family:inherit;background:#fff}
+  textarea{resize:vertical;min-height:46px}
+  .modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  .mode{flex:1;min-width:96px;border:2px solid var(--soft);border-radius:12px;padding:10px 8px;text-align:center;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;background:#fff;transition:.15s}
+  .mode.on{border-color:var(--accent);color:var(--accent);background:#f0f6ff}
+  .mode .e{display:block;font-size:20px;margin-bottom:2px}
+  .btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 10px 24px rgba(59,130,246,.4)}
+  .btn:disabled{opacity:.6}
+  .sec{background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+  .sec h3{font-size:15px;margin-bottom:10px;color:var(--accent)}
+  .li{padding:7px 0;border-bottom:1px solid var(--soft);font-size:14px;line-height:1.6}
+  .li:last-child{border-bottom:none}
+  .li b{color:var(--accent)}
+  .item{font-size:14px;line-height:1.7;white-space:pre-wrap}
+  .loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+  .spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .actbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .act{flex:1;min-width:120px;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.15)}
+  .act:active{transform:scale(.98)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--soft);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px}
+  td.num{font-variant-numeric:tabular-nums;font-weight:600}
+  .flag{background:#fef2f2}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px;background:#fee2e2;color:#b91c1c}
+  .badge.ok{background:#dcfce7;color:#15803d}
+  .empty{text-align:center;color:#fff;padding:24px 16px}
+  .empty .e{font-size:40px}
+  .empty p{font-size:14px;opacity:.92;margin-top:8px;line-height:1.6}
+  .price{color:#15803d;font-weight:700}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>วิเคราะห์คู่แข่งจากภาพ 🕵️</h1>
+    <p>แคปหน้าเพจ/สลิป/ป้ายเมนู → AI ถอดข้อมูล + กลยุทธ์ให้</p>
+  </header>
+
+  <div class="card">
+    <label style="margin-top:0">เลือกโหมดการอ่านภาพ</label>
+    <div class="modes" id="modes">
+      <div class="mode on" data-mode="competitor" onclick="setMode('competitor')"><span class="e">🕵️</span>คู่แข่ง</div>
+      <div class="mode" data-mode="slip" onclick="setMode('slip')"><span class="e">🧾</span>สแกนสลิป</div>
+      <div class="mode" data-mode="menu" onclick="setMode('menu')"><span class="e">🍽️</span>ป้าย/เมนู</div>
+    </div>
+
+    <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+      <div class="ic">📱</div><div id="dropTxt">แตะอัปสกรีนช็อต (เลือกหลายภาพได้)</div>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+    <input type="file" id="file" accept="image/*" multiple hidden onchange="onFile(event)">
+
+    <div id="ctxBox">
+      <label id="ctxLabel">ธุรกิจของคุณคืออะไร? (เพื่อเทียบให้ตรง)</label>
+      <input id="mybiz" placeholder="เช่น ร้านขายครีมบำรุงผิว">
+      <label>แพลตฟอร์ม/บริบทเพิ่มเติม (ใส่หรือไม่ก็ได้)</label>
+      <input id="platform" placeholder="เช่น Facebook, TikTok Shop, Shopee, หน้าร้าน">
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()" disabled>🕵️ วิเคราะห์คู่แข่ง</button>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+let files=[];
+let mode='competitor';
+let lastResult=null;   // เก็บผลดิบไว้สำหรับคัดลอก/ดาวน์โหลด
+
+const MODE_CFG={
+  competitor:{btn:'🕵️ วิเคราะห์คู่แข่ง',drop:'แตะอัปสกรีนช็อตหน้าเพจ/โพสต์/ร้าน (หลายภาพได้)',ctx:true,
+    ctxLabel:'ธุรกิจของคุณคืออะไร? (เพื่อเทียบให้ตรง)',ctxPh:'เช่น ร้านขายครีมบำรุงผิว'},
+  slip:{btn:'🧾 สแกนสลิปทั้งหมด',drop:'แตะอัปสลิปโอนเงิน (เลือกหลายใบได้)',ctx:false},
+  menu:{btn:'🍽️ ถอดป้าย/เมนู',drop:'แตะอัปรูปป้าย/เมนู/ฉลากราคา (หลายภาพได้)',ctx:true,
+    ctxLabel:'บริบทเพิ่มเติม (ใส่หรือไม่ก็ได้)',ctxPh:'เช่น เมนูร้านกาแฟ, ป้ายโปรหน้าร้าน'}
+};
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('on',el.dataset.mode===m));
+  const c=MODE_CFG[m];
+  document.getElementById('go').textContent=c.btn;
+  document.getElementById('dropTxt').textContent=c.drop;
+  document.getElementById('ctxBox').style.display=c.ctx?'block':'none';
+  if(c.ctx){
+    document.getElementById('ctxLabel').textContent=c.ctxLabel;
+    document.getElementById('mybiz').placeholder=c.ctxPh;
+  }
+  document.getElementById('output').innerHTML='';
+  lastResult=null;
+}
+
+function onFile(e){
+  files=Array.from(e.target.files);
+  document.getElementById('thumbs').innerHTML=files.map(f=>`<img src="${URL.createObjectURL(f)}">`).join('');
+  document.getElementById('go').disabled=!files.length;
+}
+
+function esc(s){return(s==null?'':s).toString().replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+// ทำยอดเงินให้เป็นเลขล้วน (ตัด ฿/บาท/comma) — คืน null ถ้าหาเลขไม่เจอ
+function normAmount(v){
+  if(v==null)return null;
+  const s=v.toString().replace(/[, ]/g,'').replace(/[^\d.]/g,'');
+  if(!s||isNaN(parseFloat(s)))return null;
+  return parseFloat(s);
+}
+function fmtNum(n){return n==null?'':n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})}
+
+async function run(){
+  if(!files.length)return;
+  const out=document.getElementById('output');
+  const btn=document.getElementById('go');
+  btn.disabled=true;
+  out.innerHTML='<div class="loading"><div class="spinner"></div>AI กำลังอ่านภาพ...</div>';
+  try{
+    const prompt=buildPrompt();
+    const r=await GeminiKit.vision(prompt,files,{json:true});
+    if(!r||typeof r!=='object')throw new Error('__unreadable__');
+    lastResult=r;
+    if(mode==='slip')renderSlip(r);
+    else if(mode==='menu')renderMenu(r);
+    else renderCompetitor(r);
+  }catch(e){
+    if(e&&e.message==='__unreadable__')renderEmpty();
+    else out.innerHTML=`<div class="sec" style="color:#dc2626">⚠️ ${esc((e&&e.message)||'เกิดข้อผิดพลาด ลองใหม่')}</div>`;
+  }finally{btn.disabled=false}
+}
+
+function renderEmpty(){
+  document.getElementById('output').innerHTML=`<div class="empty">
+    <div class="e">🔍</div>
+    <p><b>AI อ่านรูปนี้ไม่ออก</b><br>
+    ลองแคปใหม่ให้ภาพชัด เห็นตัวอักษรเต็ม ไม่เอียง ไม่มืดเกินไป<br>
+    หรือถ่าย/ครอปเฉพาะส่วนที่ต้องการอ่านอีกครั้ง</p></div>`;
+}
+
+/* ---------- PROMPTS ---------- */
+function buildPrompt(){
+  const mybiz=document.getElementById('mybiz').value.trim();
+  const platform=document.getElementById('platform').value.trim();
+  const guard=`คุณคือผู้ช่วยร้านค้าออนไลน์ในไทยที่ละเอียดและเชื่อถือได้ ตอบภาษาไทย
+กฎเหล็ก: อ่านเฉพาะสิ่งที่ "เห็นจริงในภาพ" เท่านั้น ห้ามเดา ห้ามแต่งข้อมูลที่ไม่ปรากฏ
+ถ้าฟิลด์ไหนอ่านไม่เห็น/ไม่แน่ใจ ให้ใส่ค่าว่าง "" หรือ null และห้ามมั่ว`;
+
+  if(mode==='slip'){
+    return `${guard}
+งาน: อ่านสลิปโอนเงินทุกใบในภาพ ดึงข้อมูลให้ครบ
+ตอบเป็น JSON object เท่านั้น:
+{
+ "slips":[
+   {
+     "bank":"ธนาคาร/แอปที่โอน (ถ้าเห็น)",
+     "date":"วันที่-เวลาบนสลิป (ตามที่เห็น)",
+     "ref":"เลขอ้างอิง/รหัสรายการ (Ref/รหัสอ้างอิง) — สำคัญมาก ถ้าไม่เห็นให้ \\"\\"",
+     "amount":"ยอดเงินตามที่เห็น (เลขล้วนได้ยิ่งดี)",
+     "sender":"ชื่อผู้โอน/บัญชีต้นทาง (ถ้าเห็น)",
+     "receiver":"ชื่อผู้รับ/บัญชีปลายทาง (ถ้าเห็น)",
+     "incomplete": true/false (true ถ้าอ่านได้ไม่ครบ เช่น ref หรือ amount หายไป/เบลอ),
+     "note":"สิ่งที่อ่านไม่ออก/น่าสงสัย (ถ้ามี)"
+   }
+ ]
+}
+สลิป 1 ใบ = 1 object เรียงตามที่เห็น ห้ามรวมหลายใบเป็นใบเดียว`;
+  }
+
+  if(mode==='menu'){
+    return `${guard}
+${platform?'บริบท: '+platform:''}
+งาน: ถอดป้าย/เมนู/ฉลากราคาในภาพ แยกราคาออกจากรายละเอียดให้ชัด
+ตอบเป็น JSON object เท่านั้น:
+{
+ "items":[
+   {"name":"ชื่อสินค้า/เมนู","price":"ราคาตามที่เห็น (เลขล้วน ถ้าไม่เห็นให้ \\"\\")","detail":"รายละเอียด/ตัวเลือก/หน่วย/เงื่อนไข (ไม่รวมราคา)"}
+ ],
+ "rawText":"ข้อความทั้งหมดที่อ่านได้จากภาพ ตามบรรทัดจริง (ไว้ตรวจทาน/คัดลอก)"
+}
+แยก price เป็นฟิลด์ของตัวเองเสมอ ห้ามปนราคาไว้ใน detail`;
+  }
+
+  // competitor
+  return `${guard}
+${mybiz?'ธุรกิจของผู้ใช้คือ: '+mybiz+' (ให้คำแนะนำที่เอาไปแข่งได้จริง อิงจากสิ่งที่เห็นในภาพ)':''}
+${platform?'แพลตฟอร์ม/บริบท: '+platform:''}
+งาน: วิเคราะห์หน้าเพจ/โพสต์/ร้านค้าออนไลน์ของคู่แข่งในภาพเชิงกลยุทธ์ ให้ actionable
+ตอบเป็น JSON object เท่านั้น:
+{
+ "positioning":"คู่แข่งวางตัวเองยังไง จุดขายหลักคืออะไร (อิงจากภาพ)",
+ "strengths":["จุดแข็งที่เห็นจากภาพ"],
+ "weaknesses":["จุดอ่อน/ช่องว่างที่เราเจาะได้"],
+ "pricing":"ราคา/โปรโมชั่นที่เห็น (ถ้าไม่เห็นบอกว่าไม่ปรากฏ)",
+ "contentStyle":"สไตล์คอนเทนต์/โทนการสื่อสาร",
+ "hooks":["ประโยค/แคปชั่น/คำโปรยที่คู่แข่งใช้ดึงดูด (ตามที่เห็น)"],
+ "opportunities":["3-5 วิธีที่เราจะทำให้ต่างและชนะ (ลงมือได้จริง)"],
+ "actionPlan":["3 สเต็ปแรกที่ผู้ใช้ควรลงมือทำสัปดาห์นี้"]
+}`;
+}
+
+/* ---------- RENDERERS ---------- */
+function actionBar(copyFn,dlFns){
+  let h='<div class="actbar">';
+  h+=`<button class="act" onclick="${copyFn}">📋 คัดลอกผล</button>`;
+  (dlFns||[]).forEach(d=>{h+=`<button class="act" onclick="${d.fn}">${d.label}</button>`});
+  h+='</div>';
+  return h;
+}
+function list(title,arr){return `<div class="sec"><h3>${title}</h3>${arr.map(x=>`<div class="li">• ${esc(x)}</div>`).join('')}</div>`}
+
+function renderCompetitor(r){
+  let h=actionBar('copyCompetitor()',[{label:'⬇️ .txt',fn:'dlCompetitor()'}]);
+  if(r.positioning)h+=`<div class="sec"><h3>🎯 การวางตำแหน่ง</h3><div class="item">${esc(r.positioning)}</div></div>`;
+  if(r.strengths&&r.strengths.length)h+=list('💪 จุดแข็งคู่แข่ง',r.strengths);
+  if(r.weaknesses&&r.weaknesses.length)h+=list('🔓 จุดอ่อน/ช่องว่าง',r.weaknesses);
+  if(r.pricing)h+=`<div class="sec"><h3>💰 ราคา/โปรโมชั่น</h3><div class="item">${esc(r.pricing)}</div></div>`;
+  if(r.contentStyle)h+=`<div class="sec"><h3>📲 สไตล์คอนเทนต์</h3><div class="item">${esc(r.contentStyle)}</div></div>`;
+  if(r.hooks&&r.hooks.length)h+=list('🪝 คำโปรย/ฮุกที่ใช้',r.hooks);
+  if(r.opportunities&&r.opportunities.length)h+=list('🚀 โอกาสชนะของเรา',r.opportunities);
+  if(r.actionPlan&&r.actionPlan.length)h+=list('✅ ลงมือสัปดาห์นี้',r.actionPlan);
+  document.getElementById('output').innerHTML=h||'';
+}
+
+function renderSlip(r){
+  const slips=(r&&Array.isArray(r.slips))?r.slips:[];
+  if(!slips.length){renderEmpty();return;}
+  let bad=0;
+  let rows=slips.map((s,i)=>{
+    const amt=normAmount(s.amount);
+    const noRef=!s.ref||!s.ref.toString().trim();
+    const flagged=s.incomplete===true||noRef||amt==null;
+    if(flagged)bad++;
+    return {i:i+1,bank:s.bank||'',date:s.date||'',ref:s.ref||'',amt,raw:s,flagged,noRef};
+  });
+  let h=actionBar('copySlip()',[{label:'⬇️ CSV',fn:'dlSlipCSV()'}]);
+  h+=`<div class="sec"><h3>🧾 ผลสแกนสลิป (${slips.length} ใบ)</h3>`;
+  if(bad)h+=`<div class="li" style="color:#b91c1c">⚠️ มี ${bad} ใบที่อ่านไม่ครบ/ไม่มีเลขอ้างอิง — ตรวจสอบด้วยตัวเอง</div>`;
+  h+='<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>ธนาคาร</th><th>วันที่</th><th>เลขอ้างอิง (ref)</th><th>ยอด (บาท)</th><th>สถานะ</th></tr></thead><tbody>';
+  rows.forEach(r0=>{
+    h+=`<tr class="${r0.flagged?'flag':''}">
+      <td>${r0.i}</td>
+      <td>${esc(r0.bank)}</td>
+      <td>${esc(r0.date)}</td>
+      <td>${r0.noRef?'<span class="badge">ไม่พบ ref</span>':esc(r0.ref)}</td>
+      <td class="num">${r0.amt==null?'<span class="badge">อ่านไม่ออก</span>':fmtNum(r0.amt)}</td>
+      <td>${r0.flagged?'<span class="badge">ตรวจซ้ำ</span>':'<span class="badge ok">ครบ</span>'}</td>
+    </tr>`;
+  });
+  // รวมยอดเฉพาะใบที่อ่านได้
+  const sum=rows.reduce((a,b)=>a+(b.amt||0),0);
+  h+=`</tbody><tfoot><tr><td colspan="4" style="text-align:right;font-weight:700">รวม (เฉพาะที่อ่านได้)</td><td class="num">${fmtNum(sum)}</td><td></td></tr></tfoot></table></div>`;
+  h+='<div class="hint">ยอดเงิน normalize เป็นเลขล้วนแล้ว • แถวสีแดง = อ่านไม่ครบ ควรเช็กกับสลิปจริง</div></div>';
+  document.getElementById('output').innerHTML=h;
+}
+
+function renderMenu(r){
+  const items=(r&&Array.isArray(r.items))?r.items:[];
+  if(!items.length&&!(r&&r.rawText)){renderEmpty();return;}
+  let h=actionBar('copyMenu()',[
+    {label:'⬇️ CSV',fn:'dlMenuCSV()'},
+    {label:'📄 rawText',fn:'dlMenuRaw()'}
+  ]);
+  h+=`<div class="sec"><h3>🍽️ รายการที่ถอดได้ (${items.length})</h3>`;
+  if(items.length){
+    h+='<div style="overflow-x:auto"><table><thead><tr><th>สินค้า/เมนู</th><th>ราคา</th><th>รายละเอียด</th></tr></thead><tbody>';
+    items.forEach(it=>{
+      const p=normAmount(it.price);
+      h+=`<tr>
+        <td>${esc(it.name)}</td>
+        <td class="num price">${p==null?(it.price?esc(it.price):'<span class="badge">ไม่พบ</span>'):fmtNum(p)}</td>
+        <td>${esc(it.detail)}</td>
+      </tr>`;
+    });
+    h+='</tbody></table></div>';
+  }
+  h+='<div class="hint">ราคาแยกเป็นคอลัมน์ของตัวเองแล้ว • กด rawText เพื่อดาวน์โหลดข้อความดิบทั้งหมด</div></div>';
+  if(r.rawText)h+=`<div class="sec"><h3>📄 ข้อความดิบ (rawText)</h3><div class="item">${esc(r.rawText)}</div></div>`;
+  document.getElementById('output').innerHTML=h;
+}
+
+/* ---------- COPY / DOWNLOAD ---------- */
+function ts(){return new Date().toISOString().slice(0,10)}
+
+function competitorText(){
+  const r=lastResult||{};
+  let t='วิเคราะห์คู่แข่งจากภาพ\n=====================\n';
+  if(r.positioning)t+=`\n[การวางตำแหน่ง]\n${r.positioning}\n`;
+  if(r.strengths&&r.strengths.length)t+=`\n[จุดแข็งคู่แข่ง]\n- ${r.strengths.join('\n- ')}\n`;
+  if(r.weaknesses&&r.weaknesses.length)t+=`\n[จุดอ่อน/ช่องว่าง]\n- ${r.weaknesses.join('\n- ')}\n`;
+  if(r.pricing)t+=`\n[ราคา/โปรโมชั่น]\n${r.pricing}\n`;
+  if(r.contentStyle)t+=`\n[สไตล์คอนเทนต์]\n${r.contentStyle}\n`;
+  if(r.hooks&&r.hooks.length)t+=`\n[คำโปรย/ฮุก]\n- ${r.hooks.join('\n- ')}\n`;
+  if(r.opportunities&&r.opportunities.length)t+=`\n[โอกาสชนะของเรา]\n- ${r.opportunities.join('\n- ')}\n`;
+  if(r.actionPlan&&r.actionPlan.length)t+=`\n[ลงมือสัปดาห์นี้]\n- ${r.actionPlan.join('\n- ')}\n`;
+  return t.trim();
+}
+function copyCompetitor(){GeminiKit.copy(competitorText())}
+function dlCompetitor(){GeminiKit.download(`competitor-${ts()}.txt`,competitorText(),'text/plain')}
+
+function csvCell(v){const s=(v==null?'':v).toString().replace(/"/g,'""');return `"${s}"`}
+function slipRows(){
+  const slips=(lastResult&&Array.isArray(lastResult.slips))?lastResult.slips:[];
+  return slips.map((s,i)=>{
+    const amt=normAmount(s.amount);
+    const noRef=!s.ref||!s.ref.toString().trim();
+    const flagged=s.incomplete===true||noRef||amt==null;
+    return {no:i+1,bank:s.bank||'',date:s.date||'',ref:s.ref||'',amount:amt==null?'':amt,status:flagged?'ตรวจซ้ำ':'ครบ',sender:s.sender||'',receiver:s.receiver||'',note:s.note||''};
+  });
+}
+function slipText(){
+  const rows=slipRows();
+  let t='ผลสแกนสลิป\n==========\n';
+  rows.forEach(r=>{t+=`#${r.no} ${r.bank} | ${r.date} | ref:${r.ref||'(ไม่พบ)'} | ยอด:${r.amount===''?'(อ่านไม่ออก)':r.amount} | ${r.status}\n`});
+  const sum=rows.reduce((a,b)=>a+(typeof b.amount==='number'?b.amount:0),0);
+  t+=`\nรวม (เฉพาะที่อ่านได้): ${sum.toFixed(2)}`;
+  return t;
+}
+function copySlip(){GeminiKit.copy(slipText())}
+function dlSlipCSV(){
+  const rows=slipRows();
+  let csv='﻿#,ธนาคาร,วันที่,เลขอ้างอิง,ยอดเงิน,สถานะ,ผู้โอน,ผู้รับ,หมายเหตุ\n';
+  rows.forEach(r=>{csv+=[r.no,r.bank,r.date,r.ref,r.amount,r.status,r.sender,r.receiver,r.note].map(csvCell).join(',')+'\n'});
+  GeminiKit.download(`slips-${ts()}.csv`,csv,'text/csv');
+}
+
+function menuItems(){return (lastResult&&Array.isArray(lastResult.items))?lastResult.items:[]}
+function menuText(){
+  let t='รายการที่ถอดได้\n==============\n';
+  menuItems().forEach(it=>{const p=normAmount(it.price);t+=`${it.name||''} | ราคา:${p==null?(it.price||'-'):p} | ${it.detail||''}\n`});
+  return t.trim();
+}
+function copyMenu(){GeminiKit.copy(menuText())}
+function dlMenuCSV(){
+  let csv='﻿สินค้า,ราคา,รายละเอียด\n';
+  menuItems().forEach(it=>{const p=normAmount(it.price);csv+=[it.name||'',p==null?(it.price||''):p,it.detail||''].map(csvCell).join(',')+'\n'});
+  GeminiKit.download(`menu-${ts()}.csv`,csv,'text/csv');
+}
+function dlMenuRaw(){
+  const raw=(lastResult&&lastResult.rawText)?lastResult.rawText:'';
+  if(!raw){GeminiKit.toast('ไม่มีข้อความดิบให้ดาวน์โหลด');return;}
+  GeminiKit.download(`menu-rawtext-${ts()}.txt`,raw,'text/plain');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ถอดสคริปต์คลิปคู่แข่ง</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#16222a;--bg2:#3a6073;--accent:#0e7490;--soft:#e0f2fe;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.drop{border:2px dashed var(--accent);border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--soft);transition:background .2s}
+.drop:hover{background:#bae6fd}
+.drop-icon{font-size:36px;display:block;margin-bottom:8px}
+.drop-text{font-size:14px;color:var(--accent);font-weight:600}
+.drop-hint{font-size:12px;color:var(--muted);margin-top:4px}
+.preview-wrap{margin-top:14px;display:none}
+.preview-wrap video{width:100%;border-radius:12px;max-height:220px;background:#000}
+.file-name{font-size:12px;color:var(--muted);margin-top:6px;word-break:break-all}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}.btn:disabled{opacity:.6}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.12);position:relative}
+.result-card h3{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.transcript-text{font-size:14px;line-height:1.8;color:var(--ink);white-space:pre-wrap}
+.copy-btn{position:absolute;top:12px;right:12px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.timeline-item{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.time-badge{background:var(--accent);color:#fff;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.beat-text{font-size:13px;line-height:1.6;color:var(--ink)}
+.hook-box{background:linear-gradient(135deg,#e0f2fe,#bae6fd);border-radius:12px;padding:14px;font-size:14px;line-height:1.7;color:#0c4a6e}
+.lesson-item{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+.lesson-num{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lesson-text{font-size:13px;line-height:1.6;color:var(--ink)}
+.warn-box{background:#fef3c7;border-radius:10px;padding:10px 12px;font-size:12px;color:#92400e;margin-top:10px}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ถอดสคริปต์คลิปคู่แข่ง 📝</h1>
+    <p>อัปคลิปที่ไวรัล → AI วิเคราะห์ hook + สคริปต์ + บทเรียน</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>อัปโหลดคลิปคู่แข่ง</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="drop-icon">🎬</span>
+        <div class="drop-text">แตะเพื่อเลือกวิดีโอ</div>
+        <div class="drop-hint">รองรับ MP4, MOV, AVI ฯลฯ — คลิปยิ่งสั้นยิ่งเร็ว</div>
+      </div>
+      <input type="file" id="fileInput" accept="video/*" hidden onchange="handleFile(this.files[0])">
+      <div class="preview-wrap" id="previewWrap">
+        <video id="videoPreview" controls></video>
+        <div class="file-name" id="fileName"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์มของคลิป (ช่วยให้วิเคราะห์แม่นขึ้น)</label>
+      <select id="platform" style="width:100%;border:1.5px solid #cbd5e1;border-radius:12px;padding:12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff">
+        <option value="ไม่ระบุ / ทั่วไป">ไม่ระบุ / ทั่วไป</option>
+        <option value="TikTok">TikTok</option>
+        <option value="Instagram Reels">Instagram Reels</option>
+        <option value="Facebook Reels / วิดีโอ">Facebook Reels / วิดีโอ</option>
+        <option value="YouTube Shorts">YouTube Shorts</option>
+        <option value="YouTube (คลิปยาว)">YouTube (คลิปยาว)</option>
+      </select>
+    </div>
+    <div class="warn-box">⏱️ คลิปยิ่งสั้นยิ่งเร็ว แนะนำไม่เกิน 3 นาที เพื่อผลลัพธ์ที่ดีที่สุด</div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🔍 ถอดสคริปต์เลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+
+function handleFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  const wrap = document.getElementById('previewWrap');
+  const video = document.getElementById('videoPreview');
+  const nameEl = document.getElementById('fileName');
+  video.src = URL.createObjectURL(file);
+  nameEl.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+  wrap.style.display = 'block';
+  document.getElementById('dropZone').style.display = 'none';
+}
+
+async function run() {
+  if (!selectedFile) {
+    GeminiKit.toast('เลือกคลิปก่อนนะ');
+    return;
+  }
+
+  if (selectedFile.size > 80 * 1024 * 1024) {
+    GeminiKit.toast('⚠️ ไฟล์ใหญ่ ' + (selectedFile.size / 1024 / 1024).toFixed(0) + ' MB อาจช้าและกินโทเคนมาก — ลองตัดให้สั้นลงจะเร็วกว่า');
+  }
+
+  const platform = document.getElementById('platform').value;
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div><span id="statusText">กำลังอัปโหลดคลิป...</span></div>';
+
+  const prompt = `คุณคือนักวางกลยุทธ์คอนเทนต์วิดีโอสั้นมือโปรของไทย ที่ถอดสูตรคลิปไวรัลให้เจ้าของธุรกิจเอาไปทำคลิปขายของตัวเองได้จริง
+แพลตฟอร์มของคลิปนี้: ${platform}
+
+วิเคราะห์คลิปวิดีโอนี้อย่างละเอียด แล้วตอบเป็น JSON เท่านั้น ตาม schema นี้:
+{
+  "transcript": "ถอดคำพูดทั้งหมดในคลิป ครบถ้วนทุกประโยค พร้อมใส่ [timecode mm:ss] นำหน้าแต่ละช่วง",
+  "structure": [
+    {"time": "00:00-00:05", "beat": "อธิบายว่าเกิดอะไรขึ้นช่วงนี้ ทั้งภาพ คำพูด และเทคนิคที่ใช้ (ใช้ timecode รูปแบบ mm:ss)"}
+  ],
+  "hookAnalysis": "วิเคราะห์ 3 วินาทีแรกว่าใช้เทคนิคไหนดึงคนดู และทำไมถึงได้ผล",
+  "hookRemix": "เขียน hook ใหม่ 2-3 แบบ ที่ดัดแปลงจากสูตรนี้ ให้เจ้าของธุรกิจเอาไปเปิดคลิปขายสินค้า/บริการของตัวเองได้ทันที (เขียนเป็นประโยคพูดจริง)",
+  "cta": "สรุป CTA / วิธีปิดการขายที่คลิปนี้ใช้ พร้อมเสนอประโยค CTA ที่ปรับใช้กับธุรกิจไทยทั่วไปได้",
+  "lessons": ["บทเรียน actionable ที่เอาไปลงมือทำได้เลย ข้อ 1", "ข้อ 2", "ข้อ 3"]
+}
+กฎ: timecode ทุกที่ต้องเป็นรูปแบบ mm:ss ที่ชัดเจน ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น`;
+
+  function onProgress(stage, text) {
+    const el = document.getElementById('statusText');
+    if (!el) return;
+    // ทนรูปแบบ argument: บางครั้ง kit ส่ง string ตรงๆ มาเป็นข้อความสถานะ
+    if (typeof stage === 'string' && !text && stage !== 'uploading' && stage !== 'processing') {
+      el.textContent = stage;
+      return;
+    }
+    if (stage === 'uploading') el.textContent = 'กำลังอัปโหลดคลิป...';
+    else if (stage === 'processing') el.textContent = 'AI กำลังวิเคราะห์...';
+    else if (typeof text === 'string' && text) el.textContent = text;
+  }
+
+  try {
+    const raw = await GeminiKit.media(prompt, selectedFile, onProgress);
+
+    let data;
+    try {
+      const match = raw.match(/\{[\s\S]*\}/);
+      data = match ? JSON.parse(match[0]) : null;
+    } catch (e) {
+      data = null;
+    }
+
+    if (!data || !data.transcript) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    lastFullText = buildFullText(data, platform);
+
+    let html = '';
+
+    // ปุ่มรวม: คัดลอกทั้งหมด + ดาวน์โหลด .txt
+    html += `<div class="result-card" style="display:flex;gap:10px">
+      <button class="btn" style="flex:1;padding:12px;font-size:14px" onclick="copyAll()">📋 คัดลอกผลทั้งหมด</button>
+      <button class="btn" style="flex:1;padding:12px;font-size:14px;background:linear-gradient(135deg,var(--accent),#0891b2)" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>
+    </div>`;
+
+    // Transcript
+    html += `<div class="result-card">
+      <h3>🗒️ สคริปต์คำพูดทั้งหมด</h3>
+      <button class="copy-btn" data-copy="${attr(data.transcript)}" onclick="cpText(this)">คัดลอก</button>
+      <div class="transcript-text">${esc(data.transcript)}</div>
+    </div>`;
+
+    // Timeline
+    if (Array.isArray(data.structure) && data.structure.length) {
+      const timelineItems = data.structure.map(item =>
+        `<div class="timeline-item">
+          <span class="time-badge">${esc(item.time)}</span>
+          <span class="beat-text">${esc(item.beat)}</span>
+        </div>`
+      ).join('');
+      html += `<div class="result-card">
+        <h3>🎞️ โครงสร้างคลิป (Timeline)</h3>
+        ${timelineItems}
+      </div>`;
+    }
+
+    // Hook Analysis
+    if (data.hookAnalysis) {
+      html += `<div class="result-card">
+        <h3>⚡ วิเคราะห์ Hook 3 วินาทีแรก</h3>
+        <button class="copy-btn" data-copy="${attr(data.hookAnalysis)}" onclick="cpText(this)">คัดลอก</button>
+        <div class="hook-box">${esc(data.hookAnalysis)}</div>
+      </div>`;
+    }
+
+    // Hook Remix — เอาไปใช้กับสินค้าตัวเอง
+    if (data.hookRemix) {
+      html += `<div class="result-card">
+        <h3>🎯 Hook ดัดแปลงใช้กับสินค้าคุณ</h3>
+        <button class="copy-btn" data-copy="${attr(data.hookRemix)}" onclick="cpText(this)">คัดลอก</button>
+        <div class="hook-box">${esc(data.hookRemix)}</div>
+      </div>`;
+    }
+
+    // CTA
+    if (data.cta) {
+      html += `<div class="result-card">
+        <h3>📣 CTA / วิธีปิดการขาย</h3>
+        <button class="copy-btn" data-copy="${attr(data.cta)}" onclick="cpText(this)">คัดลอก</button>
+        <div class="hook-box">${esc(data.cta)}</div>
+      </div>`;
+    }
+
+    // Lessons
+    if (Array.isArray(data.lessons) && data.lessons.length) {
+      const lessonItems = data.lessons.map((lesson, i) =>
+        `<div class="lesson-item">
+          <div class="lesson-num">${i + 1}</div>
+          <div class="lesson-text">${esc(lesson)}</div>
+        </div>`
+      ).join('');
+      html += `<div class="result-card">
+        <h3>💡 บทเรียนที่เอาไปใช้ได้เลย</h3>
+        ${lessonItems}
+      </div>`;
+    }
+
+    out.innerHTML = html;
+
+  } catch (e) {
+    out.innerHTML = `<div class="error-card">⚠️ ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+let lastFullText = '';
+
+function cpText(btn) {
+  const text = btn.getAttribute('data-copy') || '';
+  GeminiKit.copy(text);
+  btn.textContent = '✓';
+  setTimeout(() => btn.textContent = 'คัดลอก', 1200);
+}
+
+function copyAll() {
+  if (!lastFullText) return;
+  GeminiKit.copy(lastFullText);
+}
+
+function downloadAll() {
+  if (!lastFullText) return;
+  const stamp = new Date().toISOString().slice(0, 10);
+  GeminiKit.download('ถอดสคริปต์คู่แข่ง-' + stamp + '.txt', lastFullText, 'text/plain');
+}
+
+function buildFullText(data, platform) {
+  const L = [];
+  L.push('=== ถอดสคริปต์คลิปคู่แข่ง ===');
+  L.push('แพลตฟอร์ม: ' + (platform || '-'));
+  L.push('');
+  L.push('🗒️ สคริปต์คำพูดทั้งหมด');
+  L.push(data.transcript || '-');
+  if (Array.isArray(data.structure) && data.structure.length) {
+    L.push('');
+    L.push('🎞️ โครงสร้างคลิป (Timeline)');
+    data.structure.forEach(it => L.push('[' + (it.time || '') + '] ' + (it.beat || '')));
+  }
+  if (data.hookAnalysis) { L.push(''); L.push('⚡ วิเคราะห์ Hook 3 วินาทีแรก'); L.push(data.hookAnalysis); }
+  if (data.hookRemix) { L.push(''); L.push('🎯 Hook ดัดแปลงใช้กับสินค้าคุณ'); L.push(data.hookRemix); }
+  if (data.cta) { L.push(''); L.push('📣 CTA / วิธีปิดการขาย'); L.push(data.cta); }
+  if (Array.isArray(data.lessons) && data.lessons.length) {
+    L.push('');
+    L.push('💡 บทเรียนที่เอาไปใช้ได้เลย');
+    data.lessons.forEach((ls, i) => L.push((i + 1) + '. ' + ls));
+  }
+  return L.join('\n');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function attr(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+</script>
+</body></html>

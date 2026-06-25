@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ตรวจคลิปโฆษณาก่อนยิงแอด 🎯</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#c31432;--bg2:#240b36;--accent:#dc2626;--soft:#fff0f0;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+select{width:100%;font-family:inherit;font-size:15px;color:var(--ink);border:1.5px solid #fca5a5;border-radius:12px;padding:12px 14px;background:var(--soft);cursor:pointer}
+select:focus{outline:none;border-color:var(--accent)}
+.result-actions{display:flex;gap:10px;margin:14px 0 4px}
+.act-btn{flex:1;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:#fff;background:linear-gradient(135deg,var(--bg1),var(--accent));box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.act-btn.alt{background:#fff;color:var(--accent);border:1.5px solid #fca5a5;box-shadow:none}
+.drop{border:2.5px dashed #fca5a5;border-radius:16px;padding:30px 18px;text-align:center;cursor:pointer;background:var(--soft);transition:border-color .2s,background .2s}
+.drop:hover,.drop.active{border-color:var(--accent);background:#fef2f2}
+.drop-icon{font-size:36px;margin-bottom:8px}
+.drop-label{font-size:15px;color:var(--muted);font-weight:500}
+.drop-sub{font-size:12px;color:#9ca3af;margin-top:4px}
+#fileInput{display:none}
+.preview-wrap{margin-top:14px;display:none}
+.preview-wrap video{width:100%;border-radius:12px;max-height:220px;object-fit:cover;background:#000}
+.preview-name{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.result-card h3{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.result-card p{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap}
+.verdict-card{border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);text-align:center}
+.verdict-card.go{background:linear-gradient(135deg,#16a34a,#15803d)}
+.verdict-card.fix{background:linear-gradient(135deg,#dc2626,#9b1c1c)}
+.verdict-card h2{font-size:20px;font-weight:700;color:#fff;margin-bottom:6px}
+.verdict-card p{font-size:14px;color:rgba(255,255,255,.9);line-height:1.6}
+.scroll-item{background:var(--soft);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+.scroll-item .time-badge{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;margin-bottom:4px}
+.fix-item{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;font-size:14px;line-height:1.6}
+.fix-num{flex-shrink:0;width:22px;height:22px;background:var(--accent);color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:14px;line-height:1.6}
+.warn{font-size:12px;color:#9ca3af;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ตรวจคลิปโฆษณาก่อนยิงแอด 🎯</h1>
+    <p>AI วิเคราะห์จุดอ่อน + บอกว่าควรยิงเลยหรือแก้ก่อน</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>อัปโหลดคลิปโฆษณา</label>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">🎬</div>
+        <div class="drop-label">แตะเพื่อเลือกคลิป</div>
+        <div class="drop-sub">รองรับ MP4, MOV, AVI ฯลฯ • คลิปสั้นยิ่งเร็ว</div>
+      </div>
+      <input type="file" id="fileInput" accept="video/*" onchange="onFile(this.files[0])">
+      <div class="preview-wrap" id="previewWrap">
+        <video id="preview" controls muted playsinline></video>
+        <div class="preview-name" id="previewName"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์มที่จะยิงแอด</label>
+      <select id="platform">
+        <option value="auto">ทั่วไป (ทุกแพลตฟอร์ม)</option>
+        <option value="Facebook Reels / Feed">Facebook (Reels / Feed)</option>
+        <option value="TikTok">TikTok</option>
+        <option value="Instagram Reels / Stories">Instagram (Reels / Stories)</option>
+        <option value="YouTube Shorts">YouTube Shorts</option>
+      </select>
+    </div>
+    <p class="warn">⚡ คลิปยิ่งสั้น AI ตอบยิ่งเร็ว แนะนำไม่เกิน 2 นาที</p>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">🔍 ตรวจคลิปเลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let selectedFile = null;
+
+function onFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  const pw = document.getElementById('previewWrap');
+  const pv = document.getElementById('preview');
+  const pn = document.getElementById('previewName');
+  pv.src = URL.createObjectURL(file);
+  pn.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+  pw.style.display = 'block';
+  document.getElementById('dropZone').style.borderColor = 'var(--accent)';
+  document.getElementById('dropZone').querySelector('.drop-label').textContent = 'เปลี่ยนคลิป';
+}
+
+async function run() {
+  if (!selectedFile) { GeminiKit.toast('เลือกคลิปก่อนนะ'); return; }
+
+  // เตือนถ้าไฟล์ใหญ่เกินไป (อาจช้า + กินโทเคนเยอะ)
+  const sizeMB = selectedFile.size / 1024 / 1024;
+  if (sizeMB > 80) {
+    GeminiKit.toast('คลิปใหญ่ ' + sizeMB.toFixed(0) + ' MB อาจอัปช้าและกินโทเคนมาก — แนะนำตัดให้สั้นลง');
+  }
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div><span id="stage-txt">กำลังอัปโหลดคลิป...</span></div>';
+
+  const platformSel = document.getElementById('platform');
+  const platform = platformSel ? platformSel.value : 'auto';
+  const platformLine = (platform && platform !== 'auto')
+    ? `แพลตฟอร์มเป้าหมายคือ "${platform}" ให้ประเมินตามพฤติกรรมผู้ชมและสเปกของแพลตฟอร์มนี้ (อัตราเลื่อนผ่าน, ความยาวที่เหมาะ, รูปแบบ hook ที่เวิร์ก)`
+    : 'ประเมินแบบทั่วไปให้ใช้ได้กับทุกแพลตฟอร์มวิดีโอสั้น';
+
+  const prompt = `คุณคือ Performance Creative Strategist มือโปรที่ดูแลงบยิงแอดวิดีโอระดับล้านบาท เชี่ยวชาญ hook 3 วินาทีแรก, retention และ direct-response copywriting ภาษาไทย
+${platformLine}
+
+วิเคราะห์คลิปโฆษณานี้แบบตรงไปตรงมาเหมือนรีวิวให้ลูกค้าที่จ่ายเงินจริง แล้วตอบเป็น JSON เท่านั้น ห้ามมีข้อความนอก JSON โดยมี schema ดังนี้:
+{
+  "first3sec": "วิจารณ์ 3 วินาทีแรก ดึงดูดแค่ไหน เพราะอะไร อ้างอิงสิ่งที่เห็น/ได้ยินจริงในคลิป",
+  "hookRewrite": "เขียน hook 3 วินาทีแรกใหม่ให้ดีขึ้น 1 เวอร์ชัน ที่เจ้าของธุรกิจดัดแปลงไปใช้กับสินค้าตัวเองได้ทันที",
+  "scrollRisk": [{"time": "timecode รูปแบบ mm:ss เช่น 00:05", "why": "เหตุผลที่คนจะเลื่อนผ่านตรงจุดนี้"}],
+  "fixes": ["วิธีแก้ที่ลงมือทำได้จริงทันที ข้อ 1", "วิธีแก้ข้อ 2"],
+  "ctaSuggestion": "ข้อความ CTA ปิดการขายที่แนะนำให้ใส่ท้ายคลิป (สั้น กระตุ้นให้ทักแชท/สั่งซื้อ)",
+  "verdict": "สรุปสั้นๆ ว่าควรยิงแอดเลยหรือแก้ก่อน พร้อมเหตุผล 1-2 ประโยค",
+  "readyToRun": true หรือ false
+}
+ทุก timecode ต้องเป็นรูปแบบ mm:ss ชัดเจน ตอบภาษาไทย เป็นกันเอง เข้าใจง่าย ตรงประเด็น เอาไปใช้ได้จริง`;
+
+  try {
+    const result = await GeminiKit.media(prompt, selectedFile, (stage, txt) => {
+      const el = document.getElementById('stage-txt');
+      if (!el) return;
+      // ทนทุกรูปแบบ argument: ถ้า arg แรกเป็น string ให้แสดงตรงๆ กัน status ค้าง
+      if (typeof stage === 'string' && txt === undefined) {
+        const s = stage.toLowerCase();
+        if (s === 'uploading') el.textContent = 'กำลังอัปโหลดคลิป...';
+        else if (s === 'processing') el.textContent = 'AI กำลังวิเคราะห์คลิป...';
+        else if (s === 'done') el.textContent = 'เกือบเสร็จแล้ว...';
+        else el.textContent = stage; // ข้อความสถานะดิบ
+        return;
+      }
+      if (stage === 'uploading') el.textContent = 'กำลังอัปโหลดคลิป... ' + (txt || '');
+      else if (stage === 'processing') el.textContent = 'AI กำลังวิเคราะห์คลิป...';
+      else if (stage === 'done') el.textContent = 'เกือบเสร็จแล้ว...';
+      else el.textContent = txt || (typeof stage === 'string' ? stage : 'กำลังประมวลผล...');
+    });
+
+    // พยายาม parse JSON จาก string ที่ได้
+    let data;
+    try {
+      const match = result.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('ไม่พบ JSON');
+      data = JSON.parse(match[0]);
+    } catch (pe) {
+      throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    }
+
+    if (!data || !data.verdict) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    let html = '';
+
+    // verdict card
+    const isGo = data.readyToRun === true;
+    html += '<div class="verdict-card ' + (isGo ? 'go' : 'fix') + '">';
+    html += '<h2>' + (isGo ? '✅ ยิงได้เลย!' : '⚠️ แก้ก่อนนะ') + '</h2>';
+    html += '<p>' + esc(data.verdict) + '</p>';
+    html += '</div>';
+
+    // first 3 sec
+    html += '<div class="result-card">';
+    html += '<h3>⚡ 3 วินาทีแรก</h3>';
+    html += '<p>' + esc(data.first3sec) + '</p>';
+    html += '</div>';
+
+    // hook rewrite (เอาไปใช้กับสินค้าตัวเองได้)
+    if (data.hookRewrite) {
+      html += '<div class="result-card">';
+      html += '<h3>✍️ Hook ที่เขียนใหม่ให้ (เอาไปปรับใช้ได้เลย)</h3>';
+      html += '<p>' + esc(data.hookRewrite) + '</p>';
+      html += '</div>';
+    }
+
+    // scroll risk
+    if (Array.isArray(data.scrollRisk) && data.scrollRisk.length) {
+      html += '<div class="result-card">';
+      html += '<h3>📉 จุดเสี่ยงคนเลื่อนผ่าน</h3>';
+      data.scrollRisk.forEach(function(r) {
+        html += '<div class="scroll-item">';
+        if (r.time) html += '<span class="time-badge">' + esc(r.time) + '</span><br>';
+        html += esc(r.why);
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // fixes
+    if (Array.isArray(data.fixes) && data.fixes.length) {
+      html += '<div class="result-card">';
+      html += '<h3>🛠️ วิธีแก้</h3>';
+      data.fixes.forEach(function(f, i) {
+        html += '<div class="fix-item"><div class="fix-num">' + (i + 1) + '</div><div>' + esc(f) + '</div></div>';
+      });
+      html += '</div>';
+    }
+
+    // CTA แนะนำ
+    if (data.ctaSuggestion) {
+      html += '<div class="result-card">';
+      html += '<h3>🎯 CTA ปิดการขายที่แนะนำ</h3>';
+      html += '<p>' + esc(data.ctaSuggestion) + '</p>';
+      html += '</div>';
+    }
+
+    // ปุ่มคัดลอก/ดาวน์โหลด ผลทั้งหมด
+    html += '<div class="result-actions">';
+    html += '<button class="act-btn" onclick="copyAll()">📋 คัดลอกผลทั้งหมด</button>';
+    html += '<button class="act-btn alt" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>';
+    html += '</div>';
+
+    out.innerHTML = html;
+    lastReport = buildReport(data);
+
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+let lastReport = '';
+
+function buildReport(data) {
+  let t = 'ผลตรวจคลิปโฆษณาก่อนยิงแอด\n';
+  t += '====================\n\n';
+  t += 'สรุป (' + (data.readyToRun === true ? 'ยิงได้เลย' : 'ควรแก้ก่อน') + '):\n' + (data.verdict || '-') + '\n\n';
+  t += '3 วินาทีแรก:\n' + (data.first3sec || '-') + '\n\n';
+  if (data.hookRewrite) t += 'Hook ที่เขียนใหม่ให้:\n' + data.hookRewrite + '\n\n';
+  if (Array.isArray(data.scrollRisk) && data.scrollRisk.length) {
+    t += 'จุดเสี่ยงคนเลื่อนผ่าน:\n' +
+      data.scrollRisk.map(function(r) { return '- ' + (r.time ? '[' + r.time + '] ' : '') + (r.why || ''); }).join('\n') + '\n\n';
+  }
+  if (Array.isArray(data.fixes) && data.fixes.length) {
+    t += 'วิธีแก้:\n' +
+      data.fixes.map(function(f, i) { return (i + 1) + '. ' + f; }).join('\n') + '\n\n';
+  }
+  if (data.ctaSuggestion) t += 'CTA ปิดการขายที่แนะนำ:\n' + data.ctaSuggestion + '\n';
+  return t.trim();
+}
+
+function copyAll() {
+  if (!lastReport) { GeminiKit.toast('ยังไม่มีผลให้คัดลอก'); return; }
+  GeminiKit.copy(lastReport);
+}
+
+function downloadAll() {
+  if (!lastReport) { GeminiKit.toast('ยังไม่มีผลให้ดาวน์โหลด'); return; }
+  GeminiKit.download('ผลตรวจคลิปโฆษณา.txt', lastReport, 'text/plain');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>"]/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+</script>
+</body></html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>สร้าง FAQ อัตโนมัติ</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#360033;--bg2:#0b8793;--accent:#0e7490;--soft:#e0f7fa;--card:#fff;--ink:#1f2937;--muted:#6b7280}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+.wrap{max-width:460px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:18px}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:13px;opacity:.92;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+textarea{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;resize:vertical;min-height:160px}
+textarea:focus{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--soft);background:#fff;color:var(--muted);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.chip.active{background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border-color:transparent}
+.btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.actions{display:flex;gap:10px;margin-bottom:14px}
+.btn-sec{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--soft);color:var(--accent)}
+.btn-sec:hover{background:#b2ebf2}
+.loading{text-align:center;color:#fff;padding:22px;font-size:15px}
+.spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.faq-item{background:#fff;border-radius:16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);overflow:hidden}
+.faq-q{padding:14px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;user-select:none}
+.faq-q .num{flex-shrink:0;width:26px;height:26px;background:linear-gradient(135deg,var(--bg1),var(--accent));color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.faq-q .q-text{flex:1;font-size:15px;font-weight:700;color:var(--ink);line-height:1.5}
+.faq-q .arrow{flex-shrink:0;font-size:14px;color:var(--muted);transition:transform .25s;margin-top:4px}
+.faq-item.open .arrow{transform:rotate(180deg)}
+.faq-a{display:none;padding:0 16px 14px 52px;font-size:14px;line-height:1.8;color:#374151;border-top:1px solid var(--soft)}
+.faq-item.open .faq-a{display:block}
+.faq-a .copy-one{margin-top:10px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.faq-a .copy-one:hover{background:#b2ebf2}
+.error-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);color:#dc2626;font-size:15px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>สร้าง FAQ อัตโนมัติ ❓</h1>
+    <p>ใส่ข้อมูลร้าน → AI สร้าง FAQ ~20 ข้อให้เลย</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ข้อมูลร้าน / สินค้า / นโยบายส่ง-คืน</label>
+      <textarea id="shopInfo" placeholder="เช่น&#10;ร้าน BeautySkin จำหน่ายครีมและเซรั่มบำรุงผิว&#10;ส่งไว 1-2 วัน ทั่วประเทศ&#10;รับคืนสินค้าภายใน 7 วัน หากสินค้าชำรุด&#10;ชำระผ่าน โอนเงิน / QR Code / COD&#10;มีบริการ Line OA สอบถามได้ตลอด 24 ชม."></textarea>
+      <p class="hint">ยิ่งใส่ข้อมูลละเอียด FAQ ยิ่งตรงกับร้านคุณ (AI จะไม่แต่งข้อมูลที่คุณไม่ได้ให้)</p>
+    </div>
+    <div class="field">
+      <label>ช่องทางที่จะใช้ FAQ นี้</label>
+      <div class="chips" id="platformChips">
+        <button type="button" class="chip active" data-val="ทั่วไป">ทั่วไป</button>
+        <button type="button" class="chip" data-val="Facebook">Facebook</button>
+        <button type="button" class="chip" data-val="Instagram">Instagram</button>
+        <button type="button" class="chip" data-val="TikTok">TikTok</button>
+        <button type="button" class="chip" data-val="LINE OA">LINE</button>
+        <button type="button" class="chip" data-val="Shopee/Lazada">Shopee</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>โทนการตอบ</label>
+      <div class="chips" id="toneChips">
+        <button type="button" class="chip active" data-val="เป็นกันเอง อบอุ่น">เป็นกันเอง</button>
+        <button type="button" class="chip" data-val="สุภาพ มืออาชีพ">มืออาชีพ</button>
+        <button type="button" class="chip" data-val="สนุก ขายของแรง">ขายของแรง</button>
+        <button type="button" class="chip" data-val="หรูหรา พรีเมียม">พรีเมียม</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">❓ สร้าง FAQ เลย</button>
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+
+let allFaq = [];
+
+function pickChip(groupId, el) {
+  document.querySelectorAll('#' + groupId + ' .chip').forEach(function(c) { c.classList.remove('active'); });
+  el.classList.add('active');
+}
+function selectedChip(groupId) {
+  const el = document.querySelector('#' + groupId + ' .chip.active');
+  return el ? el.getAttribute('data-val') : '';
+}
+document.querySelectorAll('.chips').forEach(function(group) {
+  group.addEventListener('click', function(e) {
+    const chip = e.target.closest('.chip');
+    if (chip) pickChip(group.id, chip);
+  });
+});
+
+async function run() {
+  const shopInfo = document.getElementById('shopInfo').value.trim();
+  if (!shopInfo) { GeminiKit.toast('ใส่ข้อมูลร้านก่อนนะ'); return; }
+
+  const platform = selectedChip('platformChips');
+  const tone = selectedChip('toneChips');
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('go');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>AI กำลังสร้าง FAQ ให้...</div>';
+
+  const system = 'คุณคือนักการตลาดและนักเขียนคอนเทนต์ขายของออนไลน์ไทยมือโปร ที่เข้าใจจิตวิทยาลูกค้าและเชี่ยวชาญการเขียน FAQ ที่ปิดการขาย ลดข้อโต้แย้ง และสร้างความมั่นใจให้ลูกค้ากดสั่งซื้อ';
+
+  const prompt = `ใช้ข้อมูลร้านด้านล่างสร้างชุด FAQ ภาษาไทย 20 ข้อ ที่ลูกค้าตัวจริงมักถามก่อนตัดสินใจซื้อ
+
+ข้อมูลร้าน (ใช้ได้เฉพาะข้อมูลนี้):
+"""
+${shopInfo}
+"""
+
+ช่องทางที่จะใช้: ${platform}
+โทนการตอบ: ${tone}
+
+ข้อกำหนดสำคัญ:
+- ห้ามแต่งข้อมูลที่ผู้ใช้ไม่ได้ให้ เช่น ราคา เบอร์โทร โปรโมชั่น ระยะเวลา หากข้อมูลไม่พอให้ตอบแบบชวนทักแชทสอบถามแทน (อย่าใส่ตัวเลขมั่ว)
+- คำถามต้องเป็นภาษาที่ลูกค้าจริงพิมพ์ถาม สั้น กระชับ ตรงประเด็น
+- คำตอบเขียนด้วยโทน "${tone}" อ่านแล้วอุ่นใจและอยากซื้อ จบด้วย CTA ที่เหมาะกับช่องทาง ${platform} (เช่น ทักแชท/กดสั่งซื้อ/พิมพ์ "สนใจ") ในข้อที่เกี่ยวกับการตัดสินใจซื้อ
+- ครอบคลุมหลากหลายหมวด: ตัวสินค้า/วิธีใช้, การสั่งซื้อ, การจัดส่ง, การชำระเงิน, การคืน/เคลม, ความน่าเชื่อถือ, บริการหลังการขาย
+- คำตอบ actionable บอกขั้นตอนชัดเจน ไม่น้ำท่วมทุ่ง
+
+ตอบเป็น JSON array เท่านั้น ห้ามมีข้อความอื่นนอก array
+schema แต่ละ element: {"q":"คำถาม","a":"คำตอบ"}`;
+
+  try {
+    const arr = await GeminiKit.text(prompt, { json: true, system: system });
+    if (!Array.isArray(arr) || !arr.length) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+
+    allFaq = arr.filter(function(it) { return it && it.q && it.a; });
+    if (!allFaq.length) throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง');
+    renderFaq(allFaq);
+  } catch (e) {
+    out.innerHTML = '<div class="error-card">⚠️ ' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function buildAllText() {
+  return allFaq.map(function(item, i) {
+    return 'Q' + (i + 1) + ': ' + item.q + '\nA: ' + item.a;
+  }).join('\n\n');
+}
+
+function renderFaq(arr) {
+  const out = document.getElementById('output');
+  let html = '<div class="actions">' +
+      '<button class="btn-sec" onclick="copyAll()">📋 คัดลอกทั้งหมด</button>' +
+      '<button class="btn-sec" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button>' +
+    '</div>';
+  arr.forEach(function(item, i) {
+    html += '<div class="faq-item" id="faq-' + i + '">' +
+      '<div class="faq-q" onclick="toggle(' + i + ')">' +
+        '<span class="num">' + (i + 1) + '</span>' +
+        '<span class="q-text">' + esc(item.q) + '</span>' +
+        '<span class="arrow">▼</span>' +
+      '</div>' +
+      '<div class="faq-a">' + esc(item.a) +
+        '<br><button class="copy-one" onclick="copyOne(' + i + ',event)">📋 คัดลอกข้อนี้</button>' +
+      '</div>' +
+    '</div>';
+  });
+  out.innerHTML = html;
+}
+
+function toggle(i) {
+  const el = document.getElementById('faq-' + i);
+  if (el) el.classList.toggle('open');
+}
+
+function copyOne(i, ev) {
+  if (ev) ev.stopPropagation();
+  const item = allFaq[i];
+  if (!item) return;
+  GeminiKit.copy('Q: ' + item.q + '\nA: ' + item.a);
+}
+
+function copyAll() {
+  if (!allFaq.length) return;
+  GeminiKit.copy(buildAllText());
+}
+
+function downloadAll() {
+  if (!allFaq.length) return;
+  GeminiKit.download('faq.txt', buildAllText(), 'text/plain');
+}
+
+function esc(s) {
+  return (s == null ? '' : s).toString().replace(/[&<>]/g, function(c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]);
+  });
+}
+</script>
+</body></html>

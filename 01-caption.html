@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>แคปชั่นเทพ ✍️ (AI)</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg1:#7c3aed;--bg2:#4f46e5;--card:#fff;--ink:#1f2937;--muted:#6b7280;--soft:#f5f3ff;--accent:#7c3aed}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Prompt',system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+  .wrap{max-width:460px;margin:0 auto}
+  header{text-align:center;color:#fff;margin-bottom:18px}
+  header h1{font-size:26px;font-weight:700;text-shadow:0 3px 12px rgba(0,0,0,.2)}
+  header p{font-size:13px;opacity:.92;margin-top:4px}
+  .card{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 16px 38px rgba(0,0,0,.18);margin-bottom:16px}
+  label{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+  .field{margin-bottom:14px}
+  input,textarea,select{width:100%;border:2px solid var(--soft);border-radius:13px;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;transition:.2s;resize:vertical}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:2px solid var(--soft);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn{width:100%;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 10px 24px rgba(124,58,237,.4)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .result{background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,.1);position:relative;white-space:pre-wrap;font-size:15px;line-height:1.7}
+  .result .copy{position:absolute;top:10px;right:10px;border:none;background:var(--soft);color:var(--accent);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+  .bar{display:flex;gap:8px;margin-bottom:12px}
+  .bar .act{flex:1;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.92);color:var(--accent);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+  .loading{text-align:center;color:#fff;padding:20px;font-size:15px}
+  .spinner{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>แคปชั่นเทพ ✍️</h1>
+    <p>ใส่สินค้า → AI เขียนแคปชั่นขายของให้ 8 สไตล์</p>
+  </header>
+
+  <div class="card">
+    <div class="field">
+      <label>ขายอะไร? (ชื่อสินค้า/บริการ)</label>
+      <input id="product" placeholder="เช่น เซรั่มวิตามินซี ลดจุดด่างดำ">
+    </div>
+    <div class="field">
+      <label>จุดเด่น / โปรโมชั่น (ใส่หลายอย่างได้)</label>
+      <textarea id="features" rows="2" placeholder="เช่น เห็นผลใน 7 วัน, ส่งฟรี, ลด 30% วันนี้"></textarea>
+    </div>
+    <div class="field">
+      <label>กลุ่มลูกค้า</label>
+      <input id="audience" placeholder="เช่น ผู้หญิงวัยทำงาน 25-40">
+    </div>
+    <div class="field">
+      <label>แพลตฟอร์มที่จะโพสต์</label>
+      <div class="chips" id="platforms"></div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>โทนที่อยากได้</label>
+      <div class="chips" id="tones"></div>
+    </div>
+  </div>
+
+  <button class="btn" id="go" onclick="run()">✨ เขียนแคปชั่นให้เลย</button>
+
+  <div id="output" style="margin-top:16px"></div>
+</div>
+
+<script src="gemini-kit.js"></script>
+<script>
+GeminiKit.mountGear();
+const TONES=['ขายตรงเร่งปิด','สนุก/ตลก','สายเล่าเรื่อง','พรีเมียม/หรู','เป็นกันเอง'];
+const PLATFORMS=[
+  {label:'Facebook',hint:'โพสต์ Facebook อ่านง่าย เว้นวรรคเป็นบรรทัด ดึงให้คนหยุดอ่านบรรทัดแรก'},
+  {label:'Instagram',hint:'แคปชั่น Instagram โทนไลฟ์สไตล์ ใส่ hashtag ได้มากขึ้น (5-8 ตัว)'},
+  {label:'TikTok',hint:'แคปชั่น TikTok สั้น กระชับ ติดเทรนด์ hook แรงใน 1 บรรทัด'},
+  {label:'LINE',hint:'ข้อความ LINE OA สั้น เป็นกันเอง เหมือนทักหาลูกค้าตรงๆ ไม่ต้องมี hashtag'},
+  {label:'Shopee',hint:'ชื่อ/รายละเอียดสินค้า Shopee เน้นคีย์เวิร์ดค้นหา จุดเด่น และโปรฯ ไม่ต้องมี hashtag'}
+];
+let tone=TONES[0];
+let platform=PLATFORMS[0];
+let lastCaptions=[];
+document.getElementById('tones').innerHTML=TONES.map((t,i)=>`<button class="chip ${i===0?'on':''}" onclick="pickTone(this,'${t}')">${t}</button>`).join('');
+document.getElementById('platforms').innerHTML=PLATFORMS.map((p,i)=>`<button class="chip ${i===0?'on':''}" onclick="pickPlatform(this,${i})">${p.label}</button>`).join('');
+function pickTone(el,t){tone=t;el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
+function pickPlatform(el,i){platform=PLATFORMS[i];el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
+
+async function run(){
+  const product=document.getElementById('product').value.trim();
+  if(!product){GeminiKit.toast('ใส่ชื่อสินค้าก่อนนะ');return}
+  const features=document.getElementById('features').value.trim();
+  const audience=document.getElementById('audience').value.trim();
+  const out=document.getElementById('output');
+  const btn=document.getElementById('go');btn.disabled=true;
+  out.innerHTML='<div class="loading"><div class="spinner"></div>AI กำลังเขียนแคปชั่น...</div>';
+  const system='คุณคือนักเขียนคอนเทนต์และนักการตลาดขายของออนไลน์ไทยมือโปร เชี่ยวชาญการเขียนแคปชั่นที่ลูกค้าอ่านแล้ว "อยากซื้อทันที" เข้าใจจิตวิทยาการขาย จุดเจ็บของลูกค้า และวิธีปิดการขายบนโซเชียลไทย เขียนภาษาไทยที่เป็นธรรมชาติ ลื่นไหล ไม่แข็งทื่อ ห้ามแต่งสรรพคุณหรือข้อมูลที่ผู้ใช้ไม่ได้ให้มา (เช่น ราคา ส่วนลด การรับรอง) ถ้าไม่มีข้อมูลให้เน้นประโยชน์ที่ลูกค้าจะได้แทน';
+  const prompt=`เขียนแคปชั่นขายของภาษาไทย 8 แบบที่หลากหลาย ไม่ซ้ำมุมกัน สำหรับ ${platform.label}
+แนวทางแพลตฟอร์ม: ${platform.hint}
+โทนหลัก: "${tone}"
+
+สินค้า/บริการ: ${product}
+${features?'จุดเด่น/โปรโมชั่นที่ผู้ใช้ให้มา: '+features:'(ผู้ใช้ไม่ได้ระบุจุดเด่น/โปรฯ — ห้ามแต่งตัวเลขหรือข้อเสนอขึ้นเอง)'}
+${audience?'กลุ่มลูกค้า: '+audience:''}
+
+เงื่อนไขแต่ละแคปชั่น:
+- ขึ้นต้นด้วย hook ที่ดึงให้หยุดอ่าน (คำถาม/จุดเจ็บ/ความอยาก)
+- ใช้ emoji ที่เหมาะสมพอดี ไม่รก
+- มี call-to-action ปิดการขายที่ชัดและเหมาะกับ ${platform.label} (เช่น ทักแชท/กดสั่งซื้อ/คอมเมนต์)
+- ${/Shopee|LINE/.test(platform.label)?'ไม่ต้องใส่ hashtag':'ปิดท้ายด้วย hashtag 3-5 ตัวที่ตรงกลุ่ม'}
+- ความยาวกำลังดี พร้อมก็อปวางโพสต์ได้จริงทันที
+- ห้ามแต่งข้อมูลที่ผู้ใช้ไม่ได้ให้ (ราคา ส่วนลด ผลลัพธ์รับรอง)
+
+ตอบเป็น JSON array ของ string เท่านั้น 8 ตัว เช่น ["แคปชั่น1...","แคปชั่น2..."]`;
+  try{
+    const arr=await GeminiKit.text(prompt,{json:true,system});
+    if(!Array.isArray(arr)||!arr.length){throw new Error('AI ตอบในรูปแบบที่อ่านไม่ได้ ลองใหม่อีกครั้ง')}
+    lastCaptions=arr.map(c=>String(c));
+    const bar=`<div class="bar"><button class="act" onclick="copyAll()">📋 คัดลอกทั้งหมด</button><button class="act" onclick="downloadAll()">⬇️ ดาวน์โหลด .txt</button></div>`;
+    out.innerHTML=bar+lastCaptions.map((c,i)=>`<div class="result"><button class="copy" data-i="${i}" onclick="copyText(this)">คัดลอก</button>${esc(c)}</div>`).join('');
+  }catch(e){
+    out.innerHTML=`<div class="result" style="color:#dc2626">⚠️ ${esc(e.message)}</div>`;
+  }finally{btn.disabled=false}
+}
+function copyText(b){const c=lastCaptions[+b.dataset.i]||'';GeminiKit.copy(c);b.textContent='คัดลอกแล้ว ✓';setTimeout(()=>b.textContent='คัดลอก',1500)}
+function copyAll(){if(!lastCaptions.length)return;GeminiKit.copy(joinAll())}
+function downloadAll(){if(!lastCaptions.length)return;const name=(document.getElementById('product').value.trim()||'captions').slice(0,40);GeminiKit.download(`แคปชั่น-${name}.txt`,joinAll(),'text/plain')}
+function joinAll(){return lastCaptions.map((c,i)=>`【 แบบที่ ${i+1} 】\n${c}`).join('\n\n──────────\n\n')}
+function esc(s){return(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+</script>
+</body>
+</html>
