@@ -262,10 +262,13 @@
     }
     if (!uploadUrl) throw new Error('อัปโหลดไม่สำเร็จ (ไม่ได้ upload URL)');
     // 2) upload bytes + finalize
+    // ส่งเป็น ArrayBuffer (ไม่มี Content-Type) เลี่ยง CORS preflight ของ content-type
+    // ที่ติดเมื่อ upload session ถูกสร้างฝั่ง server (โหมด proxy)
+    const fileBytes = await file.arrayBuffer();
     const upRes = await fetch(uploadUrl, {
       method: 'POST',
       headers: { 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' },
-      body: file
+      body: fileBytes
     });
     if (!upRes.ok) throw apiError(upRes.status, await upRes.text());
     let fileInfo = (await upRes.json()).file;
