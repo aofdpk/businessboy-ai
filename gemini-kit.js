@@ -233,6 +233,22 @@
   // ---------- public: video understanding (File API) ----------
   // file: File object; onProgress(stage,text)
   async function video(prompt, file, onProgress = () => {}) {
+    // โหมดเว็บจริง (proxy): ส่งไฟล์เป็น inline base64 ผ่าน /api/generate ตรงๆ
+    // (ไม่ใช้ File API เพราะ upload session ที่สร้างฝั่ง server ไม่เปิด CORS ให้เบราว์เซอร์อัปไฟล์)
+    // จำกัด ~3MB เพราะ serverless รับ body ได้ ~4.5MB (base64 พองขึ้น ~33%)
+    if (PROXY) {
+      if (file.size > 3 * 1024 * 1024) {
+        throw new Error('ไฟล์ใหญ่เกินไปสำหรับเว็บนี้ (รองรับราว 3MB) — ลองใช้คลิป/ไฟล์เสียงที่สั้นลง');
+      }
+      onProgress('upload', 'กำลังส่งไฟล์...');
+      const b64 = await fileToBase64(file);
+      onProgress('analyze', 'AI กำลังวิเคราะห์เนื้อหา...');
+      const resp = await generate(MODEL_TEXT, [
+        { inline_data: { mime_type: file.type || 'application/octet-stream', data: b64 } },
+        { text: prompt }
+      ]);
+      return extractText(resp);
+    }
     let key = '';
     if (!PROXY) { if (!hasKey()) await requireKey(); key = encodeURIComponent(getKey()); }
     onProgress('upload', 'กำลังอัปโหลดไฟล์...');
