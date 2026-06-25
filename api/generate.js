@@ -67,10 +67,10 @@ async function checkRateLimit(req) {
     const appCount = results && results[0] && Number(results[0][1]);
     const total = results && results[2] && Number(results[2][1]);
     if (appCount > LIMIT_PER_APP) {
-      return { message: 'คุณทดลองโปรแกรมนี้ครบ ' + LIMIT_PER_APP + ' ครั้งแล้วสำหรับวันนี้ 🙏 พรุ่งนี้กลับมาเล่นใหม่ได้เลย — หรืออยากใช้แบบไม่จำกัด/ทำเวอร์ชันของธุรกิจคุณเอง ทักแอดมิน “เด็กประกอบการ” ได้เลยครับ' };
+      return { message: 'คุณทดลองโปรแกรมนี้ครบ ' + LIMIT_PER_APP + ' ครั้งแล้วสำหรับวันนี้ 🙏 สนใจใช้โปรแกรมแบบไม่จำกัด (อันลิมิต) — แอดไลน์ @businessboy ได้เลยครับ 💬' };
     }
     if (total > LIMIT_PER_IP_TOTAL) {
-      return { message: 'วันนี้คุณใช้งานระบบครบโควต้ารวมแล้ว 🙏 พรุ่งนี้กลับมาเล่นใหม่ได้ หรือทักแอดมิน “เด็กประกอบการ” เพื่อใช้แบบไม่จำกัดครับ' };
+      return { message: 'วันนี้คุณใช้งานระบบครบโควต้ารวมแล้ว 🙏 สนใจใช้โปรแกรมแบบไม่จำกัด (อันลิมิต) — แอดไลน์ @businessboy ได้เลยครับ 💬' };
     }
     return null;
   } catch (e) {

@@ -390,6 +390,8 @@
   function inject() {
     if (document.getElementById('gk-brand-css')) return;
     var st = document.createElement('style'); st.id = 'gk-brand-css'; st.textContent = BRAND_CSS; document.head.appendChild(st);
+    // ตรวจโหมด keyless เองในสโคปนี้ (ตัวแปร PROXY อยู่คนละ IIFE เข้าถึงไม่ได้)
+    var IS_PROXY = (location.protocol === 'https:' && !/^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname));
     var wrap = document.querySelector('.wrap') || document.body;
     var header = wrap.querySelector('header');
     var fi = document.querySelector('input[type=file]');
@@ -405,7 +407,7 @@
     howto.innerHTML =
       '<div class="gk-howto-h" id="gk-howto-h">📖 วิธีใช้งานง่ายๆ <span class="gk-tog">' + (collapsed ? '▸ แตะดู' : '▾ ย่อ') + '</span></div>' +
       '<ol class="gk-howto-b">' +
-      (PROXY
+      (IS_PROXY
         ? '<li><b>พร้อมใช้ได้ทันที</b> — ไม่ต้องสมัครหรือใส่ key อะไรเลย</li>'
         : '<li><b>ใส่ Gemini API key</b> — กดปุ่มเฟือง ⚙️ มุมขวาบน วาง key (ขอ<u>ฟรี</u>ที่ Google AI Studio) ใส่ครั้งเดียวพอ</li>') +
       '<li>' + step2 + '</li>' +
@@ -421,7 +423,7 @@
       howto.querySelector('.gk-tog').textContent = c ? '▸ แตะดู' : '▾ ย่อ';
     };
     var f = document.createElement('div'); f.className = 'gk-footer';
-    f.innerHTML = '<img class="gk-logo" src="' + LOGO + '" alt="เด็กประกอบการ"><div class="gk-cr"><b>เด็กประกอบการ · The Business Boy</b><span>© สงวนลิขสิทธิ์ — โปรแกรมนี้เป็นลิขสิทธิ์ของ เด็กประกอบการ ห้ามทำซ้ำ ดัดแปลง หรือจำหน่ายต่อ</span></div>';
+    f.innerHTML = '<img class="gk-logo" src="' + LOGO + '" alt="เด็กประกอบการ"><div class="gk-cr"><b>เด็กประกอบการ · The Business Boy</b><span>© สงวนลิขสิทธิ์ — โปรแกรมนี้เป็นลิขสิทธิ์ของ เด็กประกอบการ ห้ามทำซ้ำ ดัดแปลง หรือจำหน่ายต่อ</span><span style="display:block;margin-top:6px">📚 สนใจคอร์สเรียนทำโปรแกรม AI — แอดไลน์ <b>@businessboy</b></span></div>';
     wrap.appendChild(f);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject); else inject();
