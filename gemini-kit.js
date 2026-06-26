@@ -429,7 +429,7 @@
       howto.querySelector('.gk-tog').textContent = c ? '▸ แตะดู' : '▾ ย่อ';
     };
     var f = document.createElement('div'); f.className = 'gk-footer';
-    f.innerHTML = '<img class="gk-logo" src="' + LOGO + '" alt="เด็กประกอบการ"><div class="gk-cr"><b>เด็กประกอบการ · The Business Boy</b><span>© สงวนลิขสิทธิ์ — โปรแกรมนี้เป็นลิขสิทธิ์ของ เด็กประกอบการ ห้ามทำซ้ำ ดัดแปลง หรือจำหน่ายต่อ</span><span style="display:block;margin-top:6px">📚 สนใจคอร์สเรียนทำโปรแกรม AI — แอดไลน์ <b>@businessboy</b></span></div>';
+    f.innerHTML = '<img class="gk-logo" src="' + LOGO + '" alt="เด็กประกอบการ"><div class="gk-cr"><b>เด็กประกอบการ · The Business Boy</b><span>© สงวนลิขสิทธิ์ — โปรแกรมนี้เป็นลิขสิทธิ์ของ เด็กประกอบการ ห้ามทำซ้ำ ดัดแปลง หรือจำหน่ายต่อ</span><span style="display:block;margin-top:6px">📚 สนใจคอร์สเรียนทำโปรแกรม AI / ใช้แบบไม่จำกัด</span><a href="https://lin.ee/yRa3sBx" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;margin-top:11px;background:#06C755;color:#fff;font-weight:700;text-decoration:none;padding:11px 20px;border-radius:13px;font-size:15px;box-shadow:0 8px 20px rgba(6,199,85,.42)">💬 เพิ่มเพื่อน LINE — @businessboy</a></div>';
     wrap.appendChild(f);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject); else inject();
