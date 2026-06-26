@@ -390,6 +390,12 @@
   function inject() {
     if (document.getElementById('gk-brand-css')) return;
     var st = document.createElement('style'); st.id = 'gk-brand-css'; st.textContent = BRAND_CSS; document.head.appendChild(st);
+    // มือถือ: ตารางผลลัพธ์เลื่อนแนวนอนได้ (กันล้นจอ), รูปไม่ล้น, ชิปกดสบายขึ้น
+    if (!document.getElementById('gk-mobile-css')) {
+      var mst = document.createElement('style'); mst.id = 'gk-mobile-css';
+      mst.textContent = 'img{max-width:100%}@media (max-width:600px){table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.chip{padding-top:9px;padding-bottom:9px}}';
+      document.head.appendChild(mst);
+    }
     // ตรวจโหมด keyless เองในสโคปนี้ (ตัวแปร PROXY อยู่คนละ IIFE เข้าถึงไม่ได้)
     var IS_PROXY = (location.protocol === 'https:' && !/^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname));
     var wrap = document.querySelector('.wrap') || document.body;
