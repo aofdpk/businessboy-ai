@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หลังบ้าน · รายชื่อสมาชิก</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#7c3aed}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Prompt',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;padding:20px 14px 60px;min-height:100vh}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:22px;font-weight:700;margin-bottom:4px}
+  .sub{color:#94a3b8;font-size:13px;margin-bottom:20px}
+  .card{background:#1e293b;border-radius:16px;padding:18px;margin-bottom:16px}
+  label{font-size:13px;color:#94a3b8;display:block;margin-bottom:6px}
+  input{width:100%;border:2px solid #334155;background:#0f172a;color:#e2e8f0;border-radius:11px;padding:11px 14px;font-size:15px;font-family:inherit;outline:none}
+  input:focus{border-color:var(--accent)}
+  .btn{border:none;border-radius:11px;padding:11px 20px;font-size:15px;font-weight:700;font-family:inherit;color:#fff;background:linear-gradient(135deg,#7c3aed,#4f46e5);cursor:pointer}
+  .btn.ghost{background:#334155}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .bar input{flex:1;min-width:180px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #334155;white-space:nowrap}
+  th{color:#94a3b8;font-weight:600;font-size:12px}
+  .tbl-wrap{overflow-x:auto}
+  .credits{font-weight:700;color:#a78bfa}
+  .err{color:#f87171;font-size:14px;margin-top:10px}
+  .count{color:#94a3b8;font-size:13px}
+  @media(max-width:600px){table{display:block;overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>หลังบ้าน — รายชื่อสมาชิก</h1>
+  <div class="sub">เด็กประกอบการ · The Business Boy</div>
+
+  <div class="card" id="login-card">
+    <label>รหัสแอดมิน</label>
+    <div class="bar">
+      <input id="token" type="password" placeholder="ใส่รหัสแอดมิน" onkeydown="if(event.key==='Enter')load()">
+      <button class="btn" onclick="load()">เข้าดูข้อมูล</button>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card" id="data-card" style="display:none">
+    <div class="bar">
+      <input id="q" placeholder="ค้นหา ชื่อ / นามสกุล / เบอร์" onkeydown="if(event.key==='Enter')load()">
+      <button class="btn ghost" onclick="load()">ค้นหา</button>
+      <button class="btn" onclick="csv()">⬇️ ดาวน์โหลด CSV</button>
+    </div>
+    <div class="count" id="count"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>ชื่อ</th><th>นามสกุล</th><th>เบอร์</th><th>เครดิต</th><th>สมัครเมื่อ</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let ROWS = [];
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function fmt(d){try{return new Date(d).toLocaleString('th-TH')}catch(e){return d||''}}
+async function load(){
+  const token=document.getElementById('token').value.trim();
+  const q=(document.getElementById('q')?document.getElementById('q').value.trim():'');
+  const err=document.getElementById('err'); err.textContent='';
+  if(!token){err.textContent='ใส่รหัสแอดมินก่อน';return}
+  try{
+    const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,q})});
+    const j=await r.json();
+    if(!r.ok){err.textContent=j.error||'เข้าไม่ได้';return}
+    ROWS=j.rows||[];
+    document.getElementById('login-card').style.display='none';
+    document.getElementById('data-card').style.display='block';
+    window._token=token;
+    render();
+  }catch(e){err.textContent='เชื่อมต่อไม่ได้'}
+}
+function render(){
+  document.getElementById('count').textContent='ทั้งหมด '+ROWS.length+' คน';
+  document.getElementById('rows').innerHTML=ROWS.map((x,i)=>
+    '<tr><td>'+(i+1)+'</td><td>'+esc(x.first_name)+'</td><td>'+esc(x.last_name)+'</td><td>'+esc(x.phone)+'</td><td class="credits">'+esc(x.credits)+'</td><td>'+esc(fmt(x.created_at))+'</td></tr>'
+  ).join('');
+}
+function csv(){
+  const head=['ชื่อ','นามสกุล','เบอร์','เครดิต','สมัครเมื่อ'];
+  const lines=[head.join(',')].concat(ROWS.map(x=>[x.first_name,x.last_name,x.phone,x.credits,fmt(x.created_at)].map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')));
+  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='members-'+Date.now()+'.csv';a.click();
+}
+</script>
+</body>
+</html>

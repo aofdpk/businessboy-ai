@@ -136,12 +136,14 @@
     let res;
     if (PROXY) {
       const h = { 'Content-Type': 'application/json' };
-      try { h['x-gk-app'] = location.pathname || '/'; } catch (e) {}
-      if (opts.retry) h['x-gk-retry'] = '1'; // retry/variant ภายใน — ไม่นับโควต้าซ้ำ
+      const tk = await _authToken();                 // access token ของผู้ใช้ที่ล็อกอิน
+      if (tk) h['Authorization'] = 'Bearer ' + tk;
       res = await fetch(PROXY + '/generate', {
         method: 'POST', headers: h,
         body: JSON.stringify({ model: model, body: body })
       });
+      const cr = res.headers.get('X-Credits-Remaining');
+      if (cr != null && cr !== '') _setCredits(Number(cr)); // อัปเดตแถบเครดิต
     } else {
       if (!hasKey()) { await requireKey(); }
       res = await fetch(`${EP}/v1beta/models/${model}:generateContent?key=${encodeURIComponent(getKey())}`, {
@@ -149,7 +151,11 @@
       });
     }
     const txt = await res.text();
-    if (!res.ok) throw apiError(res.status, txt);
+    if (!res.ok) {
+      if (res.status === 401) _requireLogin();          // เซสชันหมด -> เปิดหน้าล็อกอิน
+      else if (res.status === 402) _showOutOfCredits();  // เครดิตหมด -> เปิดหน้าติดต่อไลน์
+      throw apiError(res.status, txt);
+    }
     return JSON.parse(txt);
   }
 
@@ -175,11 +181,7 @@
     const cfg = { system: opts.system, generationConfig: Object.keys(gc).length ? gc : undefined };
     const out = extractText(await generate(MODEL_TEXT, [{ text: prompt }], cfg));
     if (!opts.json) return out;
-    let parsed = safeJson(out);
-    if (parsed == null) { // retry once on bad JSON (ไม่นับโควต้าซ้ำ)
-      parsed = safeJson(extractText(await generate(MODEL_TEXT, [{ text: prompt + '\n\nสำคัญ: ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น ห้ามมีข้อความอื่นหรือ markdown' }], Object.assign({}, cfg, { retry: true }))));
-    }
-    return parsed;
+    return safeJson(out); // เซิร์ฟเวอร์ retry ให้แล้วถ้า JSON เพี้ยน
   }
 
   // ---------- public: vision (prompt + images) ----------
@@ -196,12 +198,7 @@
     const cfg = { system: opts.system, generationConfig: Object.keys(gc).length ? gc : undefined };
     const out = extractText(await generate(MODEL_TEXT, parts, cfg));
     if (!opts.json) return out;
-    let parsed = safeJson(out);
-    if (parsed == null) { // retry once on bad JSON (ไม่นับโควต้าซ้ำ)
-      const parts2 = parts.slice(0, -1).concat([{ text: prompt + '\n\nสำคัญ: ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น ห้ามมีข้อความอื่นหรือ markdown' }]);
-      parsed = safeJson(extractText(await generate(MODEL_TEXT, parts2, Object.assign({}, cfg, { retry: true }))));
-    }
-    return parsed;
+    return safeJson(out); // เซิร์ฟเวอร์ retry ให้แล้วถ้า JSON เพี้ยน
   }
 
   // ---------- public: image generation (Nano Banana) ----------
@@ -213,29 +210,10 @@
       else parts.push({ inline_data: { mime_type: im.mime || 'image/jpeg', data: im.data } });
     }
     parts.push({ text: prompt });
-    // try a few generationConfig variants for cross-version compatibility
-    const variants = [
-      { responseModalities: ['IMAGE'] },
-      { responseModalities: ['TEXT', 'IMAGE'] },
-      undefined
-    ];
-    let lastErr;
-    for (let vi = 0; vi < variants.length; vi++) {
-      const gc = variants[vi];
-      try {
-        const o = gc ? { generationConfig: gc } : {};
-        if (vi > 0) o.retry = true; // variant ถัดๆ ไปคือ retry ภายใน — ไม่นับโควต้าซ้ำ
-        const resp = await generate(MODEL_IMAGE, parts, o);
-        const dataUrl = extractImage(resp);
-        if (dataUrl) return dataUrl;
-        lastErr = new Error('AI ไม่ได้ส่งรูปกลับมา — ลองปรับคำสั่งหรือลองใหม่');
-      } catch (e) {
-        lastErr = e;
-        // if it's clearly not a config problem (bad key/quota), stop retrying
-        if (/API key|โควต้า|ปฏิเสธ/i.test(e.message)) break;
-      }
-    }
-    throw lastErr || new Error('สร้างรูปไม่สำเร็จ ลองใหม่อีกครั้ง');
+    const resp = await generate(MODEL_IMAGE, parts, { generationConfig: { responseModalities: ['IMAGE'] } });
+    const dataUrl = extractImage(resp);
+    if (!dataUrl) throw new Error('AI ไม่ได้ส่งรูปกลับมา — ลองปรับคำสั่งหรือลองใหม่');
+    return dataUrl;
   }
 
   // ---------- public: video understanding (File API) ----------
@@ -374,10 +352,233 @@
     });
   }
 
+  // ============================================================
+  //  ระบบสมาชิก + เครดิต (เฉพาะเว็บจริง / PROXY) — Supabase
+  // ============================================================
+  const SB_URL = 'https://txsgttyregmpoymstkdy.supabase.co';
+  const SB_PUBKEY = 'sb_publishable_8OUpGJbAh8U1w6GKiIN5CA_tn7n8iYZ';
+  const GK_LINE = 'https://lin.ee/yRa3sBx';
+  let _sb = null, _credits = null;
+
+  async function _authToken() {
+    if (!_sb) return '';
+    try { const { data } = await _sb.auth.getSession(); return (data.session && data.session.access_token) || ''; }
+    catch (e) { return ''; }
+  }
+  function _setCredits(n) { if (typeof n === 'number' && !isNaN(n)) { _credits = n; _renderBadge(); } }
+  function _requireLogin() { if (PROXY) _openAuth('login'); }
+
+  function _el(tag, attrs, html) {
+    const e = document.createElement(tag);
+    if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  function _pe164(raw) {
+    let p = String(raw || '').replace(/[^\d+]/g, '');
+    if (p[0] === '+') return p;
+    if (p[0] === '0') return '+66' + p.slice(1);
+    if (p.slice(0, 2) === '66') return '+' + p;
+    return '+66' + p;
+  }
+  function _authErr(error) {
+    const m = (error && error.message) || '';
+    if (/already registered|already exists|already been/i.test(m)) return 'เบอร์นี้สมัครแล้ว ลองเข้าสู่ระบบ';
+    if (/rate limit|too many|for security/i.test(m)) return 'ขอ OTP ถี่เกินไป รอสักครู่แล้วลองใหม่';
+    if (/not allowed|disabled|provider/i.test(m)) return 'ระบบสมัครยังไม่พร้อม (ยังไม่ได้เปิด SMS)';
+    if (/invalid.*phone|phone/i.test(m)) return 'เบอร์มือถือไม่ถูกต้อง';
+    return m || 'เกิดข้อผิดพลาด ลองใหม่';
+  }
+
+  function _authCss() {
+    if (document.getElementById('gk-auth-css')) return;
+    const s = document.createElement('style'); s.id = 'gk-auth-css';
+    s.textContent =
+      "#gk-auth{position:fixed;inset:0;z-index:2147483000;background:linear-gradient(160deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;padding:18px;font-family:'Prompt',system-ui,sans-serif;overflow:auto}" +
+      "#gk-auth .box{background:#fff;border-radius:22px;padding:26px 22px;width:100%;max-width:390px;box-shadow:0 24px 60px rgba(0,0,0,.35)}" +
+      "#gk-auth h2{font-size:21px;font-weight:700;color:#1f2937;text-align:center;margin:0 0 4px}" +
+      "#gk-auth .sub{font-size:13px;color:#6b7280;text-align:center;margin-bottom:16px}" +
+      "#gk-auth .tabs{display:flex;background:#f3f0ff;border-radius:12px;padding:4px;margin-bottom:14px}" +
+      "#gk-auth .tabs button{flex:1;border:none;background:none;padding:9px;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;color:#6b7280;cursor:pointer}" +
+      "#gk-auth .tabs button.on{background:#fff;color:#7c3aed;box-shadow:0 2px 8px rgba(0,0,0,.1)}" +
+      "#gk-auth label{font-size:12px;color:#6b7280;font-weight:500;display:block;margin:11px 0 5px}" +
+      "#gk-auth input{width:100%;border:2px solid #eee;border-radius:12px;padding:12px 14px;font-size:16px;font-family:inherit;outline:none;box-sizing:border-box}" +
+      "#gk-auth input:focus{border-color:#7c3aed}" +
+      "#gk-auth .row{display:flex;gap:10px}#gk-auth .row>div{flex:1}" +
+      "#gk-auth .primary{width:100%;border:none;border-radius:13px;padding:14px;font-size:16px;font-weight:700;font-family:inherit;color:#fff;background:linear-gradient(135deg,#7c3aed,#4f46e5);cursor:pointer;margin-top:18px;box-shadow:0 10px 24px rgba(124,58,237,.4)}" +
+      "#gk-auth .primary:disabled{opacity:.6}" +
+      "#gk-auth .link{background:none;border:none;color:#7c3aed;font-family:inherit;font-size:13px;cursor:pointer;text-decoration:underline;padding:6px}" +
+      "#gk-auth .foot{text-align:center;margin-top:12px}" +
+      "#gk-auth .err{color:#dc2626;font-size:13px;text-align:center;margin-top:12px}" +
+      "#gk-auth .note{font-size:12px;color:#9ca3af;text-align:center;margin-top:14px;line-height:1.6}" +
+      ".gk-badge{position:fixed;top:10px;right:10px;z-index:2147482000;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.96);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:0 6px 18px rgba(0,0,0,.18);font-family:'Prompt',system-ui,sans-serif}" +
+      ".gk-badge .c{font-size:13px;font-weight:700;color:#7c3aed}" +
+      ".gk-badge .out{border:none;background:#f3f0ff;color:#6b7280;border-radius:999px;width:26px;height:26px;font-size:14px;cursor:pointer;font-family:inherit}" +
+      "#gk-credit-modal{position:fixed;inset:0;z-index:2147483200;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:22px;font-family:'Prompt',system-ui,sans-serif}" +
+      "#gk-credit-modal .m{background:#fff;border-radius:20px;padding:26px 22px;max-width:340px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.4)}" +
+      "#gk-credit-modal .line{display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:#06C755;color:#fff;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:13px;font-size:15px}" +
+      "#gk-credit-modal .x{margin-top:10px;display:block;background:none;border:none;color:#9ca3af;font-family:inherit;cursor:pointer;width:100%;padding:8px}";
+    document.head.appendChild(s);
+  }
+
+  function _openAuth(view) {
+    _authCss();
+    let root = document.getElementById('gk-auth');
+    if (!root) { root = _el('div', { id: 'gk-auth' }); document.body.appendChild(root); }
+    root.style.display = 'flex';
+    _screen(root, view || 'login', {});
+  }
+  function _closeAuth() { const r = document.getElementById('gk-auth'); if (r) r.remove(); }
+
+  function _screen(root, view, st) {
+    const err = (m) => { const e = root.querySelector('.err'); if (e) e.textContent = m || ''; };
+    const busy = (b) => { const btn = root.querySelector('.primary'); if (!btn) return; btn.disabled = b; if (b) { btn.dataset.t = btn.textContent; btn.textContent = 'กรุณารอสักครู่...'; } else if (btn.dataset.t) btn.textContent = btn.dataset.t; };
+    const V = (id) => { const e = root.querySelector(id); return e ? e.value.trim() : ''; };
+
+    if (view === 'login') {
+      root.innerHTML = '<div class="box"><h2>เข้าสู่ระบบ</h2><div class="sub">เด็กประกอบการ · เครื่องมือ AI</div>' +
+        '<div class="tabs"><button class="on">เข้าสู่ระบบ</button><button data-go="signup">สมัครสมาชิก</button></div>' +
+        '<label>เบอร์มือถือ</label><input id="a-phone" inputmode="tel" placeholder="08xxxxxxxx">' +
+        '<label>รหัสผ่าน</label><input id="a-pass" type="password" placeholder="รหัสผ่านของคุณ">' +
+        '<button class="primary">เข้าสู่ระบบ</button><div class="err"></div>' +
+        '<div class="foot"><button class="link" data-go="forgot">ลืมรหัสผ่าน?</button></div></div>';
+      root.querySelector('.primary').onclick = async () => {
+        const phone = V('#a-phone'), pass = root.querySelector('#a-pass').value;
+        if (!phone || !pass) return err('กรอกเบอร์และรหัสผ่าน');
+        busy(true); err('');
+        const { error } = await _sb.auth.signInWithPassword({ phone: _pe164(phone), password: pass });
+        busy(false);
+        if (error) return err('เบอร์หรือรหัสผ่านไม่ถูกต้อง');
+        _onLoggedIn();
+      };
+    } else if (view === 'signup') {
+      root.innerHTML = '<div class="box"><h2>สมัครสมาชิก</h2><div class="sub">รับ 100 เครดิตฟรีทันที</div>' +
+        '<div class="tabs"><button data-go="login">เข้าสู่ระบบ</button><button class="on">สมัครสมาชิก</button></div>' +
+        '<div class="row"><div><label>ชื่อ</label><input id="a-fn" placeholder="ชื่อ"></div><div><label>นามสกุล</label><input id="a-ln" placeholder="นามสกุล"></div></div>' +
+        '<label>เบอร์มือถือ</label><input id="a-phone" inputmode="tel" placeholder="08xxxxxxxx">' +
+        '<label>ตั้งรหัสผ่าน</label><input id="a-pass" type="password" placeholder="อย่างน้อย 6 ตัว">' +
+        '<button class="primary">ขอรหัส OTP ทาง SMS</button><div class="err"></div>' +
+        '<div class="note">เราจะส่ง OTP ไปที่เบอร์นี้เพื่อยืนยันตัวตนครั้งเดียว</div></div>';
+      root.querySelector('.primary').onclick = async () => {
+        const fn = V('#a-fn'), ln = V('#a-ln'), phone = V('#a-phone'), pass = root.querySelector('#a-pass').value;
+        if (!fn || !ln) return err('กรอกชื่อและนามสกุล');
+        if (!phone) return err('กรอกเบอร์มือถือ');
+        if (pass.length < 6) return err('รหัสผ่านอย่างน้อย 6 ตัว');
+        busy(true); err('');
+        const { error } = await _sb.auth.signUp({ phone: _pe164(phone), password: pass, options: { data: { first_name: fn, last_name: ln } } });
+        busy(false);
+        if (error) return err(_authErr(error));
+        _screen(root, 'otp', { phone: _pe164(phone), mode: 'signup' });
+      };
+    } else if (view === 'otp') {
+      root.innerHTML = '<div class="box"><h2>ใส่รหัส OTP</h2><div class="sub">ส่งไปที่ ' + st.phone + '</div>' +
+        '<label>รหัส OTP 6 หลัก</label><input id="a-otp" inputmode="numeric" maxlength="6" placeholder="______">' +
+        (st.mode === 'forgot' ? '<label>ตั้งรหัสผ่านใหม่</label><input id="a-newpass" type="password" placeholder="อย่างน้อย 6 ตัว">' : '') +
+        '<button class="primary">ยืนยัน</button><div class="err"></div>' +
+        '<div class="foot"><button class="link" data-resend>ส่ง OTP อีกครั้ง</button></div></div>';
+      root.querySelector('.primary').onclick = async () => {
+        const otp = V('#a-otp');
+        if (otp.length < 4) return err('กรอกรหัส OTP');
+        busy(true); err('');
+        const { error } = await _sb.auth.verifyOtp({ phone: st.phone, token: otp, type: 'sms' });
+        if (error) { busy(false); return err('รหัส OTP ไม่ถูกต้องหรือหมดอายุ'); }
+        if (st.mode === 'forgot') {
+          const np = root.querySelector('#a-newpass').value;
+          if (np.length < 6) { busy(false); return err('รหัสผ่านใหม่อย่างน้อย 6 ตัว'); }
+          const { error: e2 } = await _sb.auth.updateUser({ password: np });
+          if (e2) { busy(false); return err('ตั้งรหัสใหม่ไม่สำเร็จ'); }
+        }
+        busy(false); _onLoggedIn();
+      };
+      root.querySelector('[data-resend]').onclick = async () => {
+        err('กำลังส่งใหม่...');
+        await _sb.auth.signInWithOtp({ phone: st.phone, options: { shouldCreateUser: st.mode === 'signup' } });
+        err('ส่ง OTP ใหม่แล้ว');
+      };
+    } else if (view === 'forgot') {
+      root.innerHTML = '<div class="box"><h2>ลืมรหัสผ่าน</h2><div class="sub">รับ OTP เพื่อตั้งรหัสใหม่</div>' +
+        '<label>เบอร์มือถือ</label><input id="a-phone" inputmode="tel" placeholder="08xxxxxxxx">' +
+        '<button class="primary">ขอรหัส OTP</button><div class="err"></div>' +
+        '<div class="foot"><button class="link" data-go="login">กลับไปเข้าสู่ระบบ</button></div></div>';
+      root.querySelector('.primary').onclick = async () => {
+        const phone = V('#a-phone');
+        if (!phone) return err('กรอกเบอร์มือถือ');
+        busy(true); err('');
+        const { error } = await _sb.auth.signInWithOtp({ phone: _pe164(phone), options: { shouldCreateUser: false } });
+        busy(false);
+        if (error) return err(/not found|no user/i.test(error.message || '') ? 'ไม่พบเบอร์นี้ในระบบ' : _authErr(error));
+        _screen(root, 'otp', { phone: _pe164(phone), mode: 'forgot' });
+      };
+    }
+    root.querySelectorAll('[data-go]').forEach(b => b.onclick = () => _screen(root, b.getAttribute('data-go'), {}));
+  }
+
+  async function _loadMe() {
+    try {
+      const { data: s } = await _sb.auth.getSession();
+      if (!s.session) return;
+      const { data } = await _sb.from('profiles').select('credits').eq('id', s.session.user.id).single();
+      if (data) _credits = data.credits;
+    } catch (e) {}
+  }
+  async function _onLoggedIn() { _closeAuth(); await _loadMe(); _renderBadge(); }
+
+  function _renderBadge() {
+    if (!PROXY) return;
+    let b = document.querySelector('.gk-badge');
+    if (_credits == null) { if (b) b.remove(); return; }
+    if (!b) { b = _el('div', { class: 'gk-badge' }); document.body.appendChild(b); }
+    b.innerHTML = '<span class="c">⚡ ' + _credits + ' เครดิต</span><button class="out" title="ออกจากระบบ">⎋</button>';
+    b.querySelector('.out').onclick = async () => { try { await _sb.auth.signOut(); } catch (e) {} location.reload(); };
+  }
+
+  function _showOutOfCredits() {
+    if (!PROXY) return;
+    _authCss();
+    if (document.getElementById('gk-credit-modal')) return;
+    const m = _el('div', { id: 'gk-credit-modal' });
+    m.innerHTML = '<div class="m"><div style="font-size:40px">⚡</div>' +
+      '<h2 style="font-size:19px;color:#1f2937;margin:8px 0 6px">เครดิตหมดแล้ว</h2>' +
+      '<div style="font-size:14px;color:#6b7280">สนใจใช้งานต่อแบบไม่จำกัด แอดไลน์มาได้เลยครับ 🙏</div>' +
+      '<a class="line" href="' + GK_LINE + '" target="_blank" rel="noopener">💬 เพิ่มเพื่อน LINE @businessboy</a>' +
+      '<button class="x">ปิด</button></div>';
+    document.body.appendChild(m);
+    m.querySelector('.x').onclick = () => m.remove();
+    m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  }
+
+  async function _bootAuth() {
+    _authCss();
+    let root = document.getElementById('gk-auth');
+    if (!root) { root = _el('div', { id: 'gk-auth' }, '<div class="box"><div class="sub" style="margin:0">กำลังโหลด...</div></div>'); document.body.appendChild(root); }
+    try {
+      const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      _sb = mod.createClient(SB_URL, SB_PUBKEY);
+    } catch (e) {
+      root.innerHTML = '<div class="box"><div class="sub">โหลดระบบไม่สำเร็จ ลองรีเฟรชหน้าใหม่</div></div>';
+      return;
+    }
+    try {
+      const { data } = await _sb.auth.getSession();
+      if (data.session) { _closeAuth(); await _loadMe(); _renderBadge(); }
+      else { _screen(root, 'login', {}); }
+    } catch (e) { _screen(root, 'login', {}); }
+    _sb.auth.onAuthStateChange((_e, session) => {
+      if (!session) { _credits = null; _renderBadge(); _openAuth('login'); }
+    });
+  }
+
+  if (PROXY) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _bootAuth);
+    else _bootAuth();
+  }
+
   window.GeminiKit = {
     getKey, setKey, clearKey, hasKey, requireKey, showKeyModal, mountGear, toast,
     fileToBase64, text, vision, generateImage, video, media: video,
     copy, download,
+    logout: async () => { if (_sb) { try { await _sb.auth.signOut(); } catch (e) {} } location.reload(); },
+    credits: () => _credits,
     MODEL_TEXT, MODEL_IMAGE
   };
 })();
