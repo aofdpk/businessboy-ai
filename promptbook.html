@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>โพย Prompt — คว้าเงินล้านในอากาศด้วยคลิป AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fffdf8; --card:#ffffff; --ink:#2b2317; --ink2:#6b5d49;
+  --gold:#f59e0b; --gold2:#d97706; --gold-soft:#fef3c7; --gold-line:#fde68a;
+  --green:#059669; --green-soft:#d1fae5;
+  --blue:#2563eb; --blue-soft:#dbeafe;
+  --radius:18px;
+  --fs:19px;
+}
+html{font-size:var(--fs);}
+html[data-size="big"]{--fs:22px;}
+html[data-size="huge"]{--fs:25px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Noto Sans Thai',sans-serif; background:var(--bg); color:var(--ink);
+  line-height:1.75; -webkit-font-smoothing:antialiased;
+}
+/* ---------- LOGIN GATE ---------- */
+#gate{
+  position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,#fffbeb 0%,#fef3c7 55%,#fde68a 100%); padding:20px;
+}
+.gate-card{
+  background:#fff; border-radius:24px; padding:44px 30px; max-width:480px; width:100%;
+  box-shadow:0 20px 60px rgba(180,120,10,.18); text-align:center;
+}
+.gate-card .book-emoji{font-size:3.2rem;}
+.gate-card h1{font-size:1.35rem; font-weight:800; margin:12px 0 4px; line-height:1.5;}
+.gate-card .sub{color:var(--ink2); font-size:.95rem; margin-bottom:26px;}
+.gate-card input{
+  width:100%; font-family:inherit; font-size:1.25rem; text-align:center; letter-spacing:2px;
+  padding:16px; border:2.5px solid var(--gold-line); border-radius:14px; outline:none; font-weight:700;
+}
+.gate-card input:focus{border-color:var(--gold);}
+.gate-card button{
+  width:100%; margin-top:16px; font-family:inherit; font-size:1.2rem; font-weight:800; color:#fff;
+  background:linear-gradient(135deg,var(--gold),var(--gold2)); border:none; border-radius:14px;
+  padding:16px; cursor:pointer; box-shadow:0 8px 20px rgba(217,119,6,.35);
+}
+.gate-card button:active{transform:scale(.98);}
+#gateErr{color:#dc2626; font-weight:700; margin-top:14px; min-height:1.6em; font-size:1rem;}
+.gate-note{margin-top:18px; font-size:.85rem; color:var(--ink2);}
+/* ---------- HEADER ---------- */
+header{
+  background:linear-gradient(135deg,#f59e0b,#d97706 70%,#b45309);
+  color:#fff; padding:30px 18px 62px; text-align:center;
+}
+header .kicker{font-weight:600; font-size:.92rem; opacity:.92; letter-spacing:.5px;}
+header h1{font-size:1.62rem; font-weight:800; line-height:1.45; margin:6px auto 4px; max-width:700px;}
+header .byline{font-size:.95rem; opacity:.95;}
+.font-toggle{
+  position:absolute; top:14px; right:14px; display:flex; gap:6px; background:rgba(255,255,255,.2);
+  border-radius:12px; padding:5px;
+}
+.font-toggle button{
+  font-family:inherit; border:none; background:transparent; color:#fff; font-weight:800;
+  border-radius:8px; padding:4px 12px; cursor:pointer; font-size:15px;
+}
+.font-toggle button:nth-child(2){font-size:18px;}
+.font-toggle button:nth-child(3){font-size:21px;}
+.font-toggle button.on{background:#fff; color:var(--gold2);}
+/* ---------- HOW TO ---------- */
+.howto{
+  max-width:820px; margin:-40px auto 0; padding:0 16px; position:relative; z-index:2;
+}
+.howto-card{
+  background:#fff; border-radius:var(--radius); padding:22px 24px;
+  box-shadow:0 10px 30px rgba(180,120,10,.12); border:1.5px solid var(--gold-line);
+}
+.howto-card h2{font-size:1.08rem; font-weight:800; color:var(--gold2); margin-bottom:10px;}
+.howto-steps{display:flex; flex-direction:column; gap:8px;}
+.howto-steps .st{display:flex; gap:12px; align-items:flex-start;}
+.howto-steps .n{
+  flex:0 0 auto; width:1.75em; height:1.75em; border-radius:50%; background:var(--gold-soft);
+  color:var(--gold2); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:.95rem; margin-top:.2em;
+}
+/* ---------- NAV ---------- */
+nav{
+  position:sticky; top:0; z-index:50; background:rgba(255,253,248,.95); backdrop-filter:blur(8px);
+  border-bottom:1.5px solid var(--gold-line); padding:10px 12px;
+}
+.nav-in{max-width:820px; margin:0 auto; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;}
+.nav-in::-webkit-scrollbar{display:none;}
+nav a{
+  flex:0 0 auto; text-decoration:none; color:var(--ink2); font-weight:700; font-size:.92rem;
+  background:#fff; border:1.5px solid var(--gold-line); border-radius:999px; padding:8px 16px; white-space:nowrap;
+}
+nav a.on{background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#fff; border-color:transparent;}
+/* ---------- SEARCH ---------- */
+.search-wrap{max-width:820px; margin:20px auto 0; padding:0 16px;}
+.search-box{position:relative;}
+.search-box input{
+  width:100%; font-family:inherit; font-size:1.05rem; padding:14px 18px 14px 52px;
+  border:2px solid var(--gold-line); border-radius:999px; outline:none; background:#fff;
+}
+.search-box input:focus{border-color:var(--gold);}
+.search-box .ic{position:absolute; left:20px; top:50%; transform:translateY(-50%); font-size:1.1rem;}
+#noResult{display:none; text-align:center; color:var(--ink2); padding:40px 20px; font-weight:600;}
+/* ---------- SECTIONS & CARDS ---------- */
+main{max-width:820px; margin:0 auto; padding:8px 16px 90px;}
+section{padding-top:8px;}
+.sec-head{margin:34px 0 6px;}
+.sec-head h2{font-size:1.32rem; font-weight:800; display:flex; align-items:center; gap:10px;}
+.sec-head .desc{color:var(--ink2); font-size:.95rem;}
+.card{
+  background:var(--card); border-radius:var(--radius); border:1.5px solid #f3e8cf;
+  box-shadow:0 4px 16px rgba(180,120,10,.07); margin-top:18px; overflow:hidden;
+}
+.card-head{padding:20px 22px 0;}
+.badges{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px;}
+.badge{font-size:.82rem; font-weight:800; border-radius:999px; padding:3px 13px;}
+.badge.viral{background:var(--gold-soft); color:#b45309;}
+.badge.sell{background:var(--green-soft); color:var(--green);}
+.badge.tool{background:var(--blue-soft); color:var(--blue);}
+.badge.hook{background:#fee2e2; color:#dc2626;}
+.badge.page{background:#f5f0e6; color:var(--ink2); font-weight:700;}
+.card-head h3{font-size:1.13rem; font-weight:800; line-height:1.55;}
+.card-head .hint{color:var(--ink2); font-size:.92rem; margin-top:2px;}
+.warn{
+  margin:14px 22px 0; background:#fff7ed; border:1.5px dashed var(--gold); border-radius:12px;
+  padding:10px 16px; font-size:.93rem; font-weight:600; color:#9a3412;
+}
+pre.prompt{
+  margin:16px 22px 0; background:#faf7f0; border:1.5px solid #efe6d2; border-radius:14px;
+  padding:18px 20px; white-space:pre-wrap; word-break:break-word;
+  font-family:'Noto Sans Thai',sans-serif; font-size:.97rem; line-height:1.8; color:#3d3425;
+  overflow:hidden; position:relative;
+}
+pre.prompt.long:not(.open){max-height:340px;}
+pre.prompt.long:not(.open)::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:90px;
+  background:linear-gradient(transparent,#faf7f0);
+}
+.expand-btn{
+  display:none; margin:8px 22px 0; background:none; border:none; color:var(--gold2);
+  font-family:inherit; font-weight:800; font-size:.95rem; cursor:pointer; padding:4px 0;
+}
+.copy-btn{
+  display:block; width:calc(100% - 44px); margin:16px 22px 0; font-family:inherit;
+  font-size:1.12rem; font-weight:800; color:#fff; border:none; border-radius:14px; padding:15px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2)); cursor:pointer;
+  box-shadow:0 6px 16px rgba(217,119,6,.3);
+}
+.copy-btn:active{transform:scale(.985);}
+.copy-btn.done{background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 6px 16px rgba(5,150,105,.3);}
+.extras{padding:6px 22px 20px;}
+.extra-block{margin-top:14px;}
+.extra-block .ex-title{font-weight:800; font-size:.95rem; color:var(--gold2); margin-bottom:6px;}
+.chiplist{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{background:#f5f0e6; border-radius:999px; padding:4px 14px; font-size:.9rem; font-weight:600; color:var(--ink2);}
+.hookline{
+  display:flex; align-items:center; gap:10px; background:#fdf9f0; border:1.5px solid #f0e6d0;
+  border-radius:12px; padding:9px 14px; margin-top:8px;
+}
+.hookline .t{flex:1; font-size:.95rem; font-weight:600;}
+.mini-copy{
+  flex:0 0 auto; font-family:inherit; font-size:.85rem; font-weight:800; border:none; cursor:pointer;
+  background:var(--gold-soft); color:#b45309; border-radius:999px; padding:5px 14px;
+}
+.mini-copy.done{background:var(--green-soft); color:var(--green);}
+.example-block{
+  background:#fdf9f0; border:1.5px solid #f0e6d0; border-radius:12px; padding:12px 16px; margin-top:8px;
+  font-size:.92rem; white-space:pre-wrap; color:#4a3f2d; line-height:1.75;
+}
+/* ---------- FOOTER / MISC ---------- */
+footer{
+  text-align:center; padding:36px 20px 46px; color:var(--ink2); font-size:.9rem;
+  border-top:1.5px solid var(--gold-line); background:#fffbf0; line-height:1.9;
+}
+footer .lock{font-weight:700; color:#b45309;}
+#toTop{
+  position:fixed; right:16px; bottom:18px; z-index:60; display:none; font-family:inherit;
+  background:#fff; border:2px solid var(--gold); color:var(--gold2); font-weight:800;
+  border-radius:999px; padding:11px 18px; font-size:1rem; cursor:pointer; box-shadow:0 6px 18px rgba(180,120,10,.25);
+}
+#toast{
+  position:fixed; left:50%; bottom:80px; transform:translateX(-50%) translateY(20px); z-index:70;
+  background:#065f46; color:#fff; font-weight:800; padding:12px 26px; border-radius:999px;
+  opacity:0; pointer-events:none; transition:.25s; font-size:1rem; box-shadow:0 10px 26px rgba(0,0,0,.25); white-space:nowrap;
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+#app{display:none;}
+@media(max-width:520px){
+  header{padding-top:56px;}
+  header h1{font-size:1.32rem;}
+  .font-toggle{top:10px; right:10px;}
+  pre.prompt{margin:14px 14px 0; padding:14px;}
+  .copy-btn{width:calc(100% - 28px); margin:14px 14px 0;}
+  .card-head{padding:18px 16px 0;}
+  .extras{padding:6px 16px 18px;}
+  .warn{margin:12px 16px 0;}
+  .expand-btn{margin-left:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN GATE ═══════════ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="book-emoji">📕✨</div>
+    <h1>โพย Prompt<br>คว้าเงินล้านในอากาศ ด้วยคลิป AI</h1>
+    <div class="sub">สำหรับผู้ซื้อหนังสือ + โพยเสริมเท่านั้น<br>กรอกรหัสที่ได้รับหลังสั่งซื้อ</div>
+    <input id="pw" type="text" placeholder="กรอกรหัสเข้าใช้งาน" autocomplete="off" autocapitalize="characters">
+    <button id="pwBtn">🔓 เข้าใช้งานโพย</button>
+    <div id="gateErr"></div>
+    <div class="gate-note">กรอกครั้งเดียว เครื่องจะจำไว้ให้ ไม่ต้องกรอกซ้ำ<br>ติดปัญหา ทักแอดมินเพจ อ๊อฟ เด็กประกอบการ</div>
+  </div>
+</div>
+
+<!-- ═══════════ APP ═══════════ -->
+<div id="app">
+<header>
+  <div class="font-toggle" title="ปรับขนาดตัวอักษร">
+    <button data-size="normal">ก</button><button data-size="big">ก</button><button data-size="huge">ก</button>
+  </div>
+  <div class="kicker">โพยลับประจำหนังสือ</div>
+  <h1>โพย Prompt คว้าเงินล้านในอากาศ<br>ด้วยคลิป AI ปักตะกร้า</h1>
+  <div class="byline">รวมทุก Prompt ในเล่ม กดคัดลอกได้เลย พร้อมเลขหน้าอ้างอิง 📖</div>
+</header>
+
+<div class="howto">
+  <div class="howto-card">
+    <h2>วิธีใช้โพยนี้ (3 ขั้นตอน)</h2>
+    <div class="howto-steps">
+      <div class="st"><div class="n">1</div><div>กดปุ่ม <b>"คัดลอก Prompt"</b> ใต้กล่องที่ต้องการ</div></div>
+      <div class="st"><div class="n">2</div><div>ไปวางในช่องแชทของ <b>Gemini</b> (ถ้าเป็น Prompt ขายของ อย่าลืมแนบ <b>รูปสินค้า + รายละเอียดสินค้า</b> ตามที่หนังสือสอนในบทที่ 9)</div></div>
+      <div class="st"><div class="n">3</div><div>นำ <b>Image Prompt</b> และ <b>Video Prompt</b> ที่ Gemini ตอบกลับ ไปสร้างภาพและวิดีโอต่อ ตามวิธีในบทที่ 7 และ 9 ของหนังสือ</div></div>
+    </div>
+  </div>
+</div>
+
+<nav><div class="nav-in" id="navIn">
+  <a href="#sec-workshop">🛠 ออกแบบช่อง</a>
+  <a href="#sec-master">⭐ Master Prompt</a>
+  <a href="#sec-cartoon">😤 สายการ์ตูน</a>
+  <a href="#sec-real">🎬 สายสมจริง</a>
+  <a href="#sec-hook">🪝 Hook</a>
+</div></nav>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="ic">🔍</span>
+    <input id="search" type="search" placeholder="ค้นหา เช่น สัตว์เลี้ยง, ขายของ, สมจริง...">
+  </div>
+</div>
+
+<main id="main"></main>
+<div id="noResult">ไม่พบ Prompt ที่ตรงกับคำค้นหา ลองคำอื่นดูครับ 🙏</div>
+
+<footer>
+  จากหนังสือ <b>คว้าเงินล้านในอากาศ ด้วยคลิป AI ปักตะกร้า ฉบับนายหน้า TikTok</b><br>
+  โดย อ๊อฟ เด็กประกอบการ (ภูริวัจน์ เสรีฐานุพัชร์) © พ.ศ. 2569<br>
+  <span class="lock">🔒 โพยนี้เป็นสิทธิ์เฉพาะผู้ซื้อ ห้ามแชร์ลิงก์และรหัสต่อสาธารณะ</span>
+</footer>
+</div>
+
+<button id="toTop">⬆ ขึ้นบน</button>
+<div id="toast">✅ คัดลอกแล้ว! ไปวางใน Gemini ได้เลย</div>
+
+<script>
+/* ══════════ DATA — ทุก prompt อ้างอิงเลขหน้าในหนังสือ ══════════ */
+const SECTIONS = [
+{
+  id:'sec-workshop', icon:'🛠', title:'Workshop ออกแบบช่อง AI ของคุณ',
+  desc:'Prompt สั้น ๆ จากบทที่ 4 ใช้ให้ Gemini ช่วยคิดช่อง ตัวละคร โทน และไอเดียคลิปแรก',
+  items:[
+    {type:'tool', page:'หนังสือหน้า 35', title:'ขั้นตอนที่ 1 — ให้ Gemini ช่วยคิดแนวช่อง',
+     text:'ช่วยคิดไอเดียช่อง TikTok ที่ทำด้วย AI\nขอแนวคอนเทนต์ที่แปลก จำง่าย\nและมีโอกาสไวรัล ขอ 10 แนวช่อง',
+     hint:'เลือกแนวที่รู้สึกว่า "ต่อยอดได้หลายคลิป"'},
+    {type:'tool', page:'หนังสือหน้า 37', title:'ขั้นตอนที่ 2 — หาตัวละครหลักของช่อง',
+     text:'ช่วยคิดตัวละครสำหรับช่อง TikTok\nธีมอวัยวะในร่างกายพูดได้\nโทนตลก ขี้โมโห บ่นเจ้าของ\nขอ 20 ไอเดีย',
+     hint:'เปลี่ยนคำว่า "อวัยวะในร่างกายพูดได้" เป็นธีมช่องของคุณได้เลย เลือกตัวละครที่ "มีเรื่องให้พูด" เยอะ'},
+    {type:'tool', page:'หนังสือหน้า 38', title:'ขั้นตอนที่ 3 — หาโทนของช่อง',
+     text:'ถ้าจะทำช่อง TikTok ธีมอวัยวะในร่างกายพูดได้\nควรมีโทนคอนเทนต์แบบไหน\nให้คนดูจำช่องได้ง่าย',
+     hint:'โทนที่หนังสือแนะนำ: ขี้โมโห + ตลก + บ่นเจ้าของ เพราะหยุดคนดูได้ และต่อยอดคลิปขายของง่าย'},
+    {type:'tool', page:'หนังสือหน้า 40', title:'ขั้นตอนที่ 4 — แตกไอเดียคลิปของช่อง',
+     text:'ช่วยคิดไอเดียคลิป TikTok\nธีมอวัยวะขี้โมโห\nตัวละครบ่นเจ้าของ\nขอ 20 ไอเดียคลิป',
+     hint:'ได้ไอเดียแล้ว อย่าเพิ่งคิดถึง 100 คลิป เลือกแค่ 5 คลิปแรกก่อน (ขั้นตอนที่ 5 หน้า 40–41)'},
+  ]
+},
+{
+  id:'sec-master', icon:'⭐', title:'Master Prompt (หัวใจของเล่ม)',
+  desc:'Prompt ตัวเดียวจบ — Gemini คิดไอเดีย เขียนบท แตกซีน พร้อม Image Prompt และ Video Prompt ให้ครบในครั้งเดียว',
+  items:[
+    {type:'viral', page:'หนังสือหน้า 60–62', title:'Master Prompt คลิปสร้างตัวตน (แก๊งอวัยวะ 3D ขี้โมโห)',
+     hint:'จากบทที่ 6 — ใช้สร้างคลิปให้คนจำช่องได้ ยังไม่ขายของ',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคอนเทนต์ TikTok, นักเขียนบทคลิปไวรัล และ AI Prompt Engineer
+
+ฉันต้องการสร้างวิดีโอ TikTok แบบ "คลิปสร้างตัวตนช่อง" ความยาว 6 ซีน โดยแต่ละซีนยาวประมาณ 8 วินาที
+คลิปนี้ยังไม่ต้องขายสินค้า
+เป้าหมายคือทำให้คนดูจำช่องได้ ดูสนุก และมีโอกาสไวรัล
+
+คอนเซปต์หลัก:
+"แก๊งอวัยวะ 3D ขี้โมโห"
+
+Character:
+ตัวละครเป็นอวัยวะในร่างกายที่มีชีวิต มีนิสัยขี้วีน ขี้บ่น พูดแรงนิด ๆ แต่ยังดูน่ารักน่าเอ็นดู อารมณ์รวมของคลิปต้องเป็น ตลก กวน น่าจดจำ และเข้าถึงได้ง่าย (Relatable)
+
+ตัวอย่างตัวละครที่ใช้ได้:
+ตับ / ฟัน / ตา / กระเพาะอาหาร / สมอง / เส้นผม
+
+โครงสร้างคลิป:
+ซีน 1 = เปิดแรง ให้คนหยุดดูทันที
+ซีน 2 = ขยายปัญหาให้ชัดขึ้น
+ซีน 3 = ตัวละครเริ่มบ่นหนักขึ้น
+ซีน 4 = พีกของอารมณ์หรือสถานการณ์
+ซีน 5 = เริ่มคลาย หรือพูดประชด / ตัดมุก
+ซีน 6 = ปิดด้วยประโยคจำ หรือ punchline ที่ทำให้คนดูอยากดูคลิปต่อไป
+
+เงื่อนไขบทพูด:
+- ต้องเป็นภาษาไทย
+- ใช้สรรพนาม กู / มึง ได้
+- พูดให้ดูเรียล ตลก และเหมือนคนกำลังบ่นจริง
+- บทพูดต้องสั้น กระชับ
+- พูดจบได้ภายใน 8 วินาทีต่อซีน
+- ห้ามพูดยาวเกินไป
+- ห้ามพูดเชิงโฆษณา
+- ไม่มีสินค้าในคลิปนี้
+
+สไตล์ภาพ:
+- ภาพแนว 3D premium animation
+- ฟีลคล้ายหนังแอนิเมชันคุณภาพสูง
+- ตัวละครต้องดูน่ารัก แต่มีอารมณ์แรง
+- สีสันชัด
+- ภาพต้องเหมาะกับ TikTok
+
+สิ่งที่ต้องการให้ตอบ:
+ให้ตอบออกมาเป็น "ตารางแจกแจงซีน" โดยมี 5 คอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด สำหรับสร้างภาพ)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด สำหรับสร้างวิดีโอใน AI video tool เช่น Veo / Kling / Flow)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- ต้องระบุให้ชัดว่าเป็นภาพแนวตั้ง 9:16
+- ต้องบรรยายหน้าตาตัวละคร อารมณ์ ฉาก แสง และสไตล์ให้ละเอียด
+- ต้องใช้คำว่า premium 3D animation / Pixar-style / cinematic lighting / vertical 9:16
+- ห้ามมี text, watermark, logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- ต้องระบุให้ชัดว่าเป็นวิดีโอแนวตั้ง 9:16
+- ต้องบอกการเคลื่อนไหวของกล้อง
+- ต้องบอกการเคลื่อนไหวของตัวละคร
+- ต้องบอกอารมณ์ของซีน
+- ห้ามมี text overlay, logo, watermark
+
+ขอให้ผลลัพธ์อ่านง่าย คม ชัด พร้อมใช้งานจริง`},
+    {type:'sell', page:'หนังสือหน้า 89–91', title:'Master Prompt คลิปขายของ (แก๊งอวัยวะ 3D ขี้โมโห)',
+     hint:'จากบทที่ 8 — คลิปขายแบบเนียน Pain Point ก่อน สินค้าเข้าซีน 5-6',
+     warn:'ต้องแนบ "รูปสินค้า" และ "รูปคุณสมบัติ/จุดเด่นสินค้า" ไปพร้อมกับ Prompt นี้ด้วย Gemini ถึงจะเขียนบทตรงสินค้า',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิปนายหน้า TikTok (Affiliate), นักเขียนบทคอนเทนต์ขายของ และ AI Prompt Engineer
+
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+ประเภทคลิป:
+คลิปขายของแบบเนียน ไม่ยัดเยียด เป้าหมายคือให้คนดูอินกับปัญหาก่อน แล้วค่อยให้สินค้าเข้ามาเป็นตัวแก้ปัญหา
+
+ตัวละครหลัก:
+อวัยวะในร่างกายที่มีนิสัยขี้วีน ขี้บ่น แต่ยังดูน่ารักน่าเอ็นดู
+เช่น เส้นผม หนังศีรษะ ฟัน ตา หรืออวัยวะอื่นที่เกี่ยวข้องกับสินค้า
+
+ฉันจะแนบข้อมูลให้ 2 อย่าง
+1. รูปสินค้า
+2. รูปคุณสมบัติสินค้า / จุดเด่นสินค้า
+ให้ใช้ข้อมูลจากรูปเหล่านี้ ในการสร้างบทคลิปให้ตรงกับสินค้า
+
+คอนเซปต์วิดีโอ:
+"แก๊งอวัยวะ 3D ขี้โมโห"
+
+โครงสร้างคลิป:
+ซีน 1-4:
+ขยี้ปัญหา (Pain Point) โดยให้ตัวละครบ่น หรือโวยวายกับปัญหาที่กำลังเจอ ทำให้คนดูรู้สึกอิน เข้าใจ และอยากดูต่อ
+ซีน 5:
+สินค้าโผล่มาเหมือนฮีโร่ เริ่มแนะนำสินค้าแบบเนียน ๆ ใช้ข้อมูลจากรูปสินค้าและรายละเอียดสินค้า
+ซีน 6:
+สินค้าเข้ามาช่วยแก้ปัญหา จบด้วยอารมณ์ดีขึ้น หรือประโยคที่ทำให้คนดูอยากซื้อ ห้ามพูดเกินจริง
+
+เงื่อนไขสำคัญ:
+- ห้าม Overclaim
+- ไม่ต้องมี Before / After
+- สินค้าต้องปรากฏเฉพาะซีน 5 และ 6
+- บทพูดต้องเป็นภาษาไทย
+- บทพูดต้องสั้น กระชับ พูดจบได้ภายใน 8 วินาทีต่อซีน
+- สามารถใช้สรรพนาม กู / มึง ได้ เพื่อให้ดูเรียล จริง และตลก
+- โทนรวมของคลิปต้องสนุก น่าดู มีจังหวะ และเหมาะกับ TikTok
+- อย่าให้ดูเป็นโฆษณาตรง ๆ ตั้งแต่ต้นคลิป
+
+ข้อกำหนดสำหรับ Image Prompt:
+- ต้องระบุ vertical 9:16
+- ต้องบรรยายตัวละคร ฉาก อารมณ์ แสง และสไตล์ให้ละเอียด
+- ถ้ามีสินค้า ต้องให้หน้าตาคล้ายกับรูปสินค้าอ้างอิงมากที่สุด
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- ต้องระบุ vertical 9:16
+- ต้องบอกการเคลื่อนไหวของตัวละคร
+- ต้องบอกการเคลื่อนไหวของกล้อง
+- ต้องบอกอารมณ์ของซีน
+- ถ้ามีสินค้า ให้ระบุว่าสินค้าต้องคล้ายกับรูปอ้างอิงมากที่สุด
+- no text overlay
+- no watermark
+- no logo
+
+ขอผลลัพธ์ที่อ่านง่าย คม ชัด พร้อมใช้งานจริง
+
+รูปแบบผลลัพธ์ที่ต้องการ:
+ให้ตอบเป็น "ตารางแจกแจงซีน" โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย (Voiceover)
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด สำหรับสร้างภาพ แนวตั้ง 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด สำหรับสร้างวิดีโอ แนวตั้ง 9:16)`},
+  ]
+},
+{
+  id:'sec-cartoon', icon:'😤', title:'แจก Prompt สายการ์ตูน (บทที่ 11–14)',
+  desc:'Prompt สำเร็จรูป 4 ธีม ธีมละ 2 ตัว — สายไวรัลไว้ดึงคน สายขายของไว้ทำเงิน ใช้คู่กัน',
+  items:[
+    {type:'viral', page:'หนังสือหน้า 119–120', title:'บทที่ 11 — แก๊งของใช้ในบ้านขี้โมโห (สายไวรัล)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน (ซีนละประมาณ 8 วินาที)
+
+คอนเซปต์:
+"แก๊งของใช้ในบ้านขี้โมโห"
+ตัวละครเป็นของใช้ในบ้านที่มีชีวิต มีอารมณ์ ขี้โมโห ขี้บ่น แต่ดูน่ารัก
+
+โครงสร้าง:
+ซีน 1-4: ตัวละครบ่นเจ้าของแบบแรง ตลก และเข้าถึงง่าย (Relatable)
+ซีน 5: จุดพีก หรือมุก
+ซีน 6: ปิดมุกตลก หรือประโยคเด็ดปิดท้าย (Punchline)
+
+เงื่อนไข:
+- ใช้สรรพนาม กู / มึง
+- บทต้องสั้น กระชับ
+- เน้นความตลก และเข้าถึงง่าย (Relatable)
+
+รูปแบบผลลัพธ์:
+ตอบเป็นตาราง (ซีน / เวลา / Visual / บทพูด / Image Prompt 9:16 / Video Prompt 9:16)`,
+     ideas:['ตู้เย็นขี้โมโห','หม้อขี้โมโห','ไม้กวาดขี้โมโห','พัดลมขี้โมโห','แก้วน้ำขี้โมโห'],
+     hooks:['มึงเปิดกูอีกแล้ว! เปิดทั้งวันเลยนะ!','จะกินอะไรนักหนา กูก็ว่างเหมือนชีวิตมึง!']},
+    {type:'sell', page:'หนังสือหน้า 122', title:'บทที่ 11 — แก๊งของใช้ในบ้านขี้โมโห (สายขายของ)',
+     warn:'อย่าลืมแนบ "รูปสินค้า" + "รายละเอียดสินค้า" (จุดเด่น คุณสมบัติ ข้อดี) ไปด้วยเสมอ',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok (Affiliate) และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"แก๊งของใช้ในบ้านขี้โมโห"
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า
+ให้ใช้ข้อมูลนี้ในการสร้างบท
+
+โครงสร้าง:
+ซีน 1-4: ตัวละครบ่นปัญหา
+ซีน 5: สินค้าเข้ามา
+ซีน 6: สินค้าแก้ปัญหา
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- ห้าม Overclaim
+- ไม่มี Before / After
+- สินค้าโผล่เฉพาะซีน 5-6
+
+รูปแบบ:
+ตาราง (ซีน / เวลา / Visual / บทพูด / Image Prompt 9:16 / Video Prompt 9:16)`,
+     example:{label:'ตัวอย่างแนวคิด ขาย "น้ำยาล้างหม้อ" (หน้า 123)', text:'ซีน 1 หม้อโวย "มึงทอดไข่กี่รอบแล้ว ไม่เคยล้างกูเลย!"\nซีน 2 หม้อดำไหม้ "ดูสภาพกูดิ!"\nซีน 3 หม้อสติแตก "กูไม่ไหวแล้ว!"\nซีน 4 พีก\nซีน 5 สินค้าเข้า "ลองใช้นี่ดิ"\nซีน 6 หม้อสะอาด "เออ แบบนี้ค่อยมีชีวิตหน่อย"'}},
+    {type:'viral', page:'หนังสือหน้า 127', title:'บทที่ 12 — อุปกรณ์ไอทีขี้โมโห (สายไวรัล)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"อุปกรณ์ไอทีขี้โมโห"
+ตัวละครเป็นอุปกรณ์ไอที เช่น โทรศัพท์ สายชาร์จ หูฟัง ที่มีชีวิต ขี้โมโห ขี้บ่น แต่ดูน่ารัก
+
+โครงสร้าง:
+ซีน 1-4: ตัวละครบ่นเจ้าของแบบแรง ตลก และเข้าถึงง่าย (Relatable)
+ซีน 5: มุกพีก
+ซีน 6: ปิดด้วยมุกตลกเด็ด ประโยคเด็ดปิดท้าย (Punchline)
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- บทต้องสั้น
+- โทนตลก เข้าถึงง่าย (Relatable)
+
+รูปแบบ:
+ตาราง (ซีน / เวลา / Visual / บทพูด / Image Prompt 9:16 / Video Prompt 9:16)`,
+     ideas:['โทรศัพท์ขี้โมโห','สายชาร์จขี้โมโห','หูฟังขี้โมโห','แบตเตอรี่ขี้โมโห'],
+     hooks:['แบตกู 2% แล้ว มึงยังไม่ชาร์จอีก!','สายกูขาดแล้ว มึงยังจะใช้กูอีกเหรอ!','มึงเปิด 20 แอป กูจะไม่ค้างได้ไง!']},
+    {type:'sell', page:'หนังสือหน้า 129', title:'บทที่ 12 — อุปกรณ์ไอทีขี้โมโห (สายขายของ)',
+     warn:'อย่าลืมแนบ "รูปสินค้า" + "รายละเอียดสินค้า" ไปด้วยเสมอ',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok (Affiliate) และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"อุปกรณ์ไอทีขี้โมโห"
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า
+
+โครงสร้าง:
+ซีน 1-4: ตัวละครบ่นปัญหา
+ซีน 5: สินค้าเข้ามา
+ซีน 6: สินค้าแก้ปัญหา
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- ห้าม Overclaim
+- ไม่มี Before/After
+
+รูปแบบ:
+ตาราง`,
+     example:{label:'ตัวอย่างจริง ขาย "สายชาร์จ" (หน้า 130)', text:'ซีน 1 สายชาร์จโวย "มึงดึงกูแรงไปไหม!"\nซีน 2 สายเริ่มขาด "กูจะขาดแล้วเว้ย!"\nซีน 3 มือถือแบตหมด "มึงจะให้กูตายใช่ไหม!"\nซีน 4 พีก\nซีน 5 สินค้าเข้า "ใช้ตัวนี้ดิ ทนกว่า"\nซีน 6 ชาร์จปกติ "เออ แบบนี้ค่อยเรียกว่าสายชาร์จ"'},
+     tip:'สูตรลับเพิ่มยอด (หน้า 131): คลิปไวรัล 3 คลิป ตามด้วยคลิปขาย 1 คลิป วนไป'},
+    {type:'viral', page:'หนังสือหน้า 134', title:'บทที่ 13 — เสื้อผ้าล้นตู้ตะโกนเรียก (สายไวรัล)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"เสื้อผ้าล้นตู้มีชีวิต"
+ตัวละครเป็นเสื้อผ้า เช่น เสื้อ กางเกง ที่มีชีวิต มีอารมณ์ และบ่นเจ้าของ
+
+โครงสร้าง:
+ซีน 1-4: เสื้อผ้าบ่นเจ้าของแบบเข้าถึงง่าย Relatable
+ซีน 5: มุกพีก
+ซีน 6: ปิดท้ายด้วยมุกตลก หรือประโยคเด็ด Punchline
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- ตลกแบบเข้าถึงง่าย Relatable
+
+รูปแบบ:
+ตาราง`,
+     hooks:['มึงมีเสื้อเต็มตู้ แต่บอกไม่มีอะไรใส่เนี่ยนะ!','กูอยู่ในตู้นี่แหละ มึงไม่เคยหยิบกูเลย!','ซื้อมาแล้วไม่ใส่ มึงซื้อกูมาทำไม!']},
+    {type:'sell', page:'หนังสือหน้า 136', title:'บทที่ 13 — เสื้อผ้ามีชีวิต ตะโกนเรียกลูกค้า (สายขายของ)',
+     warn:'แนบ "รูปสินค้า" + "รายละเอียดสินค้า" เช่น ใส่สบาย ผ้าดี ไม่ร้อน ทรงสวย',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok (Affiliate) และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"เสื้อผ้ามีชีวิต ตะโกนเรียกลูกค้า"
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า
+
+โครงสร้าง:
+ซีน 1-3: เสื้อผ้าเรียกคนดู
+ซีน 4: ขายตัวเอง
+ซีน 5: สินค้าโผล่
+ซีน 6: ปิดด้วย Hook ขาย
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- ห้าม Overclaim
+
+รูปแบบ:
+ตาราง`,
+     example:{label:'ตัวอย่างจริง ขาย "กางเกง" (หน้า 137)', text:'ซีน 1 กางเกงตะโกน "เฮ้ย! มึงนั่นแหละ!"\nซีน 2 "หยิบกูไปใส่สิ!"\nซีน 3 "ใส่กูนะ เดินสบาย ไม่อึดอัด!"\nซีน 4 "แล้วถ้ามึงใส่กูนะ…"\nซีน 5 สินค้าโผล่\nซีน 6 "สามีมึงรักตายเลย!"'},
+     tip:'สูตรเพิ่มยอด (หน้า 138): คลิปไวรัล 2 คลิป + คลิปขาย 1 คลิป วนไป'},
+    {type:'viral', page:'หนังสือหน้า 141–142', title:'บทที่ 14 — สัตว์เลี้ยงขี้น้อยใจ (สายไวรัล)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"สัตว์เลี้ยงขี้น้อยใจ"
+ตัวละครเป็นหมา หรือแมว ที่มีชีวิต มีอารมณ์ และน้อยใจเจ้าของ
+
+โครงสร้าง:
+ซีน 1-4: สัตว์เลี้ยงบ่นเจ้าของแบบเศร้า น้อยใจ แต่ยังมีความตลก
+ซีน 5: พีกทางอารมณ์
+ซีน 6: จบด้วยประโยคสะกิดใจ
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- โทน น้อยใจ + ตลก
+- เข้าถึงง่าย Relatable
+
+รูปแบบ:
+ตาราง`,
+     hooks:['มึงรู้ไหม กูรอมึงทั้งวัน','มึงไปทำงาน แล้วกูอยู่บ้านคนเดียว','มึงมีโลกของมึง แต่กูมีแค่มึงนะ']},
+    {type:'sell', page:'หนังสือหน้า 143–144', title:'บทที่ 14 — สัตว์เลี้ยงขี้น้อยใจ (สายขายของ)',
+     warn:'แนบ "รูปสินค้า" + "รายละเอียดสินค้า" เช่น ขนมน้องหมา อาหาร ของเล่น เตียง',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok (Affiliate) และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+
+คอนเซปต์:
+"สัตว์เลี้ยงขี้น้อยใจ"
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า
+
+โครงสร้าง:
+ซีน 1-4: สัตว์เลี้ยงน้อยใจเจ้าของ
+ซีน 5: สินค้าเข้ามา
+ซีน 6: สัตว์เลี้ยงมีความสุข
+
+เงื่อนไข:
+- ใช้ กู / มึง
+- ห้าม Overclaim
+
+รูปแบบ: ตาราง`,
+     example:{label:'ตัวอย่างจริง ขาย "ขนมน้องหมา" (หน้า 144)', text:'ซีน 1 หมานั่งเศร้า "มึงไปทั้งวัน"\nซีน 2 "กูรอมึงอยู่บ้านคนเดียว"\nซีน 3 "กลับมาก็ไม่เล่นกับกู"\nซีน 4 พีก "กูมีแค่มึงนะ"\nซีน 5 สินค้าเข้า "ลองให้อันนี้กูหน่อยดิ"\nซีน 6 หมามีความสุข "เออ แบบนี้ค่อยรักมึงหน่อย"'},
+     tip:'สูตรลับ (หน้า 145): คลิปน้อยใจ 2 คลิป + คลิปขาย 1 คลิป วนไป'},
+  ]
+},
+{
+  id:'sec-real', icon:'🎬', title:'แจก Prompt สายภาพสมจริง (บทที่ 15–18)',
+  desc:'สายการ์ตูนทำให้คนหยุดดู แต่สายสมจริงทำให้คนเชื่อและอยากซื้อ — ทุกตัวมี "ตัวละครประจำช่อง" เป็นคนจริงเดินเรื่อง',
+  items:[
+    {type:'viral', page:'หนังสือหน้า 151–153', title:'บทที่ 15 — สมจริงสายไวรัล ของใช้ในบ้าน (ตัวละคร "เมย์")',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok, ผู้กำกับคอนเทนต์สายสมจริง และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action
+แนวตั้ง 9:16
+บ้านจริง แสงจริง คนจริง มุมกล้องจริง
+ไม่ใช่การ์ตูน
+ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นคนสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+ต้องมีบุคลิกชัดเจน และเป็นจุดที่คนดูจำได้
+
+ตัวละครประจำช่อง:
+ผู้หญิงวัยทำงานอายุประมาณ 28–35 ปี
+หน้าตาไทยหรือเอเชีย ดูเป็นคนจริง
+แต่งตัวบ้าน ๆ เรียบง่าย
+พูดเร็ว พูดตรง มีความขี้รำคาญนิด ๆ แต่ดูจริง และน่าเชื่อถือ
+อยู่ในบ้านหรือคอนโดจริง
+เธอเป็นคนเล่าเรื่อง และเป็นคนเจอปัญหาด้วยตัวเอง
+
+หมวดคอนเทนต์:
+ของใช้ในบ้าน
+
+เป้าหมาย:
+ทำคลิปแนวไวรัลที่ทำให้คนดูรู้สึกว่า
+"บ้านกูก็เป็นแบบนี้"
+"ฉันก็เจอปัญหาแบบนี้"
+ยังไม่ต้องขายของตรง ๆ
+เน้น relatable, realistic, engaging
+
+โครงสร้าง:
+ซีน 1 = เปิดด้วยปัญหาชัด ๆ ในบ้าน โดยตัวละครประจำช่องเป็นคนเจอ
+ซีน 2 = ตัวละครขยายปัญหาให้ชัดขึ้น
+ซีน 3 = ทำให้คนดูอิน และรำคาญตาม
+ซีน 4 = จุดพีกของปัญหา
+ซีน 5 = ตัวละครเริ่มพูดถึงการอยากแก้ปัญหา หรือ Hint ว่าควรมีตัวช่วย
+ซีน 6 = จบด้วยประโยค หรือภาพที่ทำให้คนอยากดูคลิปต่อไป
+
+เงื่อนไข:
+- ให้ตัวละครประจำช่องอยู่ในเกือบทุกซีน
+- ต้องมี "คน" เป็นตัวเดินเรื่อง ไม่ใช่มีแต่ภาพมุมบ้านหรือภาพของใช้
+- บทพูดภาษาไทยต้องสั้น กระชับ เป็นธรรมชาติ
+- พูดเหมือนคนใช้ชีวิตจริง ไม่ใช่พิธีกร ไม่ใช่โฆษณา
+- ไม่ต้องใช้คำหยาบ ถ้าไม่จำเป็น
+- Mood ต้องสมจริง เรียบง่าย แต่คม
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามแฟนตาซี
+
+รูปแบบผลลัพธ์:
+ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same female character in every scene
+- realistic Thai/Asian woman
+- realistic home or condo environment
+- natural lighting
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same female character continuity
+- camera movement must be clear
+- character action must be clear
+- vertical 9:16
+- no text overlay
+- no logo
+- no unrealistic motion`,
+     ideas:['โต๊ะรกจนหาของไม่เจอ','มุมครัวมีของกองจนดูไม่น่าใช้','ห้องน้ำมีคราบเล็ก ๆ แต่รำคาญทุกวัน','มุมซักล้างรกจนไม่อยากเดินเข้าไป','ลิ้นชักเปิดทีไรของกระจายทุกที'],
+     hooks:['นี่แหละ มุมที่ฉันรำคาญทุกวัน','ของไม่ได้เยอะนะ แต่ทำไมบ้านดูรกตลอด','ใช้เวลา 10 นาทีหา แต่ของอยู่ตรงหน้า','แค่ของชิ้นเล็ก ๆ แต่มันทำให้บ้านดูไม่น่าอยู่']},
+    {type:'sell', page:'หนังสือหน้า 156–158', title:'บทที่ 15 — สมจริงสายขายของ ของใช้ในบ้าน (ตัวละคร "เมย์")',
+     warn:'แนบ "รูปสินค้า" (ชัด พื้นหลังสะอาด ไม่มีป้ายราคา) + "รายละเอียดสินค้า" (จุดเด่น คุณสมบัติ วิธีใช้ ปัญหาที่ช่วยแก้)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok Affiliate, ผู้กำกับโฆษณาสายสมจริง, นักเขียนสคริปต์ขายของแบบไม่ยัดเยียด และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action
+แนวตั้ง 9:16
+บ้านจริง คนจริง แสงจริง
+ไม่ใช่การ์ตูน
+ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นคนสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+เธอเป็นคนเจอปัญหา พูดกับกล้อง เล่าเรื่อง และใช้สินค้า
+
+ตัวละครประจำช่อง:
+ผู้หญิงวัยทำงานอายุประมาณ 28–35 ปี
+หน้าตาไทยหรือเอเชีย
+ดูเป็นคนจริง ไม่ใช่นางแบบแฟชั่น
+แต่งตัวบ้าน ๆ เรียบง่าย
+พูดเร็ว พูดตรง มีเสน่ห์แบบคนจริง
+อยู่ในบ้านหรือคอนโดจริง
+เป็นคาแรกเตอร์ประจำช่องที่คนดูจำได้
+
+หมวดสินค้า:
+ของใช้ในบ้าน
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า / คุณสมบัติสินค้า
+ให้ใช้ข้อมูลทั้งหมดนี้ในการสร้างคลิป
+
+เป้าหมายของคลิป:
+ทำให้คนดูรู้สึกว่า "นี่คือปัญหาที่บ้านฉันก็มี"
+จากนั้นค่อยให้สินค้าเข้ามาเป็นทางออกแบบธรรมชาติ
+คลิปต้องขายของได้ แต่ยังดูเป็นคอนเทนต์ ไม่ดูเป็นโฆษณาจริงจัง
+
+โครงสร้างคลิป:
+ซีน 1 = เปิดด้วยปัญหาชัด ๆ ในบ้าน โดยตัวละครประจำช่องเป็นคนเจอเอง
+ซีน 2 = ตัวละครเล่าปัญหาเพิ่มขึ้น
+ซีน 3 = คนดูเริ่มอิน และรำคาญแทน
+ซีน 4 = จุดพีกของปัญหา
+ซีน 5 = สินค้าเข้ามาเป็นตัวช่วย โดยให้ตัวละครประจำช่องเป็นคนหยิบมาใช้
+ซีน 6 = ตัวละครใช้สินค้าแล้วรู้สึกว่าชีวิตง่ายขึ้น โดยห้ามพูดเกินจริง
+
+เงื่อนไขสำคัญ:
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามพูดเกินจริง
+- ตัวละครประจำช่องต้องอยู่ในเกือบทุกซีน
+- ซีน 5 และ 6 ต้องมีสินค้าเข้าชัดเจน
+- บทพูดต้องสั้น กระชับ เป็นธรรมชาติ
+- ใช้ภาษาไทยที่คนดูแล้วเชื่อ
+- ไม่ต้องพูดเหมือนโฆษณา
+- เน้น Tone แบบ "เออ ตัวนี้ช่วยได้จริงในชีวิตประจำวัน"
+- ถ้ามีสินค้าเข้ามาในคลิป ให้หน้าตาสินค้าคล้ายกับรูปอ้างอิงมากที่สุด
+
+รูปแบบผลลัพธ์:
+ให้ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same female character in all scenes
+- realistic Thai/Asian woman
+- realistic home or condo
+- natural lighting
+- realistic product appearance based on attached product image
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same female character continuity
+- clear camera movement
+- clear character action
+- clear product usage in scenes 5-6
+- vertical 9:16
+- no text overlays
+- no logos
+- no unrealistic motion`,
+     ideas:['กล่องเก็บของ','ไม้ถูพื้น','น้ำยาทำความสะอาด','ชั้นวางของ','อุปกรณ์จัดห้องน้ำ','ตะกร้าซักผ้า','ผ้าเช็ดอเนกประสงค์'],
+     example:{label:'ตัวอย่างแนวคิด ถ้าขาย "กล่องเก็บของ" (หน้า 159)', text:'ซีน 1 เมย์กำลังหารีโมตบนโต๊ะรก\nซีน 2 เธอบ่นว่าโต๊ะเล็กนิดเดียวแต่ทำไมของดูเยอะไปหมด\nซีน 3 หยิบอย่างหนึ่ง ล้มทั้งกอง\nซีน 4 เธอถอนหายใจ เหนื่อยกับมุมนี้ทุกวัน\nซีน 5 เธอหยิบกล่องเก็บของขึ้นมา แล้วเริ่มจัด\nซีน 6 โต๊ะดูโล่งขึ้น ชีวิตดูง่ายขึ้น'}},
+    {type:'viral', page:'หนังสือหน้า 166–168', title:'บทที่ 16 — สมจริงสายไวรัล อุปกรณ์ไอที (ตัวละคร "เบส")',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok, ผู้กำกับคอนเทนต์สายสมจริง และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action
+แนวตั้ง 9:16
+คนจริง ฉากจริง แสงจริง
+ไม่ใช่การ์ตูน
+ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นคนสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+ต้องมีบุคลิกชัด และเป็นจุดที่คนดูจำได้
+
+ตัวละครประจำช่อง:
+ผู้ชายวัยทำงานอายุประมาณ 25–35 ปี
+หน้าตาไทยหรือเอเชีย ดูเป็นคนจริง
+แต่งตัวสบาย ๆ เหมือนคนทำงานหรือคนใช้ชีวิตประจำวัน
+พูดเร็ว ตรง มีความหัวเสียเล็ก ๆ เวลาของมีปัญหา แต่ไม่เวอร์
+อยู่ในห้องทำงาน ห้องนอน โต๊ะทำงาน หรือคอนโดจริง
+เขาเป็นคนเล่าเรื่อง และเจอปัญหาด้วยตัวเอง
+
+หมวดคอนเทนต์: อุปกรณ์ไอที
+
+เป้าหมาย:
+ทำคลิปแนวไวรัลที่ทำให้คนดูรู้สึกว่า "กูก็เจอปัญหานี้"
+ยังไม่ต้องขายของตรง ๆ
+เน้น realistic, relatable, scroll-stopping
+
+โครงสร้าง:
+ซีน 1 = เปิดด้วยปัญหาไอทีชัด ๆ ที่สะดุดตา
+ซีน 2 = ตัวละครขยายปัญหาให้ชัดขึ้น
+ซีน 3 = ทำให้คนดูอิน และหงุดหงิดตาม
+ซีน 4 = จุดพีกของปัญหา
+ซีน 5 = ตัวละครเริ่มพูดถึงการอยากแก้ปัญหา หรือ Hint ว่าควรมีตัวช่วย
+ซีน 6 = จบด้วยประโยค หรือภาพที่ชวนให้คนอยากดูต่อ
+
+เงื่อนไข:
+- ให้ตัวละครประจำช่องอยู่ในเกือบทุกซีน
+- ต้องมี "คน" เป็นตัวเดินเรื่อง ไม่ใช่มีแต่ภาพอุปกรณ์
+- บทพูดภาษาไทยต้องสั้น กระชับ เป็นธรรมชาติ
+- พูดเหมือนคนใช้ของจริง ไม่ใช่รีวิวเชิงเทคนิคหนักเกินไป
+- Mood สมจริง เรียบง่าย แต่คม
+- ห้าม overclaim
+- ห้ามแฟนตาซี
+- ห้าม before/after
+
+รูปแบบผลลัพธ์: ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same male character in every scene
+- realistic Thai/Asian man
+- realistic desk / bedroom / workspace / condo environment
+- natural lighting or realistic indoor lighting
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same male character continuity
+- clear camera movement
+- clear character action
+- vertical 9:16
+- no text overlay
+- no logo
+- no unrealistic motion`,
+     ideas:['สายชาร์จชอบหักตรงหัว','มือถือแบตเตอรี่หมดระหว่างวันตลอด','โต๊ะทำงานสายไฟรกมาก','พอร์ต USB ไม่พอ','หูฟังพันกันทุกเช้า','คอมพิวเตอร์ร้อนจนทำงานหงุดหงิด','อินเทอร์เน็ตอืดตอนประชุม','ปลั๊กพ่วงไม่พอใช้'],
+     hooks:['กูแค่จะชาร์จมือถือ ทำไมมันต้องลุ้นขนาดนี้','ทุกเช้ากูต้องมานั่งแกะหูฟังแบบนี้ตลอด','สายชาร์จบนโต๊ะนี้รกจนกูไม่อยากมองแล้ว','ประชุมทีไร เน็ตช้าตลอด เหมือนมันจงใจ']},
+    {type:'sell', page:'หนังสือหน้า 170–172', title:'บทที่ 16 — สมจริงสายขายของ อุปกรณ์ไอที (ตัวละคร "เบส")',
+     warn:'แนบ "รูปสินค้า" + "รายละเอียดสินค้า" (จุดเด่น ความเร็ว/ความทน/ความจุ ใช้แก้ปัญหาอะไร เหมาะกับใคร)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok Affiliate, ผู้กำกับโฆษณาสายสมจริง, นักเขียนสคริปต์ขายของแบบไม่ยัดเยียด และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action
+แนวตั้ง 9:16
+คนจริง ฉากจริง แสงจริง
+ไม่ใช่การ์ตูน
+ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นคนสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+เขาเป็นคนเจอปัญหา พูดกับกล้อง เล่าเรื่อง และใช้สินค้า
+
+ตัวละครประจำช่อง:
+ผู้ชายวัยทำงานอายุประมาณ 25–35 ปี
+หน้าตาไทยหรือเอเชีย ดูเป็นคนจริง ไม่ใช่นายแบบ
+แต่งตัวเรียบง่าย เหมือนคนทั่วไปใช้ชีวิตประจำวัน
+พูดเร็ว ตรง มีความหัวเสียเล็ก ๆ เวลาของมีปัญหา แต่ยังดูน่าเชื่อถือ
+อยู่ในห้องทำงาน ห้องนอน โต๊ะทำงาน หรือคอนโดจริง
+เป็น Character ประจำช่องที่คนดูจำได้
+
+หมวดสินค้า: อุปกรณ์ไอที
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า / คุณสมบัติสินค้า
+ให้ใช้ข้อมูลทั้งหมดนี้ในการสร้างคลิป
+
+เป้าหมายของคลิป:
+ทำให้คนดูรู้สึกว่า "นี่คือปัญหาที่ฉันเจอจริง"
+จากนั้นค่อยให้สินค้าเข้ามาเป็นทางออกแบบธรรมชาติ
+คลิปต้องขายของได้ แต่ยังดูเป็นคอนเทนต์ ไม่ดูเป็นโฆษณาจริงจัง
+
+โครงสร้างคลิป:
+ซีน 1 = เปิดด้วยปัญหาไอทีชัด ๆ โดยตัวละครประจำช่องเป็นคนเจอเอง
+ซีน 2 = ตัวละครเล่าปัญหาเพิ่มขึ้น
+ซีน 3 = ทำให้คนดูอินหรือหงุดหงิดตาม
+ซีน 4 = จุดพีกของปัญหา
+ซีน 5 = สินค้าเข้ามาเป็นตัวช่วย โดยให้ตัวละครประจำช่องเป็นคนหยิบมาใช้
+ซีน 6 = ตัวละครใช้สินค้าแล้วรู้สึกว่าชีวิตง่ายขึ้น โดยห้ามพูดเกินจริง
+
+เงื่อนไขสำคัญ:
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามพูดเกินจริง
+- ตัวละครประจำช่องต้องอยู่ในคลิปเกือบทุกซีน
+- ซีน 5 และ 6 ต้องมีสินค้าเข้าชัดเจน
+- บทพูดต้องสั้น กระชับ เป็นธรรมชาติ
+- ใช้ภาษาไทยที่คนดูแล้วเชื่อ
+- ไม่ต้องพูดเหมือนโฆษณา
+- เน้น Tone แบบ "เออ ตัวนี้ช่วยแก้ปัญหาในชีวิตประจำวันได้จริง"
+- ถ้ามีสินค้าเข้าภาพ ให้หน้าตาสินค้าคล้ายกับรูปอ้างอิงมากที่สุด
+
+รูปแบบผลลัพธ์:
+ให้ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same male character in all scenes
+- realistic Thai/Asian man
+- realistic workspace / bedroom / desk setup
+- natural or realistic indoor lighting
+- realistic product appearance based on attached product image
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same male character continuity
+- clear camera movement
+- clear character action
+- clear product usage in scenes 5-6
+- vertical 9:16
+- no text overlays
+- no logos
+- no unrealistic motion
+- if product appears, it should visually match the attached reference as closely as possible`,
+     ideas:['สายชาร์จ','พาวเวอร์แบงก์','ที่จัดสาย','แท่นวางมือถือ','หูฟัง','คีย์บอร์ด','เมาส์','ฮับ USB','ปลั๊กพ่วง','ขาตั้งมือถือ'],
+     example:{label:'ตัวอย่างแนวคิด ถ้าขาย "สายชาร์จ" (หน้า 173)', text:'ซีน 1 เบสกำลังจะชาร์จมือถือ แต่สายเดิมชาร์จไม่เข้า\nซีน 2 เขาขยับหัวสายหลายรอบ เริ่มหงุดหงิด\nซีน 3 แบตเตอรี่มือถือใกล้หมด แต่สายยังไม่ติด\nซีน 4 สีหน้าพีก เหมือนจะหมดความอดทน\nซีน 5 เขาหยิบสายชาร์จตัวใหม่ที่แนบมาใน Prompt\nซีน 6 ชาร์จติดทันที เขาพูดว่า "เออ แบบนี้สิ ค่อยเรียกว่าสายชาร์จ"'},
+     tip:'สูตรใช้จริง (หน้า 175): คลิปไวรัลสมจริง 2 คลิป + คลิปขายสมจริง 1 คลิป วนซ้ำด้วยปัญหาใหม่'},
+    {type:'viral', page:'หนังสือหน้า 181–182', title:'บทที่ 17 — สมจริงสายไวรัล สินค้าแฟชั่น (ตัวละคร "มุก")',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok, ผู้กำกับคอนเทนต์สายสมจริง และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action แนวตั้ง 9:16
+คนจริง ฉากจริง แสงจริง ไม่ใช่การ์ตูน ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นผู้หญิงสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป ต้องมีบุคลิกชัด และเป็นจุดที่คนดูจำได้
+
+ตัวละครประจำช่อง:
+ผู้หญิงวัยทำงานอายุประมาณ 25–35 ปี หน้าตาไทยหรือเอเชีย ดูเป็นคนจริง
+แต่งตัวเรียบง่าย ดูเป็นคนธรรมดาที่มีสไตล์
+พูดตรง เป็นธรรมชาติ มีอารมณ์ร่วมกับเรื่องการแต่งตัว
+อยู่ในห้องนอน คอนโด หน้าตู้เสื้อผ้า หรือมุมแต่งตัวจริง
+เธอเป็นคนเล่าเรื่องและเป็นคนเจอปัญหาด้วยตัวเอง
+
+หมวดคอนเทนต์: สินค้าแฟชั่น
+
+เป้าหมาย:
+ทำคลิปแนวไวรัลที่ทำให้คนดูรู้สึกว่า "นี่คือปัญหาที่ฉันก็เป็น"
+ยังไม่ต้องขายของตรง ๆ เน้น relatable, realistic, emotional, scroll-stopping
+
+โครงสร้าง:
+ซีน 1 = เปิดด้วยปัญหาการแต่งตัวหรือการเลือกเสื้อผ้าที่สะดุดตา
+ซีน 2 = ตัวละครขยายปัญหาให้ชัดขึ้น
+ซีน 3 = ทำให้คนดูอินและรู้สึกร่วม
+ซีน 4 = จุดพีกของความหงุดหงิดหรือไม่มั่นใจ
+ซีน 5 = ตัวละครพูดเป็นนัย (Hint) ว่าอยากได้อะไรที่ช่วยให้ชีวิตง่ายขึ้น
+ซีน 6 = จบด้วยประโยคที่ชวนให้คนอยากดูต่อ
+
+เงื่อนไข:
+- ให้ตัวละครประจำช่องอยู่ในเกือบทุกซีน
+- ต้องมี "คน" เป็นตัวเดินเรื่อง
+- บทพูดภาษาไทยต้องสั้น กระชับ เป็นธรรมชาติ
+- พูดเหมือนคนแต่งตัวจริง ไม่ใช่นางแบบหรือพิธีกร
+- Mood สมจริง เรียบง่าย แต่คม
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามแฟนตาซี
+
+รูปแบบผลลัพธ์: ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same female character in every scene
+- realistic Thai/Asian woman
+- realistic bedroom / wardrobe / dressing corner
+- natural lighting
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same female character continuity
+- clear camera movement
+- clear character action
+- vertical 9:16
+- no text overlay
+- no logo
+- no unrealistic motion`,
+     ideas:['เสื้อเต็มตู้แต่รู้สึกว่าไม่มีอะไรจะใส่','ใส่แล้วไม่มั่นใจ','ใส่แล้วร้อน','ใส่แล้วเดินไม่คล่อง','เสื้อผ้าบางตัวดูดีแต่ใช้งานจริงลำบาก','ชุดเดิม ๆ ทำให้เบื่อ'],
+     hooks:['ตู้เต็มขนาดนี้ แต่ฉันยังรู้สึกไม่มีอะไรใส่','ชุดนี้ดูสวยนะ แต่ใส่จริงคืออึดอัดมาก','บางวันไม่ได้อยากแต่งเยอะ แต่อยากดูดีเลย','เสื้อผ้ามีเยอะ แต่ตัวที่ใส่แล้วมั่นใจจริง ๆ มีไม่กี่ตัว']},
+    {type:'sell', page:'หนังสือหน้า 185–187', title:'บทที่ 17 — สมจริงสายขายของ สินค้าแฟชั่น (ตัวละคร "มุก")',
+     warn:'แนบ "รูปสินค้า" (เห็นชัด สีตรง ไม่มีป้ายราคา) + "รายละเอียดสินค้า" (ผ้าแบบไหน ทรง จุดเด่น ใส่สบายยังไง เหมาะกับโอกาสไหน)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok Affiliate, ผู้กำกับโฆษณาสายสมจริง, นักเขียนสคริปต์ขายของแบบไม่ยัดเยียด และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action
+แนวตั้ง 9:16
+คนจริง ฉากจริง แสงจริง
+ไม่ใช่การ์ตูน
+ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นผู้หญิงสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+เธอเป็นคนเจอปัญหา พูดกับกล้อง เล่าเรื่อง และใส่หรือถือสินค้า
+
+ตัวละครประจำช่อง:
+ผู้หญิงวัยทำงานอายุประมาณ 25–35 ปี
+หน้าตาไทยหรือเอเชีย
+ดูเป็นคนจริง ไม่ใช่นางแบบ
+แต่งตัวเรียบง่าย มีสไตล์แบบคนใช้ชีวิตจริง
+พูดตรง เป็นธรรมชาติ มีเสน่ห์แบบคนจริง
+อยู่ในห้องนอน คอนโด มุมแต่งตัว หรือหน้าตู้เสื้อผ้าจริง
+เป็น Character มีบุคลิกประจำช่องที่คนดูจำได้
+
+หมวดสินค้า: สินค้าแฟชั่น
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า / คุณสมบัติสินค้า
+ให้ใช้ข้อมูลทั้งหมดนี้ในการสร้างคลิป
+
+เป้าหมายของคลิป:
+ทำให้คนดูรู้สึกว่า "นี่คือปัญหาการแต่งตัวที่ฉันเจอจริง"
+จากนั้นค่อยให้สินค้าเข้ามาเป็นทางออกแบบธรรมชาติ
+คลิปต้องขายของได้ แต่ยังดูเป็นคอนเทนต์ ไม่ดูเป็นโฆษณาจริงจัง
+
+โครงสร้างคลิป:
+ซีน 1 = เปิดด้วยปัญหาการแต่งตัวหรือความรู้สึกไม่มั่นใจ
+ซีน 2 = ตัวละครเล่าปัญหาเพิ่มขึ้น
+ซีน 3 = ทำให้คนดูอินกับสถานการณ์
+ซีน 4 = จุดพีกของปัญหา
+ซีน 5 = สินค้าเข้ามา โดยให้ตัวละครประจำช่องเป็นคนหยิบหรือสวมใส่
+ซีน 6 = ตัวละครใส่สินค้าแล้วรู้สึกว่าชีวิตง่ายขึ้นหรือมั่นใจขึ้น โดยห้ามพูดเกินจริง
+
+เงื่อนไขสำคัญ:
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามพูดเกินจริง
+- ตัวละครประจำช่องต้องอยู่ในเกือบทุกซีน
+- ซีน 5 และ 6 ต้องมีสินค้าเข้าชัดเจน
+- บทพูดต้องสั้น กระชับ เป็นธรรมชาติ
+- ใช้ภาษาไทยที่คนดูแล้วเชื่อ
+- ไม่ต้องพูดเหมือนโฆษณา
+- เน้น Tone แบบ "ใส่แล้วชีวิตง่ายขึ้น / มั่นใจขึ้น / ใช้งานได้จริง"
+- ถ้ามีสินค้าเข้าภาพ ให้หน้าตาสินค้าคล้ายกับรูปอ้างอิงมากที่สุด
+
+รูปแบบผลลัพธ์:
+ให้ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same female character in all scenes
+- realistic Thai/Asian woman
+- realistic bedroom / wardrobe / dressing corner
+- realistic outfit appearance based on attached product image
+- natural lighting
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same female character continuity
+- clear camera movement
+- clear character action
+- clear outfit display in scenes 5-6
+- vertical 9:16
+- no text overlays
+- no logos
+- no unrealistic motion
+- if product appears, it should visually match the attached reference as closely as possible`,
+     ideas:['กางเกงขาสั้น','เสื้อยืด','เดรส','เสื้อคลุม','เสื้อสายเดี่ยว','กระโปรง','เสื้อเชิ้ต','ชุดเซต','กระเป๋า','รองเท้าลำลอง'],
+     example:{label:'ตัวอย่างแนวคิด ถ้าขาย "กางเกงขาสั้น" (หน้า 188)', text:'ซีน 1 มุกยืนหน้าตู้เสื้อผ้า บ่นว่าแดดก็ร้อน แต่กางเกงที่มีใส่แล้วอึดอัดทุกตัว\nซีน 2 เธอหยิบตัวเดิมขึ้นมา ทำหน้าไม่อยากใส่\nซีน 3 บางตัวดูดีแต่ไม่สบาย\nซีน 4 พีกด้วยประโยคประมาณ "แค่อยากใส่อะไรสบาย ๆ ทำไมมันยาก"\nซีน 5 เธอหยิบกางเกงตัวที่ขายขึ้นมา\nซีน 6 ใส่แล้วเดินออกจากกล้อง พูดว่า "เออ แบบนี้แหละ ตัวเดียวที่หยิบง่ายจริง"'},
+     tip:'สูตรใช้จริง (หน้า 189): คลิปไวรัล 2 คลิป + คลิปขาย 1 คลิป สลับด้วย Pain Point ใหม่'},
+    {type:'viral', page:'หนังสือหน้า 196–198', title:'บทที่ 18 — สมจริงสายไวรัล ของสัตว์เลี้ยง (ตัวละคร "พลอย")',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok, ผู้กำกับคอนเทนต์สายสมจริง และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action
+แนวตั้ง 9:16
+คนจริง สัตว์จริง บ้านจริง แสงจริง
+ไม่ใช่การ์ตูน
+ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นคนสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+ต้องมีบุคลิกชัด และเป็นจุดที่คนดูจำได้
+
+ตัวละครประจำช่อง:
+ผู้หญิงวัยประมาณ 25–35 ปี
+หน้าตาไทยหรือเอเชีย ดูเป็นคนจริง
+แต่งตัวสบาย ๆ เหมือนคนอยู่บ้านหรือคนใช้ชีวิตประจำวัน
+พูดธรรมชาติ มีความเอ็นดูสัตว์เลี้ยง แต่ยังดูเป็นคนจริง ไม่ใช่พิธีกร
+เลี้ยงหมาหรือแมว 1 ตัว
+อาศัยอยู่ในคอนโดหรือบ้านจริง
+เธอเป็นคนเล่าเรื่อง และมีปฏิสัมพันธ์กับสัตว์เลี้ยงจริงในทุกซีน
+
+หมวดคอนเทนต์:
+ของสัตว์เลี้ยง
+
+เป้าหมาย:
+ทำคลิปแนวไวรัลที่ทำให้คนดูรู้สึกว่า
+"น้องบ้านฉันก็เป็นแบบนี้"
+"ฉันก็เคยเจอสถานการณ์แบบนี้"
+ยังไม่ต้องขายของตรง ๆ
+เน้น realistic, emotional, relatable, scroll-stopping
+
+โครงสร้าง:
+ซีน 1 = เปิดด้วยพฤติกรรมหรือปัญหาของสัตว์เลี้ยงที่สะดุดตา
+ซีน 2 = ตัวละครขยายปัญหาให้ชัดขึ้น
+ซีน 3 = ทำให้คนดูอินหรือเอ็นดูตาม
+ซีน 4 = จุดพีกของสถานการณ์
+ซีน 5 = ตัวละครพูด Hint ว่าอยากให้น้องสบายขึ้น หรืออยากหาตัวช่วย
+ซีน 6 = จบด้วยภาพหรือประโยคที่ทำให้คนอยากดูต่อ
+
+เงื่อนไข:
+- ให้ตัวละครประจำช่องอยู่ในเกือบทุกซีน
+- ต้องมี "คน" เป็นตัวเดินเรื่อง ไม่ใช่มีแต่ภาพสัตว์เลี้ยง
+- บทพูดภาษาไทยต้องสั้น กระชับ เป็นธรรมชาติ
+- พูดเหมือนเจ้าของสัตว์เลี้ยงจริง ไม่ใช่พูดแบบขายของ
+- Mood สมจริง อบอุ่น แต่มีความคมทางอารมณ์
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามแฟนตาซี
+- ห้ามให้สัตว์พูดเองแบบการ์ตูน
+
+รูปแบบผลลัพธ์:
+ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same female character in every scene
+- realistic Thai/Asian woman
+- realistic pet dog or cat
+- realistic home or condo environment
+- natural lighting
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same female character continuity
+- same pet continuity
+- clear camera movement
+- clear character and pet action
+- vertical 9:16
+- no text overlay
+- no logo
+- no unrealistic motion`,
+     ideas:['น้องหมาไม่ยอมกินข้าว','แมวชอบปลุกตอนตี 4','น้องหมาเหงาเวลาเจ้าของไปทำงาน','แมวเขี่ยอาหารทิ้ง','น้องหมาไม่ชอบที่นอนเก่า','น้องแมวทำทรายเลอะทุกวัน','เจ้าของรู้สึกผิดที่ไม่มีเวลาเล่นกับน้อง'],
+     hooks:['เวลาฉันกลับบ้านช้า เขาทำหน้าแบบนี้ทุกที','ดูหน้าเขาสิ เหมือนงอนฉันจริง ๆ','บางทีฉันก็ไม่รู้ว่าเขาหิวงอแง หรือแค่อยากให้กอด','คนอื่นอาจมองว่าเขาดื้อ แต่ฉันรู้ว่าเขาแค่อยากให้สนใจ']},
+    {type:'sell', page:'หนังสือหน้า 200–202', title:'บทที่ 18 — สมจริงสายขายของ ของสัตว์เลี้ยง (ตัวละคร "พลอย")',
+     warn:'แนบ "รูปสินค้า" + "รายละเอียดสินค้า" (ใช้กับสัตว์แบบไหน จุดเด่น ช่วยแก้ปัญหาอะไร วิธีใช้)',
+     text:`สวมบทบาทเป็นผู้เชี่ยวชาญด้านการทำคลิป TikTok Affiliate, ผู้กำกับโฆษณาสายสมจริง, นักเขียนสคริปต์ขายของแบบไม่ยัดเยียด และ AI Prompt Engineer
+ฉันต้องการสร้างวิดีโอ TikTok ความยาว 6 ซีน
+ซีนละประมาณ 8 วินาที
+
+สไตล์คลิป:
+สมจริงแบบ live-action แนวตั้ง 9:16
+คนจริง สัตว์จริง บ้านจริง แสงจริง ไม่ใช่การ์ตูน ไม่ใช่แฟนตาซี
+
+สิ่งสำคัญ:
+ต้องมี "ตัวละครประจำช่อง" เป็นคนสมจริงคอยเดินเรื่องในทุกซีน
+ตัวละครนี้ต้องเป็นคนเดิมตลอดทั้งคลิป
+เธอเป็นคนเจอปัญหา พูดกับกล้อง เล่าเรื่อง และใช้สินค้าเพื่อดูแลสัตว์เลี้ยง
+
+ตัวละครประจำช่อง:
+ผู้หญิงวัยประมาณ 25–35 ปี หน้าตาไทยหรือเอเชีย ดูเป็นคนจริง ไม่ใช่นักแสดงโฆษณา แต่งตัวสบาย ๆ เหมือนคนอยู่บ้าน พูดธรรมชาติ มีความเอ็นดูสัตว์เลี้ยง และดูเหมือนเจ้าของจริง เลี้ยงหมาหรือแมว 1 ตัว อยู่ในคอนโดหรือบ้านจริง เป็น Character ประจำช่องที่คนดูจำได้
+
+หมวดสินค้า: ของสัตว์เลี้ยง
+
+ฉันจะแนบ:
+1. รูปสินค้า
+2. รายละเอียดสินค้า / คุณสมบัติสินค้า
+ให้ใช้ข้อมูลทั้งหมดนี้ในการสร้างคลิป
+
+เป้าหมายของคลิป:
+ทำให้คนดูรู้สึกว่า "นี่คือปัญหาที่เจ้าของสัตว์เลี้ยงเจอจริง"
+จากนั้นค่อยให้สินค้าเข้ามาเป็นทางออกแบบธรรมชาติ
+คลิปต้องขายของได้ แต่ยังดูเป็นคอนเทนต์ ไม่ดูเป็นโฆษณาจริงจัง
+
+โครงสร้างคลิป:
+ซีน 1 = เปิดด้วยปัญหาหรือพฤติกรรมของสัตว์เลี้ยงที่ชัดเจน
+ซีน 2 = ตัวละครเล่าปัญหาเพิ่มขึ้น
+ซีน 3 = ทำให้คนดูอินและสงสารหรือเอ็นดูตาม
+ซีน 4 = จุดพีกของสถานการณ์
+ซีน 5 = สินค้าเข้ามา โดยให้ตัวละครประจำช่องเป็นคนหยิบมาใช้กับสัตว์เลี้ยง
+ซีน 6 = เห็นว่าสัตว์เลี้ยงหรือเจ้าของสบายขึ้น โดยห้ามพูดเกินจริง
+
+เงื่อนไขสำคัญ:
+- ห้าม overclaim
+- ห้าม before/after
+- ห้ามพูดเกินจริง
+- ตัวละครประจำช่องต้องอยู่ในเกือบทุกซีน
+- ซีน 5 และ 6 ต้องมีสินค้าเข้าชัดเจน
+- บทพูดต้องสั้น กระชับ เป็นธรรมชาติ
+- ใช้ภาษาไทยที่คนดูแล้วเชื่อ
+- ไม่ต้องพูดเหมือนโฆษณา
+- เน้น tone แบบ "ช่วยให้ดูแลน้องได้ง่ายขึ้น" หรือ "น้องดูสบายขึ้น"
+- ถ้ามีสินค้าเข้ามาในภาพ ให้หน้าตาสินค้าคล้ายกับรูปอ้างอิงมากที่สุด
+
+รูปแบบผลลัพธ์:
+ให้ตอบเป็นตาราง โดยมีคอลัมน์ดังนี้
+1. ซีนที่ / เวลา
+2. รายละเอียดภาพ (Visual)
+3. บทพูดภาษาไทย
+4. Image Prompt (ภาษาอังกฤษแบบละเอียด, photorealistic, vertical 9:16)
+5. Video Prompt (ภาษาอังกฤษแบบละเอียด, realistic live-action style, vertical 9:16)
+
+ข้อกำหนดสำหรับ Image Prompt:
+- photorealistic
+- same female character in all scenes
+- same pet continuity in all scenes
+- realistic Thai/Asian woman
+- realistic home or condo
+- realistic pet product appearance based on attached product image
+- natural lighting
+- vertical 9:16
+- no text
+- no watermark
+- no logo
+
+ข้อกำหนดสำหรับ Video Prompt:
+- realistic live-action style
+- same female character continuity
+- same pet continuity
+- clear camera movement
+- clear character action
+- clear pet interaction
+- clear product usage in scenes 5-6
+- vertical 9:16
+- no text overlays
+- no logos
+- no unrealistic motion
+- if product appears, it should visually match the attached reference as closely as possible`,
+     ideas:['ขนมน้องหมา','อาหารแมว','ของเล่น','ที่นอน','ห้องน้ำแมว','ทรายแมว','ชามอาหาร','แผ่นรองฉี่','หวีแปรงขน','สเปรย์ดับกลิ่น'],
+     example:{label:'ตัวอย่างแนวคิด ถ้าขาย "ขนมน้องหมา" (หน้า 203)', text:'ซีน 1 พลอยกลับบ้านมาเจอน้องหมาทำหน้างอน\nซีน 2 เธอบอกว่าช่วงนี้กลับช้า น้องดูไม่ค่อยร่าเริง\nซีน 3 เธอลองเรียก แต่น้องยังงอนนิด ๆ\nซีน 4 เธอพูดว่า "บางทีฉันก็รู้สึกผิดนะ ที่ไม่มีเวลาอยู่กับเขาเยอะ"\nซีน 5 เธอหยิบขนมขึ้นมาให้น้อง\nซีน 6 น้องดีใจขึ้น เธอยิ้มแล้วพูดว่า "อย่างน้อยวันนี้ก็ได้ง้อเขาสำเร็จ"'}},
+  ]
+},
+{
+  id:'sec-hook', icon:'🪝', title:'Hook 3 วินาทีแรก (บทที่ 21)',
+  desc:'ประโยคเปิดคลิปที่ทำให้คนหยุดเลื่อน — กดคัดลอกทีละประโยค เอาไปใช้เปิดคลิปได้เลย',
+  items:[
+    {type:'hook', page:'หนังสือหน้า 222–224', title:'คลัง Hook ตัวอย่างจากหนังสือ',
+     hint:'Hook ที่ดีต้องทำให้คนดู หยุดเลื่อน → สงสัย → อยากดูต่อ (หน้า 225)',
+     hooks:[
+       'เฮ้ย! หยุดก่อน! มึงเปิดกูรอบที่สิบแล้วนะ! (ตู้เย็น)',
+       'มึงรู้ไหม… เมื่อคืนมึงแดกกูไป 3 กิโล (หมูกระทะ)',
+       'มึงรู้ไหม มึงลืมกูไว้ในรถมา 2 วันแล้ว! (แก้วน้ำ)',
+       'เฮ้ย! มึงนั่นแหละ! (Hook เรียกคนดู)',
+       'ใช่ มึงนั่นแหละที่กำลังเลื่อนผ่านคลิปกู (Hook เรียกคนดู)',
+       'มึงเคยสงสัยไหม ว่าทำไมมึงง่วงตลอด? (Hook คำถาม)',
+       'รู้ไหมว่าของในบ้านมึง กำลังเกลียดมึงอยู่ (Hook คำถาม)',
+       'มึงคนกาแฟแรงไปไหม ฟันกูแทบหลุด! (ช้อนพูด)',
+       'เมื่อคืนมึงนอนดิ้น จนกูเกือบตกเตียง! (หมอนพูด)',
+     ]},
+    {type:'tool', page:'หนังสือหน้า 224', title:'ให้ Gemini ช่วยคิด Hook ใหม่',
+     text:'ช่วยคิด Hook สำหรับคลิป TikTok แนวของใช้ในบ้านพูดได้\nขอ 10 ประโยคเปิดคลิปที่แปลก และตลก',
+     hint:'เปลี่ยน "แนวของใช้ในบ้านพูดได้" เป็นธีมช่องของคุณได้เลย'},
+  ]
+},
+];
+
+/* ══════════ SHA-256 (pure JS — ทำงานได้แม้เปิดจาก file://) ══════════ */
+function sha256(ascii){function rightRotate(v,a){return(v>>>a)|(v<<(32-a))}var mathPow=Math.pow,maxWord=mathPow(2,32),result='',words=[],asciiBitLength=ascii.length*8,hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],primeCounter=k.length,isComposite={};for(var candidate=2;primeCounter<64;candidate++){if(!isComposite[candidate]){for(var i=0;i<313;i+=candidate)isComposite[i]=candidate;hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0}}ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';for(i=0;i<ascii.length;i++){var j=ascii.charCodeAt(i);if(j>>8)return;words[i>>2]|=j<<((3-i)%4)*8}words[words.length]=(asciiBitLength/maxWord)|0;words[words.length]=asciiBitLength;for(j=0;j<words.length;){var w=words.slice(j,j+=16),oldHash=hash;hash=hash.slice(0,8);for(i=0;i<64;i++){var w15=w[i-15],w2=w[i-2],a=hash[0],e=hash[4],temp1=hash[7]+(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))+((e&hash[5])^(~e&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))+w[i-7]+(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10)))|0),temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));hash=[(temp1+temp2)|0].concat(hash);hash[4]=(hash[4]+temp1)|0}for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0}for(i=0;i<8;i++){for(j=3;j+1;j--){var b=(hash[i]>>(j*8))&255;result+=((b<16)?0:'')+b.toString(16)}}return result}
+function thaiSafeHash(str){
+  // แปลงเป็น UTF-8 bytes ก่อน เพื่อรองรับรหัสภาษาไทย
+  const bytes=new TextEncoder().encode(str); let s='';
+  bytes.forEach(b=>s+=String.fromCharCode(b)); return sha256(s);
+}
+
+/* ══════════ LOGIN GATE ══════════ */
+// รหัสผ่าน: เก็บเป็น SHA-256 hash (เปลี่ยนรหัส = เอารหัสใหม่พิมพ์ใหญ่ไป hash แล้วแทนใน array นี้)
+// รับหลายแบบเผื่อลูกค้าพิมพ์ผิด — input ถูกแปลงเป็นตัวใหญ่ก่อนเช็คเสมอ
+const PW_HASHES = [
+  'ed979e45981b759b2ccfcbf027ad4cc0a754538b0ce5d41e20641bc51e6aa579', // AI2026 (ครอบ ai2026 / Ai2026 / aI2026)
+  'de7b51ab575da6641222dda4e82f85f8f5d32365cc4eb0220d399b903b791199', // AL2026 (ครอบ Al2026 / al2026 — ตัวแอลเล็กที่ดูเหมือน I)
+];
+const gate=document.getElementById('gate'), app=document.getElementById('app');
+function unlock(){
+  gate.style.display='none'; app.style.display='block';
+  if(typeof detectLongPrompts==='function') requestAnimationFrame(detectLongPrompts);
+}
+if(PW_HASHES.includes(localStorage.getItem('poy_auth'))) unlock();
+function tryLogin(){
+  const val=(document.getElementById('pw').value||'').trim().toUpperCase();
+  const h=thaiSafeHash(val);
+  if(PW_HASHES.includes(h)){
+    localStorage.setItem('poy_auth',h); unlock(); window.scrollTo(0,0);
+  }else{
+    document.getElementById('gateErr').textContent='รหัสไม่ถูกต้อง ลองใหม่อีกครั้งครับ';
+    document.getElementById('pw').select();
+  }
+}
+document.getElementById('pwBtn').addEventListener('click',tryLogin);
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+
+/* ══════════ RENDER ══════════ */
+const TYPE_BADGE={viral:['viral','🟠 สายไวรัล — ดึงคนดู'], sell:['sell','🟢 สายขายของ — ทำเงิน'], tool:['tool','🔵 เครื่องมือช่วยคิด'], hook:['hook','🪝 Hook เปิดคลิป']};
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const main=document.getElementById('main');
+let cardId=0;
+SECTIONS.forEach(sec=>{
+  const secEl=document.createElement('section'); secEl.id=sec.id;
+  secEl.innerHTML=`<div class="sec-head"><h2><span>${sec.icon}</span> ${sec.title}</h2><div class="desc">${sec.desc}</div></div>`;
+  sec.items.forEach(item=>{
+    const id='c'+(++cardId);
+    const [cls,label]=TYPE_BADGE[item.type];
+    let html=`<div class="card" data-search="${esc((item.title+' '+(item.text||'')+' '+(item.hooks||[]).join(' ')+' '+(item.ideas||[]).join(' ')).toLowerCase())}">
+      <div class="card-head">
+        <div class="badges"><span class="badge ${cls}">${label}</span><span class="badge page">📖 ${item.page}</span></div>
+        <h3>${item.title}</h3>
+        ${item.hint?`<div class="hint">${item.hint}</div>`:''}
+      </div>`;
+    if(item.warn) html+=`<div class="warn">⚠️ ${item.warn}</div>`;
+    if(item.text){
+      html+=`<pre class="prompt" id="${id}">${esc(item.text)}</pre>
+      <button class="expand-btn" data-target="${id}">▼ ดู Prompt เต็ม</button>
+      <button class="copy-btn" data-copy="${id}">📋 คัดลอก Prompt</button>`;
+    }
+    let extras='';
+    if(item.ideas) extras+=`<div class="extra-block"><div class="ex-title">💡 ไอเดียที่ใช้ได้ทันที</div><div class="chiplist">${item.ideas.map(i=>`<span class="chip">${esc(i)}</span>`).join('')}</div></div>`;
+    if(item.hooks) extras+=`<div class="extra-block"><div class="ex-title">🪝 ตัวอย่าง Hook</div>${item.hooks.map(h=>`<div class="hookline"><span class="t">“${esc(h)}”</span><button class="mini-copy" data-text="${esc(h.replace(/ \([^)]*\)$/,''))}">คัดลอก</button></div>`).join('')}</div>`;
+    if(item.example) extras+=`<div class="extra-block"><div class="ex-title">📝 ${esc(item.example.label)}</div><div class="example-block">${esc(item.example.text)}</div></div>`;
+    if(item.tip) extras+=`<div class="extra-block"><div class="ex-title">⭐ ${esc(item.tip)}</div></div>`;
+    html+=`<div class="extras">${extras}</div></div>`;
+    secEl.insertAdjacentHTML('beforeend',html);
+  });
+  main.appendChild(secEl);
+});
+
+/* expand long prompts — ต้องรันหลังหน้าโชว์แล้ว (ตอน gate เปิดอยู่ scrollHeight = 0) */
+let longChecked=false;
+function detectLongPrompts(){
+  if(longChecked) return; longChecked=true;
+  document.querySelectorAll('pre.prompt').forEach(pre=>{
+    if(pre.scrollHeight>420){
+      pre.classList.add('long');
+      const btn=pre.parentElement.querySelector(`.expand-btn[data-target="${pre.id}"]`);
+      if(btn) btn.style.display='block';
+    }
+  });
+}
+if(app.style.display==='block') requestAnimationFrame(detectLongPrompts);
+document.addEventListener('click',e=>{
+  const ex=e.target.closest('.expand-btn');
+  if(ex){
+    const pre=document.getElementById(ex.dataset.target);
+    pre.classList.toggle('open');
+    ex.textContent=pre.classList.contains('open')?'▲ ย่อ Prompt':'▼ ดู Prompt เต็ม';
+  }
+});
+
+/* ══════════ COPY ══════════ */
+const toast=document.getElementById('toast'); let toastTimer;
+function showToast(msg){
+  toast.textContent=msg; toast.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);
+}
+function copyText(txt,btn,doneLabel){
+  const done=()=>{
+    const old=btn.textContent; btn.classList.add('done'); btn.textContent=doneLabel;
+    showToast('✅ คัดลอกแล้ว! ไปวางใน Gemini ได้เลย');
+    setTimeout(()=>{btn.classList.remove('done'); btn.textContent=old;},2200);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  }else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement('textarea'); ta.value=txt;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand('copy'); done();}catch(e){alert('คัดลอกไม่สำเร็จ กรุณากดค้างที่ข้อความแล้วเลือก คัดลอก');}
+  document.body.removeChild(ta);
+}
+document.addEventListener('click',e=>{
+  const cb=e.target.closest('.copy-btn');
+  if(cb){copyText(document.getElementById(cb.dataset.copy).textContent,cb,'✅ คัดลอกแล้ว!'); return;}
+  const mc=e.target.closest('.mini-copy');
+  if(mc){copyText(mc.dataset.text,mc,'✅ แล้ว!');}
+});
+
+/* ══════════ SEARCH ══════════ */
+const searchInput=document.getElementById('search'), noResult=document.getElementById('noResult');
+searchInput.addEventListener('input',()=>{
+  const q=searchInput.value.trim().toLowerCase(); let found=0;
+  document.querySelectorAll('.card').forEach(c=>{
+    const show=!q||c.dataset.search.includes(q);
+    c.style.display=show?'':'none'; if(show)found++;
+  });
+  document.querySelectorAll('section').forEach(s=>{
+    const any=[...s.querySelectorAll('.card')].some(c=>c.style.display!=='none');
+    s.style.display=any?'':'none';
+  });
+  noResult.style.display=found?'none':'block';
+});
+
+/* ══════════ NAV highlight + smooth scroll ══════════ */
+document.querySelectorAll('nav a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const el=document.querySelector(a.getAttribute('href'));
+    if(el) window.scrollTo({top:el.offsetTop-64,behavior:'smooth'});
+  });
+});
+const navLinks=[...document.querySelectorAll('nav a')];
+window.addEventListener('scroll',()=>{
+  document.getElementById('toTop').style.display=window.scrollY>600?'block':'none';
+  let cur=null;
+  SECTIONS.forEach(s=>{
+    const el=document.getElementById(s.id);
+    if(el&&el.style.display!=='none'&&el.offsetTop-120<=window.scrollY) cur=s.id;
+  });
+  navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));
+},{passive:true});
+document.getElementById('toTop').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+/* ══════════ FONT SIZE ══════════ */
+const sizeBtns=document.querySelectorAll('.font-toggle button');
+function setSize(s){
+  document.documentElement.dataset.size=s; localStorage.setItem('poy_size',s);
+  sizeBtns.forEach(b=>b.classList.toggle('on',b.dataset.size===s));
+}
+sizeBtns.forEach(b=>b.addEventListener('click',()=>setSize(b.dataset.size)));
+setSize(localStorage.getItem('poy_size')||'normal');
+</script>
+</body>
+</html>

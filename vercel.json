@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/promptbook",
+      "destination": "/promptbook.html"
+    },
+    {
       "source": "/caption",
       "destination": "/01-caption.html"
     },
