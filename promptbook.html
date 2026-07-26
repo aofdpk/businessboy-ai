@@ -77,6 +77,15 @@ header .byline{font-size:.95rem; opacity:.95;}
   background:#fff; border-radius:var(--radius); padding:22px 24px;
   box-shadow:0 10px 30px rgba(180,120,10,.12); border:1.5px solid var(--gold-line);
 }
+.video-title{font-size:1.08rem; font-weight:800; color:#dc2626; margin-bottom:10px; display:flex; align-items:center; gap:8px;}
+.video-wrap{position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#000; cursor:pointer; box-shadow:0 8px 22px rgba(0,0,0,.18); margin-bottom:20px; border:1.5px solid var(--gold-line);}
+.video-wrap img{width:100%; height:100%; object-fit:cover; display:block;}
+.video-wrap iframe{width:100%; height:100%; border:0; display:block;}
+.video-wrap .play-btn{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.22); transition:background .2s;}
+.video-wrap:hover .play-btn{background:rgba(0,0,0,.32);}
+.video-wrap .play-btn::before{content:""; width:78px; height:78px; border-radius:50%; background:#ff0000; box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.video-wrap .play-btn::after{content:""; position:absolute; border-style:solid; border-width:17px 0 17px 28px; border-color:transparent transparent transparent #fff; margin-left:6px;}
+.video-hint{text-align:center; margin:-10px 0 20px; color:var(--ink2); font-weight:600; font-size:.95rem;}
 .howto-card h2{font-size:1.08rem; font-weight:800; color:var(--gold2); margin-bottom:10px;}
 .howto-steps{display:flex; flex-direction:column; gap:8px;}
 .howto-steps .st{display:flex; gap:12px; align-items:flex-start;}
@@ -231,6 +240,13 @@ footer .lock{font-weight:700; color:#b45309;}
 
 <div class="howto">
   <div class="howto-card">
+    <div class="video-title">📺 ดูคลิปสอนวิธีใช้ (แนะนำให้ดูก่อนเริ่ม)</div>
+    <div class="video-wrap" id="videoWrap" data-vid="AOmbFzhELI8" role="button" tabindex="0" aria-label="เล่นคลิปสอนวิธีใช้">
+      <img src="https://i.ytimg.com/vi/AOmbFzhELI8/maxresdefault.jpg" alt="คลิปสอนวิธีใช้เว็บโพย"
+           onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/AOmbFzhELI8/hqdefault.jpg';">
+      <div class="play-btn"></div>
+    </div>
+    <div class="video-hint">👆 กดที่ภาพเพื่อเล่นคลิปได้เลย</div>
     <h2>วิธีใช้โพยนี้ (3 ขั้นตอน)</h2>
     <div class="howto-steps">
       <div class="st"><div class="n">1</div><div>กดปุ่ม <b>"คัดลอก Prompt"</b> ใต้กล่องที่ต้องการ</div></div>
@@ -1499,6 +1515,19 @@ function setSize(s){
 }
 sizeBtns.forEach(b=>b.addEventListener('click',()=>setSize(b.dataset.size)));
 setSize(localStorage.getItem('poy_size')||'normal');
+
+/* ══════════ คลิปสอนใช้งาน: กดปกแล้วเล่นในหน้าเว็บ ══════════ */
+(function(){
+  const vw=document.getElementById('videoWrap'); if(!vw) return;
+  function play(){
+    const id=vw.dataset.vid;
+    vw.innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&rel=0" '
+      +'title="คลิปสอนวิธีใช้เว็บโพย" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+    vw.style.cursor='default'; vw.removeAttribute('role'); vw.removeAttribute('tabindex');
+  }
+  vw.addEventListener('click',play);
+  vw.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); play(); } });
+})();
 </script>
 </body>
 </html>
