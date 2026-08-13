@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/gen3",
+      "destination": "/api/gen3-page"
+    },
+    {
+      "source": "/gen3.html",
+      "destination": "/api/gen3-page"
+    },
+    {
+      "source": "/gen3.js",
+      "destination": "/api/gen3-script"
+    },
+    {
       "source": "/promptbook",
       "destination": "/promptbook.html"
     },

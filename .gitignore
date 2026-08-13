@@ -3,3 +3,4 @@ node_modules/
 .playwright-mcp/
 _*.js
 _assets/
+local-gen3-server.js

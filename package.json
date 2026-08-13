@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "description": "38 AI tools (BYO-key local / keyless via proxy on deploy) by เด็กประกอบการ",
+  "scripts": {
+    "build:gen3": "node build-gen3.mjs"
+  },
   "dependencies": {
-    "ioredis": "^5.4.1"
+    "ioredis": "^5.4.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }
