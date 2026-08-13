@@ -109,13 +109,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .locked-setting { display:flex; align-items:center; justify-content:space-between; border:1px dashed #b9c9dd; border-radius:10px; padding:12px 14px; color:var(--muted); font-size:12px; }
 .locked-setting b { color:var(--navy); }
 .switch-row { display:flex; align-items:center; justify-content:space-between; gap:20px; border:1px solid #d6e2f0; background:#f8fbff; border-radius:12px; padding:13px 15px; cursor:pointer; }
+.switch-copy { min-width:0; }
 .switch-row b,.switch-row span { display:block; }
-.switch-row b { font-size:13px; }
+.switch-row b { font-size:14px; }
 .switch-row span { font-size:10px; color:var(--muted); margin-top:2px; }
-.switch-row input { appearance:none; width:40px; height:23px; border-radius:999px; background:#bbc5d2; position:relative; flex:0 0 auto; transition:.2s; }
+.switch-row input { appearance:none; width:40px; height:23px; border-radius:999px; background:#8794a8; position:relative; flex:0 0 auto; transition:.2s; }
 .switch-row input::after { content:""; position:absolute; top:3px; left:3px; width:17px; height:17px; border-radius:50%; background:white; transition:.2s; box-shadow:0 1px 4px rgba(0,0,0,.25); }
 .switch-row input:checked { background:var(--blue); }
 .switch-row input:checked::after { transform:translateX(17px); }
+.switch-row input:focus-visible { outline:3px solid rgba(23,105,224,.28); outline-offset:3px; }
 .section-divider { height:1px; background:var(--line); margin:5px 0; position:relative; }
 .section-divider span { position:absolute; left:0; top:50%; transform:translateY(-50%); background:white; padding-right:12px; color:var(--blue); font-size:12px; font-weight:700; letter-spacing:.04em; }
 .framework-note { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:-9px; }
@@ -200,6 +202,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .brand-link span { font-size:9px; }
   .logout-button { padding:7px 9px; }
   .framework-note { grid-template-columns:1fr; }
+  .switch-row { align-items:flex-start; gap:12px; }
   .product-zone-title { display:block; }
   .product-zone-title small { display:block; margin-top:3px; }
   .next-button { font-size:10px; }

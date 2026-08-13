@@ -56,6 +56,13 @@ function loadSavedState(): SavedState {
         hasCharacterReference: initialStepThree.hasCharacterReference,
         topicBrief: initialStepThree.topicBrief,
         presentationMode: initialStepThree.presentationMode,
+        useAgent: parsed.stepThree?.useAgent === true,
+        storyCount: Array.from({ length: 30 }, (_, index) => String(index + 1)).includes(parsed.stepThree?.storyCount)
+          ? parsed.stepThree.storyCount
+          : initialStepThree.storyCount,
+        sceneCount: Array.from({ length: 10 }, (_, index) => String(index + 1)).includes(parsed.stepThree?.sceneCount)
+          ? parsed.stepThree.sceneCount
+          : initialStepThree.sceneCount,
       },
     };
   } catch {
@@ -207,6 +214,20 @@ function StepThreeForm({ data, setData }: { data: StepThreeData; setData: React.
         <Field label="ฉากต่อเรื่อง"><Select value={data.sceneCount} onChange={(v) => patch("sceneCount", v)}>{Array.from({ length: 10 }, (_, index) => index + 1).map((n)=><option key={n}>{n}</option>)}</Select></Field>
         <Field label="เวลาต่อฉาก"><Select value={data.sceneDuration} onChange={(v) => patch("sceneDuration", v)}><option>8 วินาที</option><option>10 วินาที</option><option>15 วินาที</option></Select></Field>
       </div>
+      <label className="switch-row">
+        <span className="switch-copy">
+          <b id="agent-sheets-label">ให้ Agent บันทึกลง Google Sheets</b>
+          <span id="agent-sheets-hint">ใช้เมื่อวาง Prompt ในโหมด Agent ที่เชื่อม Google Sheets แล้ว · 1 เรื่อง = 1 แท็บ</span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          aria-labelledby="agent-sheets-label"
+          aria-describedby="agent-sheets-hint"
+          checked={data.useAgent}
+          onChange={(event) => patch("useAgent", event.target.checked)}
+        />
+      </label>
       <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(v) => patch("tone", v)} /></Field>
       <div className="field-grid">
         <Field label="สถานที่หรือบรรยากาศที่ต้องการ"><TextArea value={data.settingPreferences} onChange={(v) => patch("settingPreferences", v)} rows={3} /></Field>
