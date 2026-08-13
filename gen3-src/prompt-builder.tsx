@@ -37,9 +37,26 @@ function loadSavedState(): SavedState {
     const parsed = JSON.parse(saved);
     return {
       activeStep: [1, 2, 3].includes(parsed.activeStep) ? parsed.activeStep : 1,
-      stepOne: { ...initialStepOne, ...parsed.stepOne },
-      stepTwo: { ...initialStepTwo, ...parsed.stepTwo },
-      stepThree: { ...initialStepThree, ...parsed.stepThree },
+      stepOne: {
+        ...initialStepOne,
+        ...parsed.stepOne,
+        platforms: initialStepOne.platforms,
+        productionConstraints: initialStepOne.productionConstraints,
+      },
+      stepTwo: {
+        ...initialStepTwo,
+        ...parsed.stepTwo,
+        wardrobeLock: initialStepTwo.wardrobeLock,
+        signatureTraits: initialStepTwo.signatureTraits,
+        expressionSet: initialStepTwo.expressionSet,
+      },
+      stepThree: {
+        ...initialStepThree,
+        ...parsed.stepThree,
+        hasCharacterReference: initialStepThree.hasCharacterReference,
+        topicBrief: initialStepThree.topicBrief,
+        presentationMode: initialStepThree.presentationMode,
+      },
     };
   } catch {
     localStorage.removeItem(STORAGE_KEY);
@@ -89,14 +106,6 @@ function TextArea({ value, onChange, placeholder = "", rows = 4 }: { value: stri
 
 function StepOneForm({ data, setData }: { data: StepOneData; setData: React.Dispatch<React.SetStateAction<StepOneData>> }) {
   const patch = (key: keyof StepOneData, value: StepOneData[keyof StepOneData]) => setData((current) => ({ ...current, [key]: value }));
-  const togglePlatform = (platform: string) => {
-    setData((current) => ({
-      ...current,
-      platforms: current.platforms.includes(platform)
-        ? current.platforms.filter((item) => item !== platform)
-        : [...current.platforms, platform],
-    }));
-  };
 
   return (
     <div className="form-stack">
@@ -115,20 +124,6 @@ function StepOneForm({ data, setData }: { data: StepOneData; setData: React.Disp
           </Select>
         </Field>
       </div>
-      <Field label="แพลตฟอร์มหลัก" required>
-        <div className="choice-row">
-          {["TikTok", "Facebook Reels"].map((platform) => (
-            <button
-              className={data.platforms.includes(platform) ? "choice active" : "choice"}
-              key={platform}
-              onClick={() => togglePlatform(platform)}
-              type="button"
-            >
-              <span className="checkmark">✓</span>{platform}
-            </button>
-          ))}
-        </div>
-      </Field>
       <Field label="ความถนัด ความสนใจ หรือทรัพยากรที่มี" hint="ไม่มีก็เว้นได้">
         <TextArea value={data.creatorStrengths} onChange={(v) => patch("creatorStrengths", v)} placeholder="เช่น ชอบทำอาหาร เคยขายเสื้อผ้า มีเวลาทำวันละ 2 ชั่วโมง" />
       </Field>
@@ -143,14 +138,9 @@ function StepOneForm({ data, setData }: { data: StepOneData; setData: React.Disp
       <Field label="หมวดสินค้า Affiliate ที่สนใจ">
         <TextArea value={data.affiliateCategories} onChange={(v) => patch("affiliateCategories", v)} placeholder="เช่น ของใช้ในบ้าน อุปกรณ์ครัว แฟชั่นไซซ์ใหญ่ หรือเว้นให้ AI เลือก" />
       </Field>
-      <div className="field-grid">
-        <Field label="โทนของช่อง">
-          <TextInput value={data.contentTone} onChange={(v) => patch("contentTone", v)} />
-        </Field>
-        <Field label="ข้อจำกัดในการผลิต">
-          <TextInput value={data.productionConstraints} onChange={(v) => patch("productionConstraints", v)} />
-        </Field>
-      </div>
+      <Field label="โทนของช่อง">
+        <TextInput value={data.contentTone} onChange={(v) => patch("contentTone", v)} />
+      </Field>
       <Field label="สิ่งที่ไม่อยากทำหรือหัวข้อต้องห้าม">
         <TextArea value={data.avoidTopics} onChange={(v) => patch("avoidTopics", v)} placeholder="เช่น ไม่ทำข่าว ไม่ทำสุขภาพ ไม่ใช้เด็กเป็นตัวละคร" rows={3} />
       </Field>
@@ -169,16 +159,6 @@ function StepTwoForm({ data, setData }: { data: StepTwoData; setData: React.Disp
       <Field label="Character Description จาก STEP 1" hint="วางรายละเอียดทั้งชุด" required>
         <TextArea value={data.characterDescription} onChange={(v) => patch("characterDescription", v)} placeholder="วางรายละเอียดหน้าตา อายุ ผิว ทรงผม รูปร่าง บุคลิก และเสื้อผ้าของตัวละครที่เลือก" rows={9} />
       </Field>
-      <Field label="เสื้อผ้าที่ต้องล็อกเหมือนกันทุกช่อง">
-        <TextArea value={data.wardrobeLock} onChange={(v) => patch("wardrobeLock", v)} rows={3} />
-      </Field>
-      <Field label="จุดจำที่ห้ามเปลี่ยน">
-        <TextArea value={data.signatureTraits} onChange={(v) => patch("signatureTraits", v)} placeholder="เช่น ไฝใต้ตาซ้าย แว่นกรอบทอง ผมหงอกด้านข้าง" rows={3} />
-      </Field>
-      <Field label="3 สีหน้าที่ต้องการ">
-        <TextInput value={data.expressionSet} onChange={(v) => patch("expressionSet", v)} />
-      </Field>
-      <div className="locked-setting"><span>อัตราส่วนภาพ</span><b>9:16 · Character Sheet 6 ช่อง</b></div>
     </div>
   );
 }
@@ -196,20 +176,16 @@ function StepThreeForm({ data, setData }: { data: StepThreeData; setData: React.
           </Select>
         </Field>
       </div>
-      <Field label="คอนเซปต์และจุดแตกต่างของช่อง" required>
+      <Field label="คอนเซปต์และจุดแตกต่างของช่อง" hint="นำข้อมูลจากผลลัพธ์ STEP 1 มากรอก หรือเติมรายละเอียดเองได้เลย" required>
         <TextArea value={data.channelConcept} onChange={(v) => patch("channelConcept", v)} placeholder="ช่องนี้พูดเรื่องอะไร เล่าแบบไหน และต่างจากช่องทั่วไปอย่างไร" />
       </Field>
       <div className="field-grid">
-        <Field label="กลุ่มเป้าหมายและปัญหาหลัก" required><TextArea value={data.targetAudience} onChange={(v) => patch("targetAudience", v)} /></Field>
-        <Field label="เสาหลักเนื้อหา 3–5 ข้อ" required><TextArea value={data.contentPillars} onChange={(v) => patch("contentPillars", v)} placeholder="เขียนแยกบรรทัด เช่น เรื่องเงิน / ครอบครัว / การใช้ชีวิต" /></Field>
+        <Field label="กลุ่มเป้าหมายและปัญหาหลัก" hint="นำข้อมูลจากผลลัพธ์ STEP 1 มากรอก หรือเติมรายละเอียดเองได้เลย" required><TextArea value={data.targetAudience} onChange={(v) => patch("targetAudience", v)} /></Field>
+        <Field label="เสาหลักเนื้อหา 3–5 ข้อ" hint="นำข้อมูลจากผลลัพธ์ STEP 1 มากรอก หรือเติมรายละเอียดเองได้เลย" required><TextArea value={data.contentPillars} onChange={(v) => patch("contentPillars", v)} placeholder="เขียนแยกบรรทัด เช่น เรื่องเงิน / ครอบครัว / การใช้ชีวิต" /></Field>
       </div>
-      <Field label="รายละเอียดตัวละครหลัก" hint="วาง Character Description จากขั้นก่อน" required>
+      <Field label="รายละเอียดตัวละครหลัก" hint="นำ Character Description จาก STEP 1 มากรอก หรือเติมรายละเอียดเองได้เลย" required>
         <TextArea value={data.characterDescription} onChange={(v) => patch("characterDescription", v)} rows={6} />
       </Field>
-      <label className="switch-row">
-        <div><b>ฉันจะแนบ Character Sheet ตอนเจน</b><span>AI จะถูกสั่งให้ล็อกหน้าตาตามรูปแนบทุกฉาก</span></div>
-        <input checked={data.hasCharacterReference} onChange={(event) => patch("hasCharacterReference", event.target.checked)} type="checkbox" />
-      </label>
       <div className="section-divider"><span>เนื้อหาที่จะผลิตรอบนี้</span></div>
       <div className="field-grid">
         <Field label="เป้าหมายของคลิป" required>
@@ -226,18 +202,12 @@ function StepThreeForm({ data, setData }: { data: StepThreeData; setData: React.
       <div className="framework-note">
         <span><b>PAS</b> แก้ปัญหา</span><span><b>HSO</b> เล่าเรื่อง</span><span><b>AIDA</b> นำเสนอขาย</span>
       </div>
-      <Field label="หัวข้อหรือเหตุการณ์เฉพาะที่อยากเล่า" hint="ยิ่งเฉพาะ เรื่องยิ่งไม่ซ้ำ" required>
-        <TextArea value={data.topicBrief} onChange={(v) => patch("topicBrief", v)} placeholder="ไม่เขียนแค่ ‘เตือนสติเรื่องชีวิต’ เช่น เช้าวันเงินเดือนออก พ่อเห็นลูกกดสั่งของชิ้นที่สามทั้งที่ยังติดหนี้บัตร" rows={5} />
-      </Field>
       <div className="field-grid triple-grid">
         <Field label="จำนวนเรื่อง"><Select value={data.storyCount} onChange={(v) => patch("storyCount", v)}>{[1,2,3,4,5].map((n)=><option key={n}>{n}</option>)}</Select></Field>
         <Field label="ฉากต่อเรื่อง"><Select value={data.sceneCount} onChange={(v) => patch("sceneCount", v)}>{[3,4,5,6,7,8].map((n)=><option key={n}>{n}</option>)}</Select></Field>
         <Field label="เวลาต่อฉาก"><Select value={data.sceneDuration} onChange={(v) => patch("sceneDuration", v)}><option>8 วินาที</option><option>10 วินาที</option><option>15 วินาที</option></Select></Field>
       </div>
-      <div className="field-grid">
-        <Field label="รูปแบบการนำเสนอ"><Select value={data.presentationMode} onChange={(v) => patch("presentationMode", v)}><option>ตัวละครพูดสดกับกล้อง</option><option>พากย์เสียง</option><option>ผสมพูดสดและพากย์เสียง</option></Select></Field>
-        <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(v) => patch("tone", v)} /></Field>
-      </div>
+      <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(v) => patch("tone", v)} /></Field>
       <div className="field-grid">
         <Field label="สถานที่หรือบรรยากาศที่ต้องการ"><TextArea value={data.settingPreferences} onChange={(v) => patch("settingPreferences", v)} rows={3} /></Field>
         <Field label="สถานที่ที่ไม่ต้องการ"><TextArea value={data.excludedSettings} onChange={(v) => patch("excludedSettings", v)} placeholder="เช่น ห้ามใช้คาเฟ่ ห้ามใช้ห้องหรู" rows={3} /></Field>
@@ -282,12 +252,12 @@ export function PromptBuilder() {
   }, [activeStep, stepOne, stepTwo, stepThree]);
 
   const missing = useMemo(() => {
-    if (activeStep === 1) return stepOne.platforms.length === 0 ? ["แพลตฟอร์มหลัก"] : [];
+    if (activeStep === 1) return [];
     if (activeStep === 2) return stepTwo.characterDescription.trim() ? [] : ["Character Description"];
     const fields = [
       [stepThree.channelName, "ชื่อช่อง"], [stepThree.channelConcept, "คอนเซปต์ช่อง"],
       [stepThree.targetAudience, "กลุ่มเป้าหมาย"], [stepThree.contentPillars, "เสาหลักเนื้อหา"],
-      [stepThree.characterDescription, "รายละเอียดตัวละคร"], [stepThree.topicBrief, "หัวข้อเฉพาะ"],
+      [stepThree.characterDescription, "รายละเอียดตัวละคร"],
     ].filter(([value]) => !value.trim()).map(([, label]) => label);
     if (stepThree.objective !== "สร้างตัวตน") {
       if (!stepThree.productName.trim()) fields.push("ชื่อสินค้า");
