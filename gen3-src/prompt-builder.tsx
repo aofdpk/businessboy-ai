@@ -203,8 +203,8 @@ function StepThreeForm({ data, setData }: { data: StepThreeData; setData: React.
         <span><b>PAS</b> แก้ปัญหา</span><span><b>HSO</b> เล่าเรื่อง</span><span><b>AIDA</b> นำเสนอขาย</span>
       </div>
       <div className="field-grid triple-grid">
-        <Field label="จำนวนเรื่อง"><Select value={data.storyCount} onChange={(v) => patch("storyCount", v)}>{[1,2,3,4,5].map((n)=><option key={n}>{n}</option>)}</Select></Field>
-        <Field label="ฉากต่อเรื่อง"><Select value={data.sceneCount} onChange={(v) => patch("sceneCount", v)}>{[3,4,5,6,7,8].map((n)=><option key={n}>{n}</option>)}</Select></Field>
+        <Field label="จำนวนเรื่อง"><Select value={data.storyCount} onChange={(v) => patch("storyCount", v)}>{Array.from({ length: 30 }, (_, index) => index + 1).map((n)=><option key={n}>{n}</option>)}</Select></Field>
+        <Field label="ฉากต่อเรื่อง"><Select value={data.sceneCount} onChange={(v) => patch("sceneCount", v)}>{Array.from({ length: 10 }, (_, index) => index + 1).map((n)=><option key={n}>{n}</option>)}</Select></Field>
         <Field label="เวลาต่อฉาก"><Select value={data.sceneDuration} onChange={(v) => patch("sceneDuration", v)}><option>8 วินาที</option><option>10 วินาที</option><option>15 วินาที</option></Select></Field>
       </div>
       <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(v) => patch("tone", v)} /></Field>
