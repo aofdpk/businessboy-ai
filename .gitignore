@@ -5,3 +5,4 @@ _*.js
 !api/_gen3-bundle.js
 _assets/
 local-gen3-server.js
+qa-runs/

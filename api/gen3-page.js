@@ -55,8 +55,8 @@ function logoutScript() {
 function hubHtml() {
   return `<!doctype html><html lang="th"><head>${head('เลือกประเภทคลิป · เด็กประกอบการ รุ่น 3', 'เลือกเครื่องมือสร้างคลิป AI สำหรับคอร์สเด็กประกอบการ รุ่น 3')}</head><body><main class="app-page">${appHeader('เลือกประเภทคลิป · รุ่น 3')}
 <div class="builder-shell builder-shell--hub"><section class="mode-hub" aria-labelledby="mode-hub-title"><header class="mode-hub__intro"><span class="eyebrow">AI PROMPT BUILDER · รุ่น 3</span><h1 id="mode-hub-title">วันนี้อยากสร้างคลิปแบบไหน?</h1><p>เลือกประเภทคลิปที่ต้องการทำรอบนี้ ไม่ได้เปลี่ยนรูปแบบธุรกิจของช่อง</p></header>
-<div class="mode-grid"><article class="mode-card mode-card--identity"><span class="mode-card__badge">พร้อมใช้งาน · ใช้วันนี้</span><h2>สร้างคลิปสร้างตัวตน</h2><p>ให้คุณค่า เล่าเรื่อง และสร้างผู้ติดตาม โดยไม่มีสินค้าและไม่ใส่ CTA ขาย</p><ul><li>หาไอเดียและวางตัวตนของช่อง</li><li>สร้าง Character Sheet ให้คงที่</li><li>สร้างตาราง Image + Video Prompt พร้อมผลิต</li></ul><a class="mode-card__action mode-card__action--primary" href="/gen3/identity">เริ่มโหมดสร้างตัวตน →</a></article>
-<article class="mode-card mode-card--sales"><span class="mode-card__badge mode-card__badge--disabled">เร็ว ๆ นี้</span><h2>สร้างคลิปขายสินค้า</h2><p>ระบบสำหรับรีวิว สาธิต และเล่าเรื่องเพื่อพาเข้าสินค้า จะแยกขั้นตอนออกจากโหมดสร้างตัวตนอย่างชัดเจน</p><ul><li>ใช้ข้อมูลสินค้าจริง</li><li>วาง Pain Point และจุดขาย</li><li>ควบคุมคำกล่าวอ้างและ CTA</li></ul><button class="mode-card__action mode-card__action--disabled" disabled type="button">เร็ว ๆ นี้</button></article></div></section></div></main>${logoutScript()}</body></html>`;
+<div class="mode-grid"><article class="mode-card mode-card--identity"><span class="mode-card__badge">พร้อมใช้งาน</span><h2>สร้างคลิปสร้างตัวตน</h2><p>ให้คุณค่า เล่าเรื่อง และสร้างผู้ติดตาม โดยไม่มีสินค้าและไม่ใส่ CTA ขาย</p><ul><li>หาไอเดียและวางตัวตนของช่อง</li><li>สร้าง Character Sheet ให้คงที่</li><li>สร้างตาราง Image + Video Prompt พร้อมผลิต</li></ul><a class="mode-card__action mode-card__action--primary" href="/gen3/identity">เริ่มโหมดสร้างตัวตน →</a></article>
+<article class="mode-card mode-card--sales mode-card--sales-active"><span class="mode-card__badge mode-card__badge--sales">พร้อมใช้งาน</span><h2>สร้างคลิปขายสินค้า</h2><p>ล็อกหน้าตา วิธีใช้ และข้อเท็จจริงของสินค้าก่อนสร้างคลิปขายพร้อมผลิต</p><ul><li>สร้าง Product Sheet และ PRODUCT LOCK</li><li>ใช้ Character Sheet คู่กับ Product Sheet</li><li>สร้างตาราง Image + Video Prompt ในขั้นเดียว</li></ul><a class="mode-card__action mode-card__action--sales" href="/gen3/sales">เริ่มโหมดคลิปขายสินค้า →</a></article></div></section></div></main>${logoutScript()}</body></html>`;
 }
 
 function identityHtml() {
@@ -64,8 +64,7 @@ function identityHtml() {
 }
 
 function salesHtml() {
-  return `<!doctype html><html lang="th"><head>${head('คลิปขายสินค้า · เร็ว ๆ นี้', 'เครื่องมือสร้างคลิปขายสินค้าสำหรับคอร์สเด็กประกอบการ รุ่น 3')}</head><body><main class="app-page">${appHeader('โหมดขายสินค้า · รุ่น 3')}
-<div class="builder-shell builder-shell--hub"><section class="coming-soon" aria-labelledby="coming-soon-title"><span class="mode-card__badge mode-card__badge--disabled">เร็ว ๆ นี้</span><h1 id="coming-soon-title">โหมดสร้างคลิปขายสินค้า</h1><p>เรากำลังแยกขั้นตอนสำหรับคลิปขายให้เหมาะกับการใช้ข้อมูลสินค้าจริงโดยเฉพาะ</p><a class="mode-banner__link" href="/gen3">กลับหน้าเลือกประเภทคลิป</a></section></div></main>${logoutScript()}</body></html>`;
+  return `<!doctype html><html lang="th"><head>${head('สร้างคลิปขายสินค้า · เด็กประกอบการ รุ่น 3', 'AI Prompt Builder สำหรับสร้าง Product Sheet และคลิปขายสินค้าพร้อมผลิต')}</head><body><div id="builder-root"></div><noscript>กรุณาเปิด JavaScript เพื่อใช้งาน AI Prompt Builder</noscript><script defer src="/api/gen3-script?view=sales"></script></body></html>`;
 }
 
 function pageHtml(view) {

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const bundles = require('./_gen3-bundle');
+const ALLOWED_VIEWS = new Set(['identity', 'sales']);
 
 function safeEqual(left, right) {
   const a = Buffer.from(String(left));
@@ -30,7 +31,7 @@ module.exports = async (req, res) => {
 
   const requestedView = req.query?.view;
   const view = requestedView === undefined ? 'identity' : requestedView;
-  if (typeof view !== 'string' || view !== 'identity') {
+  if (typeof view !== 'string' || !ALLOWED_VIEWS.has(view)) {
     return res.status(404).json({ error: 'builder view not found' });
   }
 

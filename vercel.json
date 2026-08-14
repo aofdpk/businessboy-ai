@@ -3,7 +3,7 @@
   "redirects": [
     {
       "source": "/gen3.html",
-      "destination": "/gen3/identity",
+      "destination": "/gen3",
       "permanent": false
     }
   ],
