@@ -119,7 +119,7 @@ function loadSavedState(): SavedState {
 }
 
 const steps = [
-  { id: 1 as const, title: "หาไอเดียช่อง", short: "วางตัวตนของช่องและตัวละคร" },
+  { id: 1 as const, title: "หาไอเดียช่อง", short: "วางตัวตนและดูสินค้าที่ต่อยอดได้" },
   { id: 2 as const, title: "สร้างตัวละคร", short: "ทำ Character Sheet ให้คงที่" },
   { id: 3 as const, title: "สร้างคลิปตัวตน", short: "จบเป็นตาราง Image + Video Prompt" },
 ];
@@ -163,6 +163,7 @@ function StepOneForm({ data, setData }: { data: StepOneData; setData: React.Disp
 
   return (
     <div className="form-stack">
+      <div className="info-box"><b>สร้างตัวตนก่อน ขายทีหลัง</b><span>AI จะเสนอแนวช่องพร้อมหมวดสินค้าที่เข้ากันเพื่อช่วยตัดสินใจเท่านั้น คลิปจากโหมดนี้ยังไม่มีสินค้าและไม่ใส่ CTA ขาย</span></div>
       <Field label="จำนวนไอเดียช่อง" required>
         <Select value={data.ideaCount} onChange={(v) => patch("ideaCount", v)}>
           {[3, 4, 5, 6, 7, 8, 9, 10].map((item) => <option key={item}>{item}</option>)}
@@ -193,7 +194,7 @@ function StepTwoForm({ data, setData }: { data: StepTwoData; setData: React.Disp
   const patch = (key: keyof StepTwoData, value: string) => setData((current) => ({ ...current, [key]: value }));
   return (
     <div className="form-stack">
-      <div className="info-box"><b>ทำ STEP 1 ใน Gemini ก่อน</b><span>เลือกแนวทางที่ชอบ แล้วนำ Character Description ที่ AI ให้มาวางด้านล่าง</span></div>
+      <div className="info-box"><b>ทำ STEP 1 ใน Gemini ก่อน</b><span>เลือกแนวทางโดยดูทั้งความถนัดและหมวดสินค้าที่ต่อยอดได้ แล้วนำ Character Description ที่ AI ให้มาวางด้านล่าง</span></div>
       <Field label="ชื่อตัวละคร">
         <TextInput value={data.characterName} onChange={(v) => patch("characterName", v)} placeholder="เช่น น้าอิ่ม หรือ ตาบุญ" />
       </Field>
@@ -320,7 +321,7 @@ export function PromptBuilder() {
         <span className="mode-banner__copy">
           <span className="mode-banner__kicker">กำลังใช้งาน</span>
           <strong>สร้างตัวตน (Identity)</strong>
-          <small>คลิปรอบนี้ไม่มีสินค้าและไม่ใส่ CTA ขาย</small>
+          <small>วางทางขายไว้ล่วงหน้า แต่คลิปรอบนี้ยังไม่มีสินค้าและไม่ใส่ CTA ขาย</small>
         </span>
         <a className="mode-banner__link" href="/gen3">กลับหน้าเลือกประเภทคลิป</a>
       </aside>
