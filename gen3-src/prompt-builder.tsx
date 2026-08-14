@@ -209,7 +209,7 @@ function StepThreeForm({ data, setData }: { data: StepThreeData; setData: React.
   return (
     <div className="form-stack">
       <Field label="ชื่อช่อง" required><TextInput value={data.channelName} onChange={(v) => patch("channelName", v)} placeholder="เช่น ตาบุญสอนใจ" /></Field>
-      <Field label="คอนเซปต์และจุดแตกต่างของช่อง" hint="นำข้อมูลจากผลลัพธ์ STEP 1 มากรอก หรือเติมรายละเอียดเองได้เลย" required>
+      <Field label="แก่นหลักของช่อง" hint="นำข้อมูลจากผลลัพธ์ STEP 1 มากรอก หรือเติมรายละเอียดเองได้เลย" required>
         <TextArea value={data.channelConcept} onChange={(v) => patch("channelConcept", v)} placeholder="ช่องนี้พูดเรื่องอะไร เล่าแบบไหน และต่างจากช่องทั่วไปอย่างไร" />
       </Field>
       <div className="field-grid">
@@ -279,7 +279,7 @@ export function PromptBuilder() {
     if (activeStep === 1) return [];
     if (activeStep === 2) return stepTwo.characterDescription.trim() ? [] : ["Character Description"];
     const fields = [
-      [stepThree.channelName, "ชื่อช่อง"], [stepThree.channelConcept, "คอนเซปต์ช่อง"],
+      [stepThree.channelName, "ชื่อช่อง"], [stepThree.channelConcept, "แก่นหลักของช่อง"],
       [stepThree.targetAudience, "กลุ่มเป้าหมาย"], [stepThree.contentPillars, "เสาหลักเนื้อหา"],
       [stepThree.characterDescription, "รายละเอียดตัวละคร"],
     ].filter(([value]) => !value.trim()).map(([, label]) => label);
