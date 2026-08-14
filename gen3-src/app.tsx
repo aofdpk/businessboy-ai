@@ -13,9 +13,9 @@ function BuilderApp() {
       <header className="app-header">
         <a className="brand-link" href="/gen3">
           <img alt="เด็กประกอบการ" height="64" src="/businessboy-logo.jpg" width="64" />
-          <div><b>AI Prompt Builder</b><span>เด็กประกอบการ · รุ่น 3</span></div>
+          <div><b>AI Prompt Builder</b><span>โหมดสร้างตัวตน · รุ่น 3</span></div>
         </a>
-        <div className="header-message"><span>ขอแค่ได้เริ่ม</span><small>Prompt → KVID → KCUT → KPOST</small></div>
+        <div className="header-message"><span>สร้างตัวตนให้คนจำได้</span><small>Prompt → KVID → KCUT → KPOST</small></div>
         <button className="logout-button" onClick={logout} type="button">ออกจากระบบ</button>
       </header>
       <PromptBuilder />

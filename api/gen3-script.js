@@ -1,6 +1,5 @@
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
+const bundles = require('./_gen3-bundle');
 
 function safeEqual(left, right) {
   const a = Buffer.from(String(left));
@@ -23,14 +22,24 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   if (!validSession(req)) return res.status(401).json({ error: 'unauthorized' });
-  const candidates = [
-    path.join(process.cwd(), 'gen3.js'),
-    path.join(process.cwd(), '..', 'gen3.js'),
-    path.join(__dirname, '..', 'gen3.js'),
-  ];
-  const sourcePath = candidates.find((candidate) => fs.existsSync(candidate));
-  if (!sourcePath) return res.status(500).json({ error: 'builder bundle missing' });
-  const source = fs.readFileSync(sourcePath, 'utf8');
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const requestedView = req.query?.view;
+  const view = requestedView === undefined ? 'identity' : requestedView;
+  if (typeof view !== 'string' || view !== 'identity') {
+    return res.status(404).json({ error: 'builder view not found' });
+  }
+
+  const source = bundles[view];
+  if (typeof source !== 'string' || !source) {
+    return res.status(500).json({ error: 'builder bundle missing' });
+  }
+
   res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  if (req.method === 'HEAD') return res.status(200).end();
   return res.status(200).send(source);
 };

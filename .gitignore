@@ -2,5 +2,6 @@ node_modules/
 .vercel/
 .playwright-mcp/
 _*.js
+!api/_gen3-bundle.js
 _assets/
 local-gen3-server.js

@@ -1,16 +1,28 @@
 {
-  "rewrites": [
-    {
-      "source": "/gen3",
-      "destination": "/api/gen3-page"
-    },
+  "trailingSlash": false,
+  "redirects": [
     {
       "source": "/gen3.html",
-      "destination": "/api/gen3-page"
+      "destination": "/gen3/identity",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/gen3/identity",
+      "destination": "/api/gen3-page?view=identity"
+    },
+    {
+      "source": "/gen3/sales",
+      "destination": "/api/gen3-page?view=sales"
+    },
+    {
+      "source": "/gen3",
+      "destination": "/api/gen3-page?view=hub"
     },
     {
       "source": "/gen3.js",
-      "destination": "/api/gen3-script"
+      "destination": "/api/gen3-script?view=identity"
     },
     {
       "source": "/promptbook",
