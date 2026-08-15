@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { buildSalesPrompt, initialSalesPrompt, type SalesPromptData, type SalesSpeechSpeed } from "./sales-prompt-data";
+import { buildSalesPrompt, initialSalesPrompt, type SalesProductSceneMode, type SalesPromptData, type SalesSpeechSpeed } from "./sales-prompt-data";
 
-const STORAGE_KEY = "businessboy-gen3-sales-v2";
+const STORAGE_KEY = "businessboy-gen3-sales-v3";
+const PREVIOUS_STORAGE_KEY = "businessboy-gen3-sales-v2";
 const LEGACY_STORAGE_KEY = "businessboy-gen3-sales-v1";
 const IDENTITY_STORAGE_KEY = "businessboy-gen3-identity-v1";
 const STORY_COUNTS = Array.from({ length: 30 }, (_, index) => String(index + 1));
@@ -30,8 +31,15 @@ function oneOf(source: Record<string, unknown>, key: string, allowed: string[], 
   return allowed.includes(candidate) ? candidate : fallback;
 }
 
+function validProductScenes(value: unknown, sceneCount: string) {
+  const maximum = Number.parseInt(sceneCount, 10);
+  if (!Array.isArray(value) || !Number.isInteger(maximum) || maximum < 1) return [];
+  return Array.from(new Set(value.map(Number).filter((scene) => Number.isInteger(scene) && scene >= 1 && scene <= maximum))).sort((a, b) => a - b);
+}
+
 function sanitizeData(input: unknown): SalesPromptData {
   const source = record(input);
+  const sceneCount = oneOf(source, "sceneCount", SCENE_COUNTS, initialSalesPrompt.sceneCount);
   return {
     productName: text(source, "productName", initialSalesPrompt.productName),
     productDetails: text(source, "productDetails", initialSalesPrompt.productDetails),
@@ -44,7 +52,9 @@ function sanitizeData(input: unknown): SalesPromptData {
     contentPillars: text(source, "contentPillars", initialSalesPrompt.contentPillars),
     framework: oneOf(source, "framework", FRAMEWORKS, initialSalesPrompt.framework),
     storyCount: oneOf(source, "storyCount", STORY_COUNTS, initialSalesPrompt.storyCount),
-    sceneCount: oneOf(source, "sceneCount", SCENE_COUNTS, initialSalesPrompt.sceneCount),
+    sceneCount,
+    productSceneMode: oneOf(source, "productSceneMode", ["auto", "manual"], initialSalesPrompt.productSceneMode) as SalesProductSceneMode,
+    productSceneNumbers: validProductScenes(source.productSceneNumbers, sceneCount),
     sceneDuration: oneOf(source, "sceneDuration", DURATIONS, initialSalesPrompt.sceneDuration),
     speechSpeed: oneOf(source, "speechSpeed", ["slow", "normal", "fast"], initialSalesPrompt.speechSpeed) as SalesSpeechSpeed,
     cta: oneOf(source, "cta", CTAS, initialSalesPrompt.cta),
@@ -77,6 +87,11 @@ function loadSavedData(): SalesPromptData {
     const current = localStorage.getItem(STORAGE_KEY);
     if (current) {
       const parsed = record(JSON.parse(current));
+      return sanitizeData(parsed.data || parsed);
+    }
+    const previous = localStorage.getItem(PREVIOUS_STORAGE_KEY);
+    if (previous) {
+      const parsed = record(JSON.parse(previous));
       return sanitizeData(parsed.data || parsed);
     }
     const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -134,6 +149,28 @@ function Select({ children, onChange, value }: { children: React.ReactNode; onCh
 
 function SalesForm({ data, importStatus, onImportContext, setData }: { data: SalesPromptData; importStatus: string; onImportContext: () => void; setData: React.Dispatch<React.SetStateAction<SalesPromptData>> }) {
   const patch = <K extends keyof SalesPromptData>(key: K, value: SalesPromptData[K]) => setData((current) => ({ ...current, [key]: value }));
+  const sceneTotal = Number.parseInt(data.sceneCount, 10);
+  const availableScenes = Array.from({ length: Number.isInteger(sceneTotal) ? sceneTotal : 0 }, (_, index) => index + 1);
+  const selectedSceneLabel = data.productSceneNumbers.map((scene) => String(scene).padStart(2, "0")).join(", ");
+
+  function changeSceneCount(value: string) {
+    const maximum = Number.parseInt(value, 10);
+    setData((current) => ({
+      ...current,
+      sceneCount: value,
+      productSceneNumbers: current.productSceneNumbers.filter((scene) => scene <= maximum),
+    }));
+  }
+
+  function toggleProductScene(scene: number) {
+    setData((current) => {
+      const selected = current.productSceneNumbers.includes(scene)
+        ? current.productSceneNumbers.filter((item) => item !== scene)
+        : [...current.productSceneNumbers, scene].sort((a, b) => a - b);
+      return { ...current, productSceneNumbers: selected };
+    });
+  }
+
   return <div className="form-stack">
     <div className="info-box info-box--sales"><b>เตรียมเพียง 2 อย่าง แล้วสร้างคลิปขายได้เลย</b><span>คัดลอก Prompt ไป Gemini จากนั้นแนบ Character Sheet และรูปสินค้าต้นฉบับในข้อความเดียวกัน ไม่ต้องทำ Product Sheet หรือ PRODUCT LOCK</span></div>
     <div className="attachment-list" aria-label="ไฟล์ที่ต้องแนบใน Gemini"><b>ไฟล์ที่ต้องแนบพร้อม Prompt</b><span>Character Sheet 1 รูป</span><span>รูปสินค้าต้นฉบับอย่างน้อย 1 รูป</span></div>
@@ -153,7 +190,21 @@ function SalesForm({ data, importStatus, onImportContext, setData }: { data: Sal
 
     <div className="section-divider"><span>ตั้งค่าคลิปที่จะผลิต</span></div>
     <div className="field-grid"><Field label="โครงสร้าง"><Select onChange={(value) => patch("framework", value)} value={data.framework}>{FRAMEWORKS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ตอนจบอยากให้คนทำอะไร"><Select onChange={(value) => patch("cta", value)} value={data.cta}>{CTAS.map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
-    <div className="field-grid"><Field label="จำนวนเรื่อง"><Select onChange={(value) => patch("storyCount", value)} value={data.storyCount}>{STORY_COUNTS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ฉากต่อเรื่อง"><Select onChange={(value) => patch("sceneCount", value)} value={data.sceneCount}>{SCENE_COUNTS.map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
+    <div className="field-grid"><Field label="จำนวนเรื่อง"><Select onChange={(value) => patch("storyCount", value)} value={data.storyCount}>{STORY_COUNTS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ฉากต่อเรื่อง"><Select onChange={changeSceneCount} value={data.sceneCount}>{SCENE_COUNTS.map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
+    <Field label="ให้สินค้าโผล่ฉากไหน" hint="ค่าเริ่มต้นให้ AI วางตามเรื่องและความชัดของรูปสินค้า"><Select onChange={(value) => patch("productSceneMode", value as SalesProductSceneMode)} value={data.productSceneMode}><option value="auto">ให้ AI เลือกให้ (แนะนำ)</option><option value="manual">ฉันเลือกฉากเอง</option></Select></Field>
+    {data.productSceneMode === "manual" && <fieldset aria-describedby="sales-product-scenes-hint sales-product-scenes-summary" aria-invalid={data.productSceneNumbers.length === 0} className="product-scene-picker">
+      <legend>เลือกฉากที่สินค้าโผล่ <b className="required">*</b></legend>
+      <p id="sales-product-scenes-hint">ติ๊กได้หลายฉาก · ใช้เลขฉากชุดเดียวกันกับทุกเรื่อง · เลือก 1 ฉากปลอดภัยที่สุด หากมีรูปชัดหลายมุมค่อยเลือกเพิ่ม</p>
+      <div className="product-scene-options">
+        {availableScenes.map((scene) => {
+          const checked = data.productSceneNumbers.includes(scene);
+          const label = String(scene).padStart(2, "0");
+          return <label className={checked ? "product-scene-chip active" : "product-scene-chip"} key={scene}><input checked={checked} onChange={() => toggleProductScene(scene)} type="checkbox" /><span aria-hidden="true" className="product-scene-chip__check">{checked ? "✓" : ""}</span><span>ฉาก {label}</span></label>;
+        })}
+      </div>
+      <p aria-live="polite" className={data.productSceneNumbers.length === 0 ? "product-scene-summary product-scene-summary--error" : "product-scene-summary"} id="sales-product-scenes-summary">{data.productSceneNumbers.length === 0 ? "ยังไม่ได้เลือกฉาก กรุณาเลือกอย่างน้อย 1 ฉาก" : `เลือกแล้ว: ฉาก ${selectedSceneLabel}`}</p>
+    </fieldset>}
+    {data.productSceneMode === "manual" && data.productSceneNumbers.length > 1 && <div className="info-box info-box--warning" role="status"><b>เลือกสินค้าโผล่หลายฉาก</b><span>ทำได้เมื่อรูปสินค้าชัดหลายมุม แต่ถ้ารูปมีมุมจำกัด Gemini จะหยุดและขอให้เลือกเหลือ 1 ฉากหรือเพิ่มรูปที่ชัดกว่า</span></div>}
     <div className="field-grid"><Field label="เวลาต่อฉาก"><Select onChange={(value) => patch("sceneDuration", value)} value={data.sceneDuration}>{DURATIONS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ความเร็วในการพูด" hint="จำนวนคำต่อฉาก · ค่าแนะนำออกแบบจากคลิป 8 วินาที"><Select onChange={(value) => patch("speechSpeed", value as SalesSpeechSpeed)} value={data.speechSpeed}>{SPEECH_SPEEDS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</Select></Field></div>
     {data.speechSpeed === "fast" && <div className="info-box info-box--warning" role="status"><b>โหมดเร็วอาจพูดไม่ครบภายในเวลาที่เลือก</b><span>ควรทดสอบ 1 คลิปก่อนผลิตหลายเรื่อง และตรวจการออกเสียงกับปากให้ตรงทุกคำ</span></div>}
     <label className="switch-row"><span className="switch-copy"><b id="sales-agent-sheets-label">ให้ Agent บันทึกลง Google Sheets</b><span id="sales-agent-sheets-hint">ใช้เมื่อวาง Prompt ในโหมด Agent ที่เชื่อม Google Sheets แล้ว · 1 เรื่อง = 1 แท็บ</span></span><input aria-describedby="sales-agent-sheets-hint" aria-labelledby="sales-agent-sheets-label" checked={data.useAgent} onChange={(event) => patch("useAgent", event.target.checked)} role="switch" type="checkbox" /></label>
@@ -170,7 +221,7 @@ export function SalesPromptBuilder() {
   const [copyError, setCopyError] = useState("");
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, data })); } catch { /* Storage may be unavailable. */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 3, data })); } catch { /* Storage may be unavailable. */ }
   }, [data]);
 
   const prompt = useMemo(() => buildSalesPrompt(data), [data]);
@@ -183,6 +234,7 @@ export function SalesPromptBuilder() {
     if (!data.channelConcept.trim()) fields.push("แก่นหลักของช่อง");
     if (!data.targetAudience.trim()) fields.push("กลุ่มเป้าหมายและปัญหาหลัก");
     if (!data.contentPillars.trim()) fields.push("เสาหลักเนื้อหา 3–5 ข้อ");
+    if (data.productSceneMode === "manual" && data.productSceneNumbers.length === 0) fields.push("เลือกฉากที่สินค้าโผล่อย่างน้อย 1 ฉาก");
     return fields;
   }, [data]);
 

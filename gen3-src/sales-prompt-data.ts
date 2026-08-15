@@ -1,4 +1,5 @@
 export type SalesSpeechSpeed = "slow" | "normal" | "fast";
+export type SalesProductSceneMode = "auto" | "manual";
 
 export type SalesPromptData = {
   productName: string;
@@ -12,6 +13,8 @@ export type SalesPromptData = {
   framework: string;
   storyCount: string;
   sceneCount: string;
+  productSceneMode: SalesProductSceneMode;
+  productSceneNumbers: number[];
   sceneDuration: string;
   speechSpeed: SalesSpeechSpeed;
   cta: string;
@@ -33,6 +36,8 @@ export const initialSalesPrompt: SalesPromptData = {
   framework: "ให้ AI เลือกโครงสร้างที่เหมาะที่สุด",
   storyCount: "1",
   sceneCount: "3",
+  productSceneMode: "auto",
+  productSceneNumbers: [],
   sceneDuration: "8 วินาที",
   speechSpeed: "normal",
   cta: "ให้ AI เลือก CTA ที่เป็นธรรมชาติ",
@@ -50,6 +55,28 @@ function dataValue(input: string, fallback = "ไม่ได้ระบุ") {
   return value(input, fallback).replaceAll("<", "＜").replaceAll(">", "＞");
 }
 
+function boundedInteger(input: string, minimum: number, maximum: number, fallback: number) {
+  const parsed = Number(input);
+  return Number.isInteger(parsed) && parsed >= minimum && parsed <= maximum ? parsed : fallback;
+}
+
+function sanitizeProductSceneNumbers(input: unknown, sceneCount: number) {
+  if (!Array.isArray(input)) return [];
+  return Array.from(new Set(input
+    .map((item) => typeof item === "number"
+      ? item
+      : typeof item === "string" && /^\d+$/.test(item.trim())
+        ? Number(item)
+        : Number.NaN)
+    .filter((item) => Number.isInteger(item) && item >= 1 && item <= sceneCount)))
+    .sort((left, right) => left - right);
+}
+
+function formatSceneNumbers(sceneNumbers: number[]) {
+  if (sceneNumbers.length === 0) return "";
+  return `ฉาก ${sceneNumbers.map((scene) => String(scene).padStart(2, "0")).join(", ")}`;
+}
+
 function speechSettings(speed: SalesSpeechSpeed) {
   if (speed === "slow") {
     return { label: "ช้า — 10–15 คำ", range: "10–15 คำไทย", delivery: "slow, calm Thai conversational cadence with natural pauses" };
@@ -61,8 +88,26 @@ function speechSettings(speed: SalesSpeechSpeed) {
 }
 
 export function buildSalesPrompt(data: SalesPromptData) {
-  const storyCount = value(data.storyCount, "1");
-  const sceneCount = value(data.sceneCount, "3");
+  const storyCount = String(boundedInteger(data.storyCount, 1, 30, 1));
+  const sceneCountNumber = boundedInteger(data.sceneCount, 1, 10, 3);
+  const sceneCount = String(sceneCountNumber);
+  const productSceneMode: SalesProductSceneMode = data.productSceneMode === "manual" ? "manual" : "auto";
+  const productSceneNumbers = sanitizeProductSceneNumbers(data.productSceneNumbers, sceneCountNumber);
+  const productSceneList = formatSceneNumbers(productSceneNumbers);
+  const productSceneSetting = productSceneMode === "manual"
+    ? `ผู้ใช้เลือกเอง — ${productSceneList || "ยังไม่มีเลขฉากที่ถูกต้อง"}`
+    : "ให้ AI เลือกฉากที่เหมาะสมให้แต่ละเรื่อง";
+  const productSceneRules = productSceneMode === "manual"
+    ? productSceneNumbers.length === 0
+      ? `โหมด MANUAL ไม่ผ่าน CONFIGURATION GATE เพราะไม่มีเลขฉากที่ถูกต้องในช่วง 01–${String(sceneCountNumber).padStart(2, "0")} ให้กำหนดผลลัพธ์สุดท้ายเป็น STOP และขอให้ผู้ใช้เลือกฉากที่สินค้าโผล่อย่างน้อย 1 ฉาก ห้ามสร้างเรื่อง ตาราง หรือ Spreadsheet และถือเป็น STOP สำหรับคำสั่ง Agent ด้วย`
+      : `โหมด MANUAL: ใช้ฉากที่ผู้ใช้กำหนดตรงตัวในทุกเรื่อง คือ ${productSceneList} แถวที่เลือกทุกแถวต้องเป็น “มี — Character Reference + Original Product Reference” และแถวอื่นทุกแถวต้องเป็น “ไม่มี — Character Reference only” ห้ามเพิ่ม ลบ ย้าย หรือสลับฉากสินค้าเอง การเลือกนี้ควบคุมการมองเห็นสินค้าเท่านั้น ไม่ได้อนุญาต action ที่หลักฐานไม่รองรับ หาก EVIDENCE_STATUS เป็น LIMITED และผู้ใช้เลือกมากกว่า 1 ฉาก ให้กำหนดผลลัพธ์สุดท้ายเป็น STOP พร้อมขอให้เลือกเพียง 1 ฉากหรือแนบรูปสินค้าที่เห็นเต็มและชัดขึ้น ห้ามลดจำนวนฉากให้เอง ห้ามสร้างตารางหรือ Spreadsheet และถือเป็น STOP สำหรับคำสั่ง Agent ด้วย`
+    : "โหมด AUTO: เมื่อ PASS ให้ AI เลือกสินค้า 1–2 ฉากต่อเรื่องตามโครงเรื่อง โดยแต่ละเรื่องเลือกต่างกันได้ เมื่อ LIMITED ต้องเลือกสินค้า exactly 1 ฉากต่อเรื่อง และทุกกรณีต้องรายงานเลขฉากจริง";
+  const productSceneOutput = productSceneMode === "manual"
+    ? `ผู้ใช้กำหนด — ${productSceneList || "ไม่ผ่าน: ยังไม่ได้เลือกฉาก"}`
+    : "AI เลือกให้ — แสดงเลขฉากจริงของแต่ละเรื่อง";
+  const agentProductSceneRule = productSceneMode === "manual"
+    ? `โหมด MANUAL: ค่า B5 ของทุกแท็บต้องเป็น “${productSceneList}” ตรงตัว และต้องตรงกับแถวที่ใช้ Character Reference + Original Product Reference เท่านั้น`
+    : "โหมด AUTO: ค่า B5 ของแต่ละแท็บใช้เลขฉากที่ AI เลือกจริงสำหรับเรื่องนั้น และอาจต่างกันระหว่างเรื่องได้";
   const sceneDuration = value(data.sceneDuration, "8 วินาที");
   const speech = speechSettings(data.speechSpeed);
   const attachmentState = data.willAttachCharacterReference && data.willAttachProductReference
@@ -93,6 +138,7 @@ export function buildSalesPrompt(data: SalesPromptData) {
 - โครงสร้าง: ${dataValue(data.framework)}
 - จำนวนเรื่อง: ${storyCount}
 - จำนวนฉากต่อเรื่อง: ${sceneCount}
+- การกำหนดฉากที่สินค้าโผล่: ${productSceneSetting}
 - ความยาวต่อฉาก: ${sceneDuration}
 - ความเร็วในการพูด: ${speech.label}
 - ช่วงจำนวนคำต่อฉาก: ${speech.range}
@@ -123,6 +169,11 @@ HARD GATE
 - ถ้าเป็น STOP ให้ตอบเฉพาะหัวข้อ “ผลตรวจรูป: STOP”, เหตุผลที่ตรวจสอบได้ และสิ่งที่ต้องแนบหรือยืนยันไม่เกิน 3 ข้อ ห้ามสร้างชื่อเรื่อง สคริปต์ ตาราง Image Prompt หรือ Video Prompt
 - PASS และ LIMITED จึงสร้างผลงานต่อได้ โดยต้องแสดงสถานะจริง ห้ามยกระดับ LIMITED เป็น PASS
 - สินค้ากลุ่มอาหาร อาหารเสริม เครื่องสำอาง อุปกรณ์ไฟฟ้า เด็ก สัตว์ หรือการใช้กับร่างกาย ต้อง STOP เมื่อมุมขาย คำกล่าวอ้าง หรือการกระทำที่วางแผนจำเป็นต้องใช้ข้อมูลรุ่น วิธีใช้ หรือคำเตือนที่หลักฐานยังไม่พอ แต่ถ้าทำคลิปแบบ LIMITED โดยไม่สาธิต ไม่กล่าวอ้างผล และใช้เพียงสิ่งที่มองเห็นชัด สามารถผลิตต่อได้อย่างระมัดระวัง
+
+กฎกำหนดฉากที่สินค้าโผล่
+${productSceneRules}
+- ไม่ว่าใช้โหมดใด ทุกแถวที่สินค้าโผล่ต้องเห็นตัวละครและสินค้าอยู่พร้อมกันตั้งแต่เฟรมแรก ห้ามใช้ฉากสินค้าล้วน
+- หากกฎของโหมดฉากสินค้าขัดกับ EVIDENCE_STATUS หรือ Reference ที่มี ให้ใช้ STOP ตามกฎข้างต้น ห้ามแอบแก้เลขฉากหรือ Reference routing เพื่อให้ผลิตต่อได้
 
 กฎข้อเท็จจริงและคำกล่าวอ้าง
 - ใช้เฉพาะสิ่งที่เห็นชัดหรือรายละเอียดที่ผู้ใช้ระบุตรงตัว ห้ามแต่งรีวิว สถิติ ผลลัพธ์ before/after การรับรอง ความปลอดภัย หรือการรับประกันผล
@@ -170,6 +221,7 @@ HARD GATE
 รูปแบบผลลัพธ์เมื่อ PASS หรือ LIMITED
 เริ่มด้วย:
 - ผลตรวจรูป: PASS หรือ LIMITED
+- โหมดฉากสินค้า: ${productSceneOutput}
 - ข้อมูลสินค้าที่ใช้ได้: สรุปเฉพาะหลักฐานที่นำไปใช้จริง
 - ข้อจำกัดที่รักษาไว้: unknowns, unsupported views/actions และสิ่งที่ห้ามแต่ง
 
@@ -196,6 +248,7 @@ HARD GATE
 ตรวจงานก่อนส่งโดยไม่แสดงร่าง
 - จำนวนเรื่อง ฉาก แถว และคอลัมน์ครบ
 - EVIDENCE_STATUS ตรงหลักฐาน และ LIMITED ใช้สินค้าเพียง 1 ฉากต่อเรื่อง
+- โหมดฉากสินค้าและเลขฉากตรงกับการตั้งค่า: ${productSceneOutput}
 - ทุกเรื่องมีสินค้าอย่างน้อย 1 ฉาก รายการฉากสินค้าโผล่ตรงตาราง และไม่มี Product-only route
 - ทุก Product-visible Image Prompt มี visual fingerprint เต็ม ใช้สอง Reference และไม่มีข้อมูลด้านที่ไม่เห็น
 - ทุก action และ claim มีแหล่งรองรับ ไม่มีราคา โปร รีวิว ผลลัพธ์ หรือวิธีใช้ที่แต่งขึ้น
@@ -208,15 +261,16 @@ HARD GATE
   if (!data.useAgent) return basePrompt;
 
   return `${basePrompt}\n\nงานต่อเนื่องสำหรับ Agent — บันทึกลง Google Sheets
-ทำส่วนนี้เฉพาะเมื่อ EVIDENCE_STATUS เป็น PASS หรือ LIMITED เท่านั้น หากเป็น STOP ห้ามสร้าง Spreadsheet หรือบันทึกตารางใด ๆ
+ทำส่วนนี้เฉพาะเมื่อ EVIDENCE_STATUS เป็น PASS หรือ LIMITED และไม่มีด่านอื่นสั่ง STOP เท่านั้น หากผลลัพธ์เป็น STOP จากด่านใดก็ตาม รวมถึง CONFIGURATION GATE หรือกฎโหมดฉากสินค้า ห้ามสร้าง Spreadsheet หรือบันทึกตารางใด ๆ
 หลังจากตรวจผลงานฉบับสุดท้ายแล้ว หากมีเครื่องมือ Google Sheets และได้รับสิทธิ์ ให้สร้าง Spreadsheet ใหม่ 1 ไฟล์ชื่อ “${dataValue(data.channelName, "คลิปขายสินค้า")} — คลิปขาย AI” และบันทึกผลงานจริง ห้ามทำเพียงตารางจำลองในแชต
 1. สร้าง ${storyCount} แท็บ แท็บละ 1 เรื่อง ตั้งชื่อ “01 - ชื่อเรื่อง”, “02 - ชื่อเรื่อง” ตามลำดับ
 2. ในแต่ละแท็บใส่ชื่อเรื่อง, Hook, Sales angle, หลักฐานที่ใช้, โครงสร้าง, Product action/state และ CTA ในแถว 1–4
 3. ใส่ A5 = “ฉากที่สินค้าโผล่” และ B5 = รายการฉากจริงจากเรื่องนั้น
+   - ${agentProductSceneRule}
 4. แถว 6 ใช้หัวตาราง 6 คอลัมน์ตามลำดับ: ลำดับฉาก | คำอธิบายฉาก | Image Prompt | Video Prompt | บทพูดภาษาไทย | สินค้าในฉาก / Reference ที่ใช้
 5. แถว 7 เป็นต้นไปบันทึกครบทุกฉากแบบคำต่อคำ ห้ามย่อ แปล หรือตัดข้อความ และคอลัมน์ Reference ต้องตรงกับ B5
 6. เปิด Wrap text, ตรึง 6 แถวบนสุด และปรับความกว้างคอลัมน์ให้อ่านง่าย
-7. ตรวจจำนวนแท็บ จำนวนแถว รายการฉากสินค้าโผล่ และบทพูดกับ Video Prompt อีกครั้งก่อนจบ
+7. ตรวจจำนวนแท็บ จำนวนแถว โหมดฉากสินค้า ค่า B5, Reference routing, รายการฉากสินค้าโผล่ และบทพูดกับ Video Prompt อีกครั้งก่อนจบ
 8. เมื่อสำเร็จ ให้ตอบเฉพาะชื่อไฟล์ จำนวนเรื่อง จำนวนฉากทั้งหมด และลิงก์ Google Sheets ที่เปิดได้ ไม่ต้องแสดงตารางซ้ำในแชต
 9. หากไม่มีเครื่องมือหรือสิทธิ์ Google Sheets ให้แจ้งตามจริงและแสดงผลงานปกติในแชต ห้ามอ้างว่าสร้างไฟล์หรือลิงก์สำเร็จ`;
 }
