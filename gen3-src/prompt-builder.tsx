@@ -81,6 +81,7 @@ function sanitizeStepThree(input: unknown): StepThreeData {
     storyCount: oneOf(source, "storyCount", Array.from({ length: 30 }, (_, index) => String(index + 1)), initialStepThree.storyCount),
     sceneCount: oneOf(source, "sceneCount", Array.from({ length: 10 }, (_, index) => String(index + 1)), initialStepThree.sceneCount),
     sceneDuration: oneOf(source, "sceneDuration", ["8 วินาที", "10 วินาที", "15 วินาที"], initialStepThree.sceneDuration),
+    speechSpeed: oneOf(source, "speechSpeed", ["ช้า — 10–15 คำ", "ปกติ — 20–25 คำ", "เร็ว — 30–35 คำ"], initialStepThree.speechSpeed),
     useAgent: source.useAgent === true,
     presentationMode: initialStepThree.presentationMode,
     tone: text(source, "tone", initialStepThree.tone),
@@ -146,8 +147,8 @@ function Field({
   );
 }
 
-function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: React.ReactNode }) {
-  return <select value={value} onChange={(event) => onChange(event.target.value)}>{children}</select>;
+function Select({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: string) => void; children: React.ReactNode; ariaLabel?: string }) {
+  return <select aria-label={ariaLabel} value={value} onChange={(event) => onChange(event.target.value)}>{children}</select>;
 }
 
 function TextInput({ value, onChange, placeholder = "" }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
@@ -234,6 +235,17 @@ function StepThreeForm({ data, setData }: { data: StepThreeData; setData: React.
         <Field label="ฉากต่อเรื่อง"><Select value={data.sceneCount} onChange={(v) => patch("sceneCount", v)}>{Array.from({ length: 10 }, (_, index) => index + 1).map((n)=><option key={n}>{n}</option>)}</Select></Field>
         <Field label="เวลาต่อฉาก"><Select value={data.sceneDuration} onChange={(v) => patch("sceneDuration", v)}><option>8 วินาที</option><option>10 วินาที</option><option>15 วินาที</option></Select></Field>
       </div>
+      <Field label="ความเร็วในการพูด" hint="กำหนดจำนวนคำต่อ 1 ฉาก · ค่าแนะนำออกแบบจากคลิป 8 วินาที">
+        <Select ariaLabel="ความเร็วในการพูด" value={data.speechSpeed} onChange={(v) => patch("speechSpeed", v)}>
+          <option>ช้า — 10–15 คำ</option><option>ปกติ — 20–25 คำ</option><option>เร็ว — 30–35 คำ</option>
+        </Select>
+      </Field>
+      {data.speechSpeed === "เร็ว — 30–35 คำ" && (
+        <div className="info-box info-box--warning" role="status">
+          <b>โหมดเร็วอาจพูดไม่ครบภายในเวลาที่เลือก</b>
+          <span>ควรทดสอบ 1 คลิปก่อนผลิตหลายเรื่อง และตรวจการออกเสียงกับปากให้ตรงทุกคำ</span>
+        </div>
+      )}
       <label className="switch-row">
         <span className="switch-copy">
           <b id="agent-sheets-label">ให้ Agent บันทึกลง Google Sheets</b>

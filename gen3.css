@@ -190,8 +190,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .switch-row input:focus-visible { outline:3px solid rgba(23,105,224,.28); outline-offset:3px; }
 .sales-app .switch-row input:checked { background:#875900; }
 .sales-app .switch-row input:focus-visible { outline-color:rgba(135,89,0,.34); }
-.sales-app .switch-row:has(#sales-product-images-label),.sales-app .switch-row:has(#sales-references-label) { border-color:#e2c77f; background:#fffaf0; }
-.sales-app #sales-product-images-label::after,.sales-app #sales-references-label::after { content:" *"; color:var(--danger); }
+.sales-app .switch-row:has(#sales-character-reference-label),.sales-app .switch-row:has(#sales-product-reference-label) { border-color:#e2c77f; background:#fffaf0; }
+.sales-app #sales-character-reference-label::after,.sales-app #sales-product-reference-label::after { content:" *"; color:var(--danger); }
 .sales-app .switch-row:has(input:disabled) { cursor:not-allowed; border-color:#d7dee8; background:#f2f4f7; }
 .sales-app .switch-row:has(input:disabled) .switch-copy { opacity:.74; }
 .sales-app .switch-row input:disabled { background:#9ba6b5; }
