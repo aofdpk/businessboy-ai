@@ -48,6 +48,14 @@ function safeEqual(left, right) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return '';
+  }
+}
+
 function validSession(req) {
   const secret = process.env.GEN3_SESSION_SECRET || process.env.SESSION_SECRET || '';
   if (!secret) return false;
@@ -55,7 +63,7 @@ function validSession(req) {
     .split(';')
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${COOKIE_NAME}=`));
-  const token = raw ? decodeURIComponent(raw.slice(raw.indexOf('=') + 1)) : '';
+  const token = raw ? safeDecode(raw.slice(raw.indexOf('=') + 1)) : '';
   const [expiresAt, supplied] = token.split('.');
   if (!expiresAt || !supplied || Number(expiresAt) <= Date.now()) return false;
   const expected = crypto.createHmac('sha256', secret).update(expiresAt).digest('base64url');
@@ -150,7 +158,7 @@ module.exports = async (req, res) => {
     if (!extension) return res.status(415).json({ error: 'ชนิดรูปไม่รองรับ' });
 
     const rank = product.rank !== null && product.rank !== undefined && Number.isFinite(Number(product.rank))
-      ? String(Number(product.rank)).padStart(3, '0')
+      ? String(Number(product.rank)).padStart(4, '0')
       : 'แนะนำ';
     const displayName = `${rank}-${safeName(product.cleanName)}.${extension}`;
     const fallbackName = `product-${id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || 'image'}.${extension}`;

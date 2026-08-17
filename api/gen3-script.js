@@ -8,11 +8,19 @@ function safeEqual(left, right) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return '';
+  }
+}
+
 function validSession(req) {
   const secret = process.env.GEN3_SESSION_SECRET || process.env.SESSION_SECRET || '';
   if (!secret) return false;
   const raw = String(req.headers.cookie || '').split(';').map((part) => part.trim()).find((part) => part.startsWith('businessboy_gen3_session='));
-  const token = raw ? decodeURIComponent(raw.slice(raw.indexOf('=') + 1)) : '';
+  const token = raw ? safeDecode(raw.slice(raw.indexOf('=') + 1)) : '';
   const [expiresAt, supplied] = token.split('.');
   if (!expiresAt || !supplied || Number(expiresAt) <= Date.now()) return false;
   const expected = crypto.createHmac('sha256', secret).update(expiresAt).digest('base64url');

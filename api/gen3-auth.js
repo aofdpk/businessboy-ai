@@ -31,11 +31,19 @@ function createToken() {
   return `${expiresAt}.${sign(expiresAt)}`;
 }
 
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return '';
+  }
+}
+
 function cookies(req) {
   return String(req.headers.cookie || '').split(';').reduce((result, pair) => {
     const index = pair.indexOf('=');
     if (index < 0) return result;
-    result[pair.slice(0, index).trim()] = decodeURIComponent(pair.slice(index + 1).trim());
+    result[pair.slice(0, index).trim()] = safeDecode(pair.slice(index + 1).trim());
     return result;
   }, {});
 }
