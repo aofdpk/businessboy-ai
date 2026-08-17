@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const catalog = require('./_gen3-products');
 
+// Keep this handler in the deployment diff whenever the generated catalog is released.
+
 const COOKIE_NAME = 'businessboy_gen3_session';
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
