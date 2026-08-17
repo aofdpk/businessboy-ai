@@ -66,7 +66,7 @@ function hubHtml() {
 <div class="builder-shell builder-shell--hub"><section class="mode-hub" aria-labelledby="mode-hub-title"><header class="mode-hub__intro"><span class="eyebrow">AI TOOLS · รุ่น 3</span><h1 id="mode-hub-title">วันนี้อยากทำอะไร?</h1><p>เลือกเครื่องมือสร้างคลิปหรือค้นหาสินค้าที่ต้องการใช้ในรอบนี้</p></header>
 <div class="mode-grid mode-grid--catalog"><article class="mode-card mode-card--identity"><span class="mode-card__badge">พร้อมใช้งาน</span><h2>สร้างคลิปสร้างตัวตน</h2><p>วางช่องให้คนติดตาม พร้อมเห็นหมวดสินค้าที่เข้ากันในอนาคต โดยคลิปที่ผลิตในโหมดนี้ยังไม่มีสินค้าและไม่ใส่ CTA ขาย</p><ul><li>หาไอเดียช่องและสินค้าที่ต่อยอดได้</li><li>สร้าง Character Sheet ให้คงที่</li><li>สร้างตาราง Image + Video Prompt พร้อมผลิต</li></ul><a class="mode-card__action mode-card__action--primary" href="/gen3/identity">เริ่มโหมดสร้างตัวตน →</a></article>
 <article class="mode-card mode-card--sales mode-card--sales-active"><span class="mode-card__badge mode-card__badge--sales">พร้อมใช้งาน</span><h2>สร้างคลิปขายสินค้า</h2><p>แนบรูปตัวละครและรูปสินค้าต้นฉบับ แล้วรับตารางคลิปขายพร้อมผลิตใน Prompt เดียว</p><ul><li>ไม่ต้องสร้าง Product Sheet</li><li>ตรวจหลักฐานและข้อจำกัดสินค้าให้อัตโนมัติ</li><li>สร้างตาราง Image + Video Prompt ในขั้นเดียว</li></ul><a class="mode-card__action mode-card__action--sales" href="/gen3/sales">เริ่มโหมดคลิปขายสินค้า →</a></article>
-<article class="mode-card mode-card--catalog"><span class="mode-card__badge mode-card__badge--catalog">พร้อมใช้งาน</span><h2>คลังสินค้าแนะนำ</h2><p>ค้นหาสินค้าสำหรับทำคลิปแนวโกดัง พร้อมรูป ชื่ออ่านง่าย รายละเอียดย่อ และราคาที่ตรวจล่าสุด</p><ul><li>ค้นหาและกรองตามหมวด ราคา ฤดูกาล หรือเดือน</li><li>คัดลอกรายละเอียดพร้อมราคาได้ทันที</li><li>ดูรูปใหญ่ ดาวน์โหลดรูป และเปิด Shopee</li></ul><a class="mode-card__action mode-card__action--catalog" href="/gen3/products">เปิดคลังสินค้า →</a></article></div></section></div></main>${logoutScript()}</body></html>`;
+<article class="mode-card mode-card--catalog"><span class="mode-card__badge mode-card__badge--catalog">พร้อมใช้งาน</span><h2>คลังสินค้าน่าขาย</h2><p>ค้นหาสินค้าที่คัดจากยอดขายสะสม คะแนนสินค้า คุณภาพร้าน ราคา และความเหมาะกับช่วงเวลา</p><ul><li>กรองหมวด ราคา เดือน คะแนน และประเภทร้าน</li><li>คัดลอกรายละเอียดพร้อมราคาได้ทันที</li><li>ดูรูปใหญ่ ดาวน์โหลดรูป และเปิด Shopee</li></ul><a class="mode-card__action mode-card__action--catalog" href="/gen3/products">เปิดคลังสินค้า →</a></article></div></section></div></main>${logoutScript()}</body></html>`;
 }
 
 function identityHtml() {
@@ -78,7 +78,7 @@ function salesHtml() {
 }
 
 function productsHtml() {
-  return `<!doctype html><html lang="th"><head>${head('คลังสินค้าแนะนำ · เด็กประกอบการ รุ่น 3', 'ค้นหาสินค้าที่คัดสำหรับทำคลิปแนวโกดัง พร้อมรูป ชื่อ รายละเอียด ราคา และตัวกรองตามช่วงเวลา')}<link href="/gen3-products.css" rel="stylesheet"></head><body><div id="catalog-root"></div><noscript>กรุณาเปิด JavaScript เพื่อใช้งานคลังสินค้าแนะนำ</noscript><script defer src="/api/gen3-script?view=products"></script></body></html>`;
+  return `<!doctype html><html lang="th"><head>${head('คลังสินค้าน่าขาย · เด็กประกอบการ รุ่น 3', 'ค้นหาสินค้าน่าขาย พร้อมรูป ชื่อ รายละเอียด ราคา ยอดขายสะสม คะแนนสินค้า และตัวกรองตามช่วงเวลา')}<link href="/gen3-products.css" rel="stylesheet"></head><body><div id="catalog-root"></div><noscript>กรุณาเปิด JavaScript เพื่อใช้งานคลังสินค้าน่าขาย</noscript><script defer src="/api/gen3-script?view=products"></script></body></html>`;
 }
 
 function pageHtml(view) {

@@ -1,4 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/gen3-products.js": {
+      "regions": ["sin1"]
+    },
+    "api/gen3-product-image.js": {
+      "regions": ["sin1"]
+    }
+  },
   "trailingSlash": false,
   "redirects": [
     {

@@ -6,11 +6,16 @@ type CatalogProduct = {
   rank: number | null;
   category: string;
   categoryKey: string;
+  categoryGroup: string;
+  categoryGroupKey: string;
+  subcategory: string;
+  subcategoryKey: string;
   imageUrl: string;
   cleanName: string;
   summary: string;
   priceMin: number | null;
   priceMax: number | null;
+  priceType: "fixed" | "range";
   checkedAt: string;
   productUrl: string;
   featured: boolean;
@@ -19,9 +24,18 @@ type CatalogProduct = {
   monthTags: number[];
   seasonalScore: number;
   seasonReason: string;
+  itemSold: number | null;
+  rating: number | null;
+  shopRating: number | null;
+  shopType: "official" | "preferred" | "general";
+  stockStatus: "in-stock" | "unknown";
+  reasonBadges: string[];
+  safetyNotice: string;
 };
 
-type CategoryFacet = { key: string; label: string; count: number };
+type SubcategoryFacet = { key: string; label: string; count: number };
+type CategoryFacet = { key: string; label: string; count: number; subcategories: SubcategoryFacet[] };
+type GroupFacet = { key: string; label: string; count: number; categories: CategoryFacet[] };
 type SeasonFacet = { key: string; label: string; count: number };
 type MonthFacet = { month: number; count: number };
 
@@ -33,18 +47,23 @@ type CatalogResponse = {
   offset: number;
   limit: number;
   nextOffset: number | null;
+  nextCursor: string | null;
   featured: CatalogProduct[];
   items: CatalogProduct[];
   facets: {
-    categories: CategoryFacet[];
+    groups: GroupFacet[];
     seasons: SeasonFacet[];
     months: MonthFacet[];
+    shopTypes: Array<{ key: string; count: number }>;
   };
 };
 
 type PriceFilter = "all" | "under-100" | "100-300" | "301-500" | "501-1000" | "over-1000";
-type SortMode = "rank" | "price-asc" | "price-desc";
+type SortMode = "recommended" | "sold-desc" | "rating-desc" | "price-asc" | "price-desc" | "seasonal" | "newest";
 type PeriodFilter = "all" | "current-month" | "all-year" | "hot" | "rainy" | "cool" | `month-${number}`;
+type ShopTypeFilter = "all" | "official" | "preferred" | "general";
+type StockFilter = "all" | "in-stock";
+type FreshnessFilter = 0 | 7 | 30 | 90;
 
 const PAGE_SIZE = 24;
 const PRICE_FILTERS: Array<{ value: PriceFilter; label: string }> = [
@@ -64,9 +83,13 @@ const PERIOD_LABELS: Record<string, string> = {
   cool: "หน้าหนาว/อากาศเย็น (พ.ย.–ก.พ.)",
 };
 const SORT_LABELS: Record<SortMode, string> = {
-  rank: "อันดับแนะนำ",
+  recommended: "น่าขาย",
+  "sold-desc": "ยอดขายสะสมสูง",
+  "rating-desc": "คะแนนสูง",
   "price-asc": "ราคาต่ำไปสูง",
   "price-desc": "ราคาสูงไปต่ำ",
+  seasonal: "เหมาะกับช่วงนี้",
+  newest: "ตรวจข้อมูลล่าสุด",
 };
 
 const numberFormatter = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 2 });
@@ -104,16 +127,27 @@ function periodLabel(period: PeriodFilter) {
   return PERIOD_LABELS[period] || "ช่วงเวลาที่เลือก";
 }
 
-function buildCatalogUrl(filters: { query: string; category: string; period: PeriodFilter; price: PriceFilter; sort: SortMode; offset: number }) {
+function buildCatalogUrl(filters: {
+  query: string; group: string; category: string; subcategory: string; period: PeriodFilter; price: PriceFilter;
+  sort: SortMode; minSold: number; minRating: number; shopType: ShopTypeFilter; stock: StockFilter;
+  freshness: FreshnessFilter; cursor: string;
+}) {
   const params = new URLSearchParams({
     q: filters.query,
+    group: filters.group,
     category: filters.category,
+    subcategory: filters.subcategory,
     period: apiPeriod(filters.period),
     price: filters.price,
     sort: filters.sort,
-    offset: String(filters.offset),
+    minSold: String(filters.minSold),
+    minRating: String(filters.minRating),
+    shopType: filters.shopType,
+    stock: filters.stock,
+    freshness: String(filters.freshness),
     limit: String(PAGE_SIZE),
   });
+  if (filters.cursor) params.set("cursor", filters.cursor);
   return `/api/gen3-products?${params.toString()}`;
 }
 
@@ -124,7 +158,21 @@ function formatPrice(product: CatalogProduct) {
   const first = min ?? max ?? 0;
   const last = max ?? min ?? first;
   if (Math.abs(first - last) < 0.001) return `฿${numberFormatter.format(first)}`;
-  return `฿${numberFormatter.format(Math.min(first, last))}–฿${numberFormatter.format(Math.max(first, last))}`;
+  return `฿${numberFormatter.format(Math.min(first, last))}–฿${numberFormatter.format(Math.max(first, last))} ตามตัวเลือก`;
+}
+
+function formatSold(value: number | null) {
+  return value === null ? "ยังไม่พบยอดขายใน Feed" : `ยอดขายสะสม ${numberFormatter.format(value)}`;
+}
+
+function formatRating(value: number | null) {
+  return value === null ? "ยังไม่พบคะแนน" : `★ ${numberFormatter.format(value)}`;
+}
+
+function shopTypeLabel(value: CatalogProduct["shopType"]) {
+  if (value === "official") return "ร้าน Official";
+  if (value === "preferred") return "ร้าน Preferred";
+  return "ร้านทั่วไป";
 }
 
 function hasAvailablePrice(product: CatalogProduct) {
@@ -187,6 +235,8 @@ function ProductImage({ product, eager = false, onError }: { product: CatalogPro
 type CardProps = {
   product: CatalogProduct;
   featured?: boolean;
+  showRank?: boolean;
+  eager?: boolean;
   copiedKey: string;
   onCopy: (key: string, value: string, label: string) => void;
   onPreview: (product: CatalogProduct) => void;
@@ -197,7 +247,9 @@ function ProductActions({ product, imageFailed, copiedKey, onCopy, onPreview }: 
   const summaryKey = `${product.id}:summary`;
   const summaryPriceKey = `${product.id}:summary-price`;
   const canCopySummaryPrice = Boolean(product.summary) && hasAvailablePrice(product);
-  const summaryPrice = `รายละเอียดสินค้า: ${product.summary}\nราคาปัจจุบัน: ${formatPrice(product)}`;
+  const noticeLine = product.safetyNotice ? `\nหมายเหตุ: ${product.safetyNotice}` : "";
+  const summaryText = `${product.summary}${noticeLine}`;
+  const summaryPrice = `รายละเอียดสินค้า: ${product.summary}\nราคาปัจจุบัน: ${formatPrice(product)}${noticeLine}`;
   const downloadHref = `/api/gen3-product-image?id=${encodeURIComponent(product.id)}`;
   return (
     <div className="catalog-card__actions">
@@ -215,7 +267,7 @@ function ProductActions({ product, imageFailed, copiedKey, onCopy, onPreview }: 
         className="catalog-action"
         disabled={!product.summary}
         type="button"
-        onClick={() => onCopy(summaryKey, product.summary, "รายละเอียดสินค้า")}
+        onClick={() => onCopy(summaryKey, summaryText, "รายละเอียดสินค้า")}
       >
         {copiedKey === summaryKey ? "คัดลอกแล้ว ✓" : "คัดลอกรายละเอียด"}
       </button>
@@ -234,23 +286,32 @@ function ProductActions({ product, imageFailed, copiedKey, onCopy, onPreview }: 
 }
 
 function ProductCard(props: CardProps) {
-  const { product, featured = false } = props;
+  const { product, featured = false, showRank = false, eager = false } = props;
   const [imageFailed, setImageFailed] = useState(false);
   const headingId = `catalog-product-${product.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   return (
     <article aria-labelledby={headingId} className={featured ? "catalog-card catalog-card--featured" : "catalog-card"}>
       <div className="catalog-card__media">
-        <ProductImage eager={featured} onError={() => setImageFailed(true)} product={product} />
+        <ProductImage eager={featured || eager} onError={() => setImageFailed(true)} product={product} />
         {featured && <span className="catalog-card__recommended">สินค้าแนะนำจาก BusinessBoy</span>}
       </div>
       <div className="catalog-card__body">
         <div className="catalog-card__meta">
-          <span>{product.category}</span>
-          {featured ? <b>แนะนำ</b> : <b>{product.rank === null ? "ไม่จัดอันดับ" : `#${String(product.rank).padStart(4, "0")}`}</b>}
+          <span>{product.subcategory || product.category}</span>
+          {featured ? <b>แนะนำ</b> : showRank && product.rank !== null ? <b>#{numberFormatter.format(product.rank)}</b> : <b>น่าขาย</b>}
         </div>
         <h3 id={headingId}>{product.cleanName}</h3>
         {featured && product.shopName && <p className="catalog-card__shop">ร้าน {product.shopName}</p>}
         <p className="catalog-card__summary">{product.summary || "ยังไม่มีรายละเอียดสรุป"}</p>
+        {!featured && <div className="catalog-card__signals" aria-label="สัญญาณประกอบการคัดเลือก">
+          <span>{formatRating(product.rating)}</span>
+          <span>{formatSold(product.itemSold)}</span>
+          <span>{shopTypeLabel(product.shopType)}</span>
+        </div>}
+        {!featured && product.reasonBadges?.length > 0 && <div className="catalog-card__badges" aria-label="เหตุผลที่แนะนำ">
+          {product.reasonBadges.slice(0, 3).map((badge) => <span key={badge}>{badge}</span>)}
+        </div>}
+        {!featured && product.safetyNotice && <p className="catalog-card__notice">{product.safetyNotice}</p>}
         <div className="catalog-card__price">
           <strong>{formatPrice(product)}</strong>
           <small>{formatCheckedAt(product.checkedAt)}</small>
@@ -263,24 +324,42 @@ function ProductCard(props: CardProps) {
 
 type FilterFieldsProps = {
   idPrefix: string;
-  categories: CategoryFacet[];
+  groups: GroupFacet[];
   seasonFacets: SeasonFacet[];
   monthFacets: MonthFacet[];
+  group: string;
   category: string;
+  subcategory: string;
   period: PeriodFilter;
   priceFilter: PriceFilter;
   sortMode: SortMode;
+  minSold: number;
+  minRating: number;
+  shopType: ShopTypeFilter;
+  stock: StockFilter;
+  freshness: FreshnessFilter;
   activeCount: number;
+  onGroup: (value: string) => void;
   onCategory: (value: string) => void;
+  onSubcategory: (value: string) => void;
   onPeriod: (value: PeriodFilter) => void;
   onPrice: (value: PriceFilter) => void;
   onSort: (value: SortMode) => void;
+  onMinSold: (value: number) => void;
+  onMinRating: (value: number) => void;
+  onShopType: (value: ShopTypeFilter) => void;
+  onStock: (value: StockFilter) => void;
+  onFreshness: (value: FreshnessFilter) => void;
   onClear: () => void;
 };
 
 function FilterFields(props: FilterFieldsProps) {
   const currentMonth = CURRENT_BANGKOK_MONTH;
   const currentMonthCount = props.monthFacets.find((item) => item.month === currentMonth)?.count ?? 0;
+  const selectedGroup = props.groups.find((item) => item.key === props.group);
+  const categories = selectedGroup?.categories ?? (props.group === "all" ? props.groups.flatMap((item) => item.categories) : []);
+  const selectedCategory = categories.find((item) => item.key === props.category);
+  const subcategories = (selectedCategory?.subcategories ?? []).filter((item) => item.key !== selectedCategory?.key || item.label !== selectedCategory?.label);
   function seasonCount(key: string) {
     return props.seasonFacets.find((item) => item.key === key)?.count ?? 0;
   }
@@ -289,12 +368,24 @@ function FilterFields(props: FilterFieldsProps) {
   }
   return (
     <div className="catalog-filter-fields">
-      <label htmlFor={`${props.idPrefix}-category`}><span>หมวดสินค้า</span>
-        <select id={`${props.idPrefix}-category`} value={props.category} onChange={(event) => props.onCategory(event.target.value)}>
-          <option value="all">ทุกหมวดสินค้า</option>
-          {props.categories.map((item) => <option key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
+      <label htmlFor={`${props.idPrefix}-group`}><span>หมวดหลัก</span>
+        <select id={`${props.idPrefix}-group`} value={props.group} onChange={(event) => props.onGroup(event.target.value)}>
+          <option value="all">ทุกหมวดหลัก</option>
+          {props.groups.map((item) => <option key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
         </select>
       </label>
+      <label htmlFor={`${props.idPrefix}-category`}><span>หมวดย่อย</span>
+        <select id={`${props.idPrefix}-category`} value={props.category} onChange={(event) => props.onCategory(event.target.value)}>
+          <option value="all">ทุกหมวดย่อย</option>
+          {categories.map((item) => <option key={`${item.key}-${item.label}`} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
+        </select>
+      </label>
+      {subcategories.length > 0 && <label htmlFor={`${props.idPrefix}-subcategory`}><span>ประเภทสินค้า</span>
+        <select id={`${props.idPrefix}-subcategory`} value={props.subcategory} onChange={(event) => props.onSubcategory(event.target.value)}>
+          <option value="all">ทุกประเภท</option>
+          {subcategories.map((item) => <option key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
+        </select>
+      </label>}
       <label htmlFor={`${props.idPrefix}-period`}><span>ช่วงเวลาที่เหมาะทำคอนเทนต์</span>
         <select id={`${props.idPrefix}-period`} value={props.period} onChange={(event) => props.onPeriod(event.target.value as PeriodFilter)}>
           <option value="all">ทุกช่วงเวลา</option>
@@ -313,9 +404,38 @@ function FilterFields(props: FilterFieldsProps) {
       </label>
       <label htmlFor={`${props.idPrefix}-sort`}><span>เรียงลำดับ</span>
         <select id={`${props.idPrefix}-sort`} value={props.sortMode} onChange={(event) => props.onSort(event.target.value as SortMode)}>
-          <option value="rank">{props.period === "all" ? "อันดับแนะนำ" : "เหมาะกับช่วงนี้"}</option>
+          <option value="recommended">น่าขาย</option>
+          <option value="sold-desc">ยอดขายสะสมสูง</option>
+          <option value="rating-desc">คะแนนสูง</option>
           <option value="price-asc">ราคาต่ำไปสูง</option>
           <option value="price-desc">ราคาสูงไปต่ำ</option>
+          <option value="seasonal">เหมาะกับช่วงนี้</option>
+          <option value="newest">ตรวจข้อมูลล่าสุด</option>
+        </select>
+      </label>
+      <label htmlFor={`${props.idPrefix}-sold`}><span>ยอดขายสะสมขั้นต่ำ</span>
+        <select id={`${props.idPrefix}-sold`} value={props.minSold} onChange={(event) => props.onMinSold(Number(event.target.value))}>
+          <option value="0">ไม่กำหนด</option><option value="100">100 ชิ้น</option><option value="1000">1,000 ชิ้น</option><option value="10000">10,000 ชิ้น</option>
+        </select>
+      </label>
+      <label htmlFor={`${props.idPrefix}-rating`}><span>คะแนนสินค้าขั้นต่ำ</span>
+        <select id={`${props.idPrefix}-rating`} value={props.minRating} onChange={(event) => props.onMinRating(Number(event.target.value))}>
+          <option value="0">ไม่กำหนด</option><option value="4.5">4.5 ขึ้นไป</option><option value="4.7">4.7 ขึ้นไป</option><option value="4.8">4.8 ขึ้นไป</option>
+        </select>
+      </label>
+      <label htmlFor={`${props.idPrefix}-shop`}><span>ประเภทร้าน</span>
+        <select id={`${props.idPrefix}-shop`} value={props.shopType} onChange={(event) => props.onShopType(event.target.value as ShopTypeFilter)}>
+          <option value="all">ทุกร้าน</option><option value="official">Official</option><option value="preferred">Preferred</option><option value="general">ร้านทั่วไป</option>
+        </select>
+      </label>
+      <label htmlFor={`${props.idPrefix}-stock`}><span>สถานะสินค้า</span>
+        <select id={`${props.idPrefix}-stock`} value={props.stock} onChange={(event) => props.onStock(event.target.value as StockFilter)}>
+          <option value="all">ทั้งหมด</option><option value="in-stock">มีสินค้า</option>
+        </select>
+      </label>
+      <label htmlFor={`${props.idPrefix}-freshness`}><span>ตรวจข้อมูลล่าสุด</span>
+        <select id={`${props.idPrefix}-freshness`} value={props.freshness} onChange={(event) => props.onFreshness(Number(event.target.value) as FreshnessFilter)}>
+          <option value="0">ไม่กำหนด</option><option value="7">ไม่เกิน 7 วัน</option><option value="30">ไม่เกิน 30 วัน</option><option value="90">ไม่เกิน 90 วัน</option>
         </select>
       </label>
       <button className="catalog-clear-button" disabled={props.activeCount === 0} type="button" onClick={props.onClear}>ล้างตัวกรอง</button>
@@ -335,10 +455,19 @@ function CatalogApp() {
   const [retryCount, setRetryCount] = useState(0);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [group, setGroup] = useState("all");
   const [category, setCategory] = useState("all");
+  const [subcategory, setSubcategory] = useState("all");
   const [period, setPeriod] = useState<PeriodFilter>("all");
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
-  const [sortMode, setSortMode] = useState<SortMode>("rank");
+  const [sortMode, setSortMode] = useState<SortMode>("recommended");
+  const [minSold, setMinSold] = useState(0);
+  const [minRating, setMinRating] = useState(0);
+  const [shopType, setShopType] = useState<ShopTypeFilter>("all");
+  const [stock, setStock] = useState<StockFilter>("all");
+  const [freshness, setFreshness] = useState<FreshnessFilter>(0);
+  const [cursor, setCursor] = useState("");
+  const [previousCursors, setPreviousCursors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [copiedKey, setCopiedKey] = useState("");
@@ -358,6 +487,13 @@ function CatalogApp() {
     return () => window.clearTimeout(timeout);
   }, [query]);
 
+  const filterKey = JSON.stringify([debouncedQuery, group, category, subcategory, period, priceFilter, sortMode, minSold, minRating, shopType, stock, freshness]);
+
+  useEffect(() => {
+    setCursor("");
+    setPreviousCursors([]);
+  }, [filterKey]);
+
   useEffect(() => {
     activeRequest.current?.abort();
     const controller = new AbortController();
@@ -368,12 +504,25 @@ function CatalogApp() {
     setIsLoadingMore(false);
     setProducts([]);
 
-    const url = buildCatalogUrl({ query: debouncedQuery, category, period, price: priceFilter, sort: sortMode, offset: 0 });
+    const url = buildCatalogUrl({
+      query: debouncedQuery, group, category, subcategory, period, price: priceFilter, sort: sortMode,
+      minSold, minRating, shopType, stock, freshness, cursor,
+    });
     fetch(url, { credentials: "same-origin", signal: controller.signal })
       .then(async (response) => {
         if (response.status === 401) {
           window.location.reload();
           throw new Error("unauthorized");
+        }
+        if (response.status === 409) {
+          const detail = await response.json().catch(() => null);
+          if (detail?.code === "catalog_changed") {
+            setPreviousCursors([]);
+            setCursor("");
+            setToast("คลังสินค้าอัปเดตแล้ว ระบบพากลับหน้าแรก");
+            window.setTimeout(() => setToast(""), 2600);
+            throw new Error("catalog_changed");
+          }
         }
         if (!response.ok) throw new Error("โหลดรายการสินค้าไม่สำเร็จ");
         return response.json();
@@ -382,10 +531,10 @@ function CatalogApp() {
         if (sequence !== requestSequence.current) return;
         setCatalog(result);
         setProducts(Array.isArray(result.items) ? result.items : []);
-        setFeatured(Array.isArray(result.featured) ? result.featured : []);
+        if (!cursor) setFeatured(Array.isArray(result.featured) ? result.featured : []);
       })
       .catch((error) => {
-        if (error.name !== "AbortError" && error.message !== "unauthorized" && sequence === requestSequence.current) {
+        if (error.name !== "AbortError" && !["unauthorized", "catalog_changed"].includes(error.message) && sequence === requestSequence.current) {
           setLoadError("เปิดคลังสินค้าไม่สำเร็จ กรุณาลองอีกครั้ง");
         }
       })
@@ -394,7 +543,7 @@ function CatalogApp() {
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, category, period, priceFilter, sortMode, retryCount]);
+  }, [filterKey, cursor, retryCount]);
 
   useEffect(() => () => activeRequest.current?.abort(), []);
 
@@ -412,16 +561,25 @@ function CatalogApp() {
     if (!filterOpen && dialog.open) dialog.close();
   }, [filterOpen]);
 
-  const categories = catalog?.facets?.categories ?? [];
+  const groups = catalog?.facets?.groups ?? [];
   const seasonFacets = catalog?.facets?.seasons ?? [];
   const monthFacets = catalog?.facets?.months ?? [];
-  const activeCount = Number(category !== "all") + Number(period !== "all") + Number(priceFilter !== "all") + Number(sortMode !== "rank");
+  const activeCount = Number(group !== "all") + Number(category !== "all") + Number(subcategory !== "all")
+    + Number(period !== "all") + Number(priceFilter !== "all") + Number(sortMode !== "recommended")
+    + Number(minSold > 0) + Number(minRating > 0) + Number(shopType !== "all") + Number(stock !== "all") + Number(freshness > 0);
 
   function clearFilters() {
+    setGroup("all");
     setCategory("all");
+    setSubcategory("all");
     setPeriod("all");
     setPriceFilter("all");
-    setSortMode("rank");
+    setSortMode("recommended");
+    setMinSold(0);
+    setMinRating(0);
+    setShopType("all");
+    setStock("all");
+    setFreshness(0);
   }
 
   function clearEverything() {
@@ -430,37 +588,25 @@ function CatalogApp() {
     clearFilters();
   }
 
-  async function loadMore() {
-    if (!catalog || catalog.nextOffset === null || isLoadingMore) return;
-    activeRequest.current?.abort();
-    const controller = new AbortController();
-    activeRequest.current = controller;
-    const sequence = ++requestSequence.current;
+  function moveResultsIntoView() {
+    window.setTimeout(() => document.getElementById("results-title")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  }
+
+  function nextPage() {
+    if (!catalog?.nextCursor || isLoadingMore) return;
     setIsLoadingMore(true);
-    setLoadError("");
-    try {
-      const url = buildCatalogUrl({ query: debouncedQuery, category, period, price: priceFilter, sort: sortMode, offset: catalog.nextOffset });
-      const response = await fetch(url, { credentials: "same-origin", signal: controller.signal });
-      if (response.status === 401) {
-        window.location.reload();
-        throw new Error("unauthorized");
-      }
-      if (!response.ok) throw new Error("โหลดรายการสินค้าไม่สำเร็จ");
-      const result = await response.json() as CatalogResponse;
-      if (sequence !== requestSequence.current) return;
-      setProducts((current) => {
-        const seen = new Set(current.map((product) => product.id));
-        return [...current, ...result.items.filter((product) => !seen.has(product.id))];
-      });
-      setCatalog((current) => current ? { ...current, matched: result.matched, nextOffset: result.nextOffset } : result);
-    } catch (error) {
-      if (error instanceof Error && error.name !== "AbortError" && error.message !== "unauthorized" && sequence === requestSequence.current) {
-        setToast("โหลดสินค้าเพิ่มไม่สำเร็จ กรุณาลองอีกครั้ง");
-        window.setTimeout(() => setToast(""), 2400);
-      }
-    } finally {
-      if (sequence === requestSequence.current) setIsLoadingMore(false);
-    }
+    setPreviousCursors((current) => [...current, cursor]);
+    setCursor(catalog.nextCursor);
+    moveResultsIntoView();
+  }
+
+  function previousPage() {
+    if (!previousCursors.length || isLoadingMore) return;
+    setIsLoadingMore(true);
+    const prior = previousCursors[previousCursors.length - 1] ?? "";
+    setPreviousCursors((current) => current.slice(0, -1));
+    setCursor(prior);
+    moveResultsIntoView();
   }
 
   async function handleCopy(key: string, value: string, label: string) {
@@ -494,23 +640,41 @@ function CatalogApp() {
 
   const cardProps = { copiedKey, onCopy: handleCopy, onPreview: openPreview };
   const filterProps = {
-    categories,
+    groups,
     seasonFacets,
     monthFacets,
+    group,
     category,
+    subcategory,
     period,
     priceFilter,
     sortMode,
+    minSold,
+    minRating,
+    shopType,
+    stock,
+    freshness,
     activeCount,
-    onCategory: setCategory,
+    onGroup: (value: string) => { setGroup(value); setCategory("all"); setSubcategory("all"); },
+    onCategory: (value: string) => { setCategory(value); setSubcategory("all"); },
+    onSubcategory: setSubcategory,
     onPeriod: setPeriod,
     onPrice: setPriceFilter,
     onSort: setSortMode,
+    onMinSold: setMinSold,
+    onMinRating: setMinRating,
+    onShopType: setShopType,
+    onStock: setStock,
+    onFreshness: setFreshness,
     onClear: clearFilters,
   };
 
-  const activeCategory = categories.find((item) => item.key === category)?.label || "หมวดที่เลือก";
+  const activeGroup = groups.find((item) => item.key === group);
+  const activeCategory = activeGroup?.categories.find((item) => item.key === category)
+    ?? groups.flatMap((item) => item.categories).find((item) => item.key === category);
+  const activeSubcategory = activeCategory?.subcategories.find((item) => item.key === subcategory);
   const activePrice = PRICE_FILTERS.find((item) => item.value === priceFilter)?.label || "ช่วงราคาที่เลือก";
+  const showRank = activeCount === 0 && !debouncedQuery && previousCursors.length === 0;
 
   async function logout() {
     await fetch("/api/gen3-auth", { method: "DELETE" }).catch(() => undefined);
@@ -522,15 +686,15 @@ function CatalogApp() {
       <header className="app-header">
         <a className="brand-link" href="/gen3">
           <img alt="เด็กประกอบการ" height="64" src="/businessboy-logo.jpg" width="64" />
-          <div><b>คลังสินค้าแนะนำ</b><span>สำหรับนักเรียนรุ่น 3</span></div>
+          <div><b>คลังสินค้าน่าขาย</b><span>สำหรับนักเรียนรุ่น 3</span></div>
         </a>
-        <div className="header-message"><span>คัดมาเพื่อทำคลิปแนวโกดัง</span><small>ค้นหา → ดาวน์โหลดรูป → เปิด Shopee</small></div>
+        <div className="header-message"><span>คัดจากข้อมูลสินค้าและคุณภาพร้าน</span><small>ค้นหา → ดาวน์โหลดรูป → เปิด Shopee</small></div>
         <button className="logout-button" onClick={logout} type="button">ออกจากระบบ</button>
       </header>
 
       <div className="catalog-shell">
         <section className="catalog-intro" aria-labelledby="catalog-title">
-          <div><span className="eyebrow">PRODUCT LIBRARY · รุ่น 3</span><h1 id="catalog-title">{catalog ? `รวม ${numberFormatter.format(catalog.total)} สินค้าสำหรับทำคลิปแนวโกดัง` : "คลังสินค้าสำหรับทำคลิปแนวโกดัง"}</h1><p>ค้นหารูป ชื่อ รายละเอียดย่อ ราคา และสินค้าที่เหมาะนำเสนอในแต่ละช่วงเวลา</p></div>
+          <div><span className="eyebrow">PRODUCT LIBRARY · รุ่น 3</span><h1 id="catalog-title">{catalog ? `${numberFormatter.format(catalog.total)} สินค้าน่าขายสำหรับทำคลิป` : "คลังสินค้าน่าขาย"}</h1><p>คัดจากยอดขายสะสม คะแนนสินค้า คุณภาพร้าน ราคา และความเหมาะกับช่วงเวลา โดยไม่รับประกันยอดขาย</p></div>
           <div className="catalog-intro__stats" role="group" aria-label="ข้อมูลคลังสินค้า">
             <span><b>{catalog ? numberFormatter.format(catalog.total) : "—"}</b> รายการ</span>
             <span>{catalog?.generatedAt ? formatCatalogUpdatedAt(catalog.generatedAt) : "กำลังโหลดเวลาอัปเดต"}</span>
@@ -544,7 +708,15 @@ function CatalogApp() {
           <button ref={filterButton} className="catalog-filter-mobile" type="button" onClick={() => setFilterOpen(true)} aria-expanded={filterOpen} aria-haspopup="dialog">ตัวกรอง{activeCount ? ` (${activeCount})` : ""}</button>
         </section>
 
-        {featured.length ? (
+        <div className="catalog-quick-filters" aria-label="ตัวกรองด่วน">
+          <button className={minSold === 1000 ? "is-active" : ""} type="button" onClick={() => setMinSold(minSold === 1000 ? 0 : 1000)}>ขายสะสม 1,000+</button>
+          <button className={minRating === 4.7 ? "is-active" : ""} type="button" onClick={() => setMinRating(minRating === 4.7 ? 0 : 4.7)}>คะแนน 4.7+</button>
+          <button className={shopType === "official" ? "is-active" : ""} type="button" onClick={() => setShopType(shopType === "official" ? "all" : "official")}>ร้าน Official</button>
+          <button className={period === "current-month" ? "is-active" : ""} type="button" onClick={() => setPeriod(period === "current-month" ? "all" : "current-month")}>เหมาะเดือนนี้</button>
+          <button className={stock === "in-stock" ? "is-active" : ""} type="button" onClick={() => setStock(stock === "in-stock" ? "all" : "in-stock")}>มีสินค้า</button>
+        </div>
+
+        {featured.length && previousCursors.length === 0 ? (
           <section className="catalog-featured" aria-labelledby="featured-title">
             <div className="catalog-section-heading"><div><span>BUSINESSBOY RECOMMENDS</span><h2 id="featured-title">สินค้าแนะนำ</h2></div></div>
             {featured.map((product) => <ProductCard {...cardProps} featured key={product.id} product={product} />)}
@@ -557,10 +729,17 @@ function CatalogApp() {
 
         {activeCount > 0 && <div className="catalog-active-filters" aria-label="ตัวกรองที่กำลังใช้">
           <span>กำลังกรอง:</span>
-          {category !== "all" && <button type="button" onClick={() => setCategory("all")} aria-label={`ยกเลิกหมวด ${activeCategory}`}>{activeCategory} ×</button>}
+          {group !== "all" && <button type="button" onClick={() => { setGroup("all"); setCategory("all"); setSubcategory("all"); }} aria-label={`ยกเลิกหมวดหลัก ${activeGroup?.label || "ที่เลือก"}`}>{activeGroup?.label || "หมวดหลัก"} ×</button>}
+          {category !== "all" && <button type="button" onClick={() => { setCategory("all"); setSubcategory("all"); }} aria-label={`ยกเลิกหมวดย่อย ${activeCategory?.label || "ที่เลือก"}`}>{activeCategory?.label || "หมวดย่อย"} ×</button>}
+          {subcategory !== "all" && <button type="button" onClick={() => setSubcategory("all")} aria-label={`ยกเลิกประเภท ${activeSubcategory?.label || "ที่เลือก"}`}>{activeSubcategory?.label || "ประเภทสินค้า"} ×</button>}
           {period !== "all" && <button type="button" onClick={() => setPeriod("all")} aria-label={`ยกเลิกช่วงเวลา ${periodLabel(period)}`}>{periodLabel(period)} ×</button>}
           {priceFilter !== "all" && <button type="button" onClick={() => setPriceFilter("all")} aria-label={`ยกเลิกช่วงราคา ${activePrice}`}>{activePrice} ×</button>}
-          {sortMode !== "rank" && <button type="button" onClick={() => setSortMode("rank")} aria-label={`ยกเลิกการเรียง ${SORT_LABELS[sortMode]}`}>{SORT_LABELS[sortMode]} ×</button>}
+          {sortMode !== "recommended" && <button type="button" onClick={() => setSortMode("recommended")} aria-label={`ยกเลิกการเรียง ${SORT_LABELS[sortMode]}`}>{SORT_LABELS[sortMode]} ×</button>}
+          {minSold > 0 && <button type="button" onClick={() => setMinSold(0)}>ยอดขายสะสม {numberFormatter.format(minSold)}+ ×</button>}
+          {minRating > 0 && <button type="button" onClick={() => setMinRating(0)}>คะแนน {minRating}+ ×</button>}
+          {shopType !== "all" && <button type="button" onClick={() => setShopType("all")}>{shopTypeLabel(shopType)} ×</button>}
+          {stock !== "all" && <button type="button" onClick={() => setStock("all")}>มีสินค้า ×</button>}
+          {freshness > 0 && <button type="button" onClick={() => setFreshness(0)}>ตรวจไม่เกิน {freshness} วัน ×</button>}
           <button className="catalog-active-filters__clear" type="button" onClick={clearFilters}>ล้างทั้งหมด</button>
         </div>}
 
@@ -573,8 +752,12 @@ function CatalogApp() {
           {isLoading && <LoadingGrid />}
           {!isLoading && loadError && <div className="catalog-state" role="alert"><h3>เปิดคลังสินค้าไม่สำเร็จ</h3><p>ตรวจการเชื่อมต่อแล้วลองโหลดรายการอีกครั้ง</p><button type="button" onClick={() => setRetryCount((value) => value + 1)}>ลองอีกครั้ง</button></div>}
           {!isLoading && !loadError && catalog && catalog.matched === 0 && <div className="catalog-state"><h3>ไม่พบสินค้าที่ตรงทุกเงื่อนไข</h3><p>ระบบจะไม่ผ่อนตัวกรองให้อัตโนมัติ ลองเปลี่ยนคำค้นหรือช่วงเวลาที่เลือก</p><button type="button" onClick={clearEverything}>ล้างการค้นหาและตัวกรอง</button></div>}
-          {!isLoading && !loadError && products.length > 0 && <div className="catalog-grid">{products.map((product) => <ProductCard {...cardProps} key={product.id} product={product} />)}</div>}
-          {!isLoading && !loadError && catalog && catalog.nextOffset !== null && <div className="catalog-load-more"><p>แสดง {numberFormatter.format(products.length)} จาก {numberFormatter.format(catalog.matched)} รายการ</p><button disabled={isLoadingMore} type="button" onClick={loadMore}>{isLoadingMore ? "กำลังโหลด…" : `โหลดเพิ่มอีก ${numberFormatter.format(Math.min(PAGE_SIZE, catalog.matched - products.length))} รายการ`}</button></div>}
+          {!isLoading && !loadError && products.length > 0 && <div className="catalog-grid">{products.map((product, index) => <ProductCard {...cardProps} eager={index < 4} showRank={showRank} key={product.id} product={product} />)}</div>}
+          {!isLoading && !loadError && catalog && (previousCursors.length > 0 || catalog.nextCursor) && <nav className="catalog-pagination" aria-label="หน้ารายการสินค้า">
+            <button disabled={isLoadingMore || previousCursors.length === 0} type="button" onClick={previousPage}>← หน้าก่อน</button>
+            <p>หน้า {numberFormatter.format(previousCursors.length + 1)} · แสดงครั้งละ {numberFormatter.format(products.length)} จาก {numberFormatter.format(catalog.matched)} รายการ</p>
+            <button disabled={isLoadingMore || !catalog.nextCursor} type="button" onClick={nextPage}>หน้าถัดไป →</button>
+          </nav>}
         </section>
       </div>
 

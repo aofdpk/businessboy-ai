@@ -6,9 +6,14 @@
   "scripts": {
     "build:gen3": "node build-gen3.mjs",
     "build:catalog": "node scripts/catalog/build-product-catalog.mjs",
-    "validate:catalog": "node scripts/catalog/validate-product-catalog.mjs"
+    "validate:catalog": "node scripts/catalog/validate-product-catalog.mjs",
+    "test:catalog-api": "node catalog-db/smoke-test.mjs",
+    "test:catalog-db": "node catalog-db/pipeline-contract-test.mjs",
+    "export:catalog-jsonl": "node catalog-db/export-approved-jsonl.mjs",
+    "benchmark:catalog": "node catalog-db/benchmark-bundled.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "ioredis": "^5.4.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

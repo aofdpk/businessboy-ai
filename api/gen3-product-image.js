@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const catalog = require('./_gen3-products');
+const { getCatalogProductById } = require('./_catalog-data-source');
 
 const COOKIE_NAME = 'businessboy_gen3_session';
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
@@ -70,12 +70,6 @@ function validSession(req) {
   return safeEqual(supplied, expected);
 }
 
-function records() {
-  const featured = Array.isArray(catalog.featured) ? catalog.featured : catalog.featured ? [catalog.featured] : [];
-  const ranked = Array.isArray(catalog.ranked) ? catalog.ranked : [];
-  return [...featured, ...ranked];
-}
-
 function trustedImageUrl(value) {
   try {
     const url = value instanceof URL ? value : new URL(String(value));
@@ -138,7 +132,7 @@ module.exports = async (req, res) => {
 
   const id = typeof req.query?.id === 'string' ? req.query.id.trim() : '';
   if (!id || id.length > 128) return res.status(400).json({ error: 'รหัสสินค้าไม่ถูกต้อง' });
-  const product = records().find((record) => String(record?.id || '') === id);
+  const product = await getCatalogProductById(id);
   if (!product) return res.status(404).json({ error: 'ไม่พบสินค้าในคลัง' });
 
   const controller = new AbortController();

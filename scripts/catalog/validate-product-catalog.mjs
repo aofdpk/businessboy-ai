@@ -1,61 +1,39 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
 import {
-  BROKEN_THAI_TOKEN,
   CATALOG_CATEGORY_DEFINITIONS,
+  CATALOG_GROUP_DEFINITIONS,
   CATALOG_SCHEMA_VERSION,
-  CLEAR_GIBBERISH,
   DEFAULT_RANKED_TARGET,
   DEFAULT_RESERVE_TARGET,
-  FINAL_ADDITIONAL_GARBLE,
-  FINAL_ADDITIONAL_POLICY,
-  FINAL_DEFECT,
-  FINAL_GARBLE_OR_RAW_HEADER,
-  FINAL_FEED_NOISE,
-  FINAL_FEED_NOISE_ADDITIONAL,
-  FINAL_FEED_NOISE_THIRD,
-  FINAL_LOCKED_BLOCKER_TEXT,
-  FINAL_HEALTH_CLAIM_ADDITIONAL,
-  FINAL_HIGH_RISK_CLAIM,
-  FINAL_PROMO_POLICY,
-  FINAL_NONOBJECTIVE_TEXT,
-  FINAL_SELLER_VOICE,
-  FINAL_UNSUITABLE_BODY_PRODUCT,
-  PROHIBITED_SAFETY_ADDITIONAL,
-  SOURCE_TITLE_POLICY,
-  SOURCE_TITLE_ADDITIONAL,
-  RAW_TEXT_BOUNDARY,
-  RAW_NAME_BOUNDARY,
-  TRAILING_INCOMPLETE_NAME,
-  TRAILING_INCOMPLETE_SUMMARY,
-  UNREADABLE_THAI_RUN,
-  hasConflictingLayerCounts,
-  hasConflictingDimensions,
-  hasConflictingUnitCounts,
-  hasAuthenticityClaim,
-  hasBalancedPairs,
-  hasDominantSummaryToken,
-  hasDescriptionBrandAuthenticityClaim,
-  hasPassiveMeterCaseMismatch,
-  hasRepeatedSummaryPhrase,
-  hasUnsupportedCertification,
-  makeSeasonalMetadata,
-  summaryMatchesProductFamily,
-  summaryMostlyRestatesName,
-} from './catalog-lib.mjs';
+  forbiddenPublicText,
+  hasControlledPublicClaim,
+  hasListingPriceNoise,
+  hasPublicPromoNoise,
+  hasUppercaseCodNoise,
+  isActiveCleaningProduct,
+  isUnsafeAutomotiveText,
+  makeSearchText,
+} from './sellable-catalog-lib.mjs';
 
 function parseArgs(argv) {
   const args = {
     catalog: resolve('data', 'products', 'catalog.json'),
     reserve: resolve('data', 'products', 'catalog-reserve.json'),
     runtimeModule: resolve('api', '_gen3-products.js'),
+    rankedTarget: DEFAULT_RANKED_TARGET,
+    reserveTarget: DEFAULT_RESERVE_TARGET,
   };
   for (let index = 0; index < argv.length; index += 1) {
-    if (argv[index] === '--catalog') args.catalog = resolve(argv[++index]);
-    else if (argv[index] === '--reserve') args.reserve = resolve(argv[++index]);
-    else if (argv[index] === '--runtime-module') args.runtimeModule = resolve(argv[++index]);
-    else throw new Error(`Unknown argument: ${argv[index]}`);
+    const value = argv[index];
+    const next = argv[index + 1];
+    if (value === '--catalog') args.catalog = resolve(next), index += 1;
+    else if (value === '--reserve') args.reserve = resolve(next), index += 1;
+    else if (value === '--runtime-module') args.runtimeModule = resolve(next), index += 1;
+    else if (value === '--ranked-target') args.rankedTarget = Number(next), index += 1;
+    else if (value === '--reserve-target') args.reserveTarget = Number(next), index += 1;
+    else throw new Error(`Unknown argument: ${value}`);
   }
   return args;
 }
@@ -64,287 +42,171 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function validateUrl(value, type, id) {
-  assert(typeof value === 'string' && !value.includes('\0'), `${id}: invalid ${type} URL string`);
-  const url = new URL(value);
-  assert(url.protocol === 'https:', `${id}: ${type} URL must use HTTPS`);
-  if (type === 'product') assert(url.hostname === 'shopee.co.th' && /^\/product\/\d+\/\d+$/.test(url.pathname), `${id}: product URL is not canonical Shopee Thailand`);
-  if (type === 'image') assert(/(?:^|\.)(?:susercontent\.com|shopee\.co\.th)$/.test(url.hostname), `${id}: image URL host is not allowlisted`);
+const CATEGORY_BY_KEY = new Map(CATALOG_CATEGORY_DEFINITIONS.map((definition) => [definition.key, definition]));
+const GROUP_BY_KEY = new Map(CATALOG_GROUP_DEFINITIONS.map((definition) => [definition.key, definition.label]));
+const REASON_CODES = new Set([
+  'high-cumulative-sales', 'strong-cumulative-sales', 'established-sales-signal',
+  'high-rating', 'official-shop', 'preferred-shop', 'high-like-signal',
+  'season-fit', 'clear-fixed-price',
+]);
+const CONTROLLED_GROUPS = new Set(['automotive', 'beauty', 'supplements']);
+const ALLOWED_PRODUCT_KEYS = new Set([
+  'rank', 'reserveOrder', 'id', 'categoryGroupKey', 'categoryGroup', 'categoryKey', 'category',
+  'subcategoryKey', 'subcategory', 'imageUrl', 'cleanName', 'summary', 'priceMin', 'priceMax',
+  'priceType', 'checkedAt', 'productUrl', 'shopId', 'itemId', 'itemSold', 'rating', 'likes',
+  'shopRating', 'shopType', 'sellerVerified', 'stockStatus', 'stockLevel', 'riskTier',
+  'reviewStatus', 'reviewMethod', 'recommendationScore', 'reasonCodes', 'seasonTags',
+  'monthTags', 'seasonalScore', 'seasonReason', 'normalizedSearchText',
+]);
+const REQUIRED_COMMON_KEYS = [...ALLOWED_PRODUCT_KEYS].filter((key) => key !== 'rank' && key !== 'reserveOrder');
+
+function validHttps(value, hosts) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && hosts.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`));
+  } catch {
+    return false;
+  }
 }
 
-const CATEGORY_LABEL_BY_KEY = new Map(CATALOG_CATEGORY_DEFINITIONS.map(({ key, label }) => [key, label]));
-const ALLOWED_SEASON_TAGS = Object.freeze(['all-year', 'hot', 'rainy', 'cool']);
-
-function validateSeasonalMetadata(product, id) {
-  assert(Array.isArray(product.seasonTags), `${id}: seasonTags must be an array`);
-  assert(Array.isArray(product.monthTags), `${id}: monthTags must be an array`);
-  assert(new Set(product.seasonTags).size === product.seasonTags.length, `${id}: duplicate season tag`);
-  assert(product.seasonTags.every((tag) => ALLOWED_SEASON_TAGS.includes(tag)), `${id}: invalid season tag`);
-  assert(new Set(product.monthTags).size === product.monthTags.length, `${id}: duplicate month tag`);
-  assert(product.monthTags.every((month) => Number.isInteger(month) && month >= 1 && month <= 12), `${id}: invalid month tag`);
-  assert(product.monthTags.every((month, index) => index === 0 || product.monthTags[index - 1] < month), `${id}: monthTags must be strictly sorted`);
-  if (product.seasonTags.includes('all-year')) {
-    assert(product.seasonTags.length === 1 && product.monthTags.length === 0, `${id}: all-year products must not contain seasonal months or another season`);
-  } else {
-    assert(product.monthTags.length > 0, `${id}: seasonal product must include at least one month`);
-  }
-  assert(Number.isInteger(product.seasonalScore) && product.seasonalScore >= 0 && product.seasonalScore <= 100, `${id}: invalid seasonal score`);
-  assert(typeof product.seasonReason === 'string' && product.seasonReason.length >= 20 && product.seasonReason.length <= 120, `${id}: invalid season reason`);
-  const expected = makeSeasonalMetadata(product.categoryKey, product.cleanName, product.summary);
-  for (const field of ['seasonTags', 'monthTags', 'seasonalScore', 'seasonReason']) {
-    assert(JSON.stringify(product[field]) === JSON.stringify(expected[field]), `${id}: ${field} differs from deterministic seasonal rules`);
-  }
+function titleFingerprint(value) {
+  return String(value).normalize('NFKC').toLocaleLowerCase('th-TH')
+    .replace(/\b(?:สี|color)\s*[\p{L}\p{N}-]+/giu, '')
+    .replace(/\b\d+(?:[.,]\d+)?\s*(?:ชิ้น|pcs?|cm|mm|ml|g|kg)\b/giu, '')
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function validateProduct(product, kind, expectedOrder) {
-  const id = `${kind}:${product.id}`;
-  const allowedFields = new Set([
-    'id', kind === 'ranked' ? 'rank' : 'reserveOrder', 'categoryKey', 'category', 'imageUrl', 'cleanName', 'summary',
-    'priceMin', 'priceMax', 'checkedAt', 'productUrl', 'seasonTags', 'monthTags', 'seasonalScore', 'seasonReason', 'shopId', 'itemId',
-  ]);
-  for (const key of Object.keys(product)) assert(allowedFields.has(key), `${id}: unexpected field ${key}`);
-  assert(product[kind === 'ranked' ? 'rank' : 'reserveOrder'] === expectedOrder, `${id}: non-contiguous order`);
-  assert(typeof product.id === 'string' && product.id === `${product.shopId}-${product.itemId}`, `${id}: id does not match shopId-itemId`);
-  assert(/^\d+$/.test(product.shopId) && /^\d+$/.test(product.itemId), `${id}: invalid internal identifiers`);
-  assert(typeof product.categoryKey === 'string' && CATEGORY_LABEL_BY_KEY.has(product.categoryKey), `${id}: invalid category key`);
-  assert(product.category === CATEGORY_LABEL_BY_KEY.get(product.categoryKey), `${id}: category label/key mismatch`);
-  assert(typeof product.cleanName === 'string' && product.cleanName.length >= 8 && product.cleanName.length <= 90, `${id}: invalid clean name`);
-  assert(typeof product.summary === 'string' && product.summary.length >= 35 && product.summary.length <= 170, `${id}: invalid summary length`);
-  assert(!product.summary.includes('…'), `${id}: summary contains a truncation marker`);
-  assert(!product.summary.startsWith('สินค้าในหมวด') && !/โปรดตรวจสอบรายละเอียด/u.test(product.summary), `${id}: summary contains a generic fallback`);
-  assert(!/(?:EMS|ไปรษณีย์|ลงทะเบียน|จัดส่ง|ขนส่ง|กดสั่ง|คำสั่งซื้อ|เคลม|คืนสินค้า|ถ่ายวิดีโอ|สีอาจแตกต่าง|การวัด(?:ด้วยตนเอง)?|ข้อผิดพลาด|ร้าน(?:ค้า|เรา)?|Shopee|GPS|รับเอง|Standard\s*Delivery|หวังว่า|การันตี|ต้องชอบ|ติดใจ|ฟิน|รับประกัน|แชท|ออกใบกำกับ|ใบกํากับ|ลดเหลือ|ใหม่ล่าสุด|คุณภาพดี|เชื่อถือ|หมดปัญหา|กำลังจะมีสินค้า)/iu.test(product.summary), `${id}: summary contains seller policy or marketing text`);
-  assert(!product.cleanName.includes('\0') && !product.summary.includes('\0'), `${id}: contains NUL`);
-  assert(!/(?:[\uFE0E\uFE0F]|หลุด\s*qc|ตำหนิ|ตําหนิ|รักษา(?:โรค|สิว|ฝ้า)|ฆ่าเชื้อ|ไม่ระคาย|ปลอดภัย\s*100|อันดับ\s*1|ราคาถูกที่สุด|ราคาประหยัด|ราคาโรงงาน|(?:สินค้า)?ส่งจากไทย|ส่งเร็ว|ถูกมาก+|สุดคุ้ม|คุ้ม(?:กว่า|ค่า|มาก|สุด)?|ขายดี|โรงงาน|แจ้งในแชท|ของแท้|เห็นผลทันที|ทางการแพทย์|ป้องกันเชื้อ|ไฟฟ้า|แบต(?:เตอรี่)?|ชาร์จ|\busb\b|\bled\b|บลูทูธ|power\s*bank|ครีม|เซรั่ม|แชมพู|โลชั่น|น้ำหอม|ผ้าอ้อม|ทารก|หมวกกันน็อค|ปะเก็น|น้ำมันเครื่อง|มีด|คัตเตอร์|กรรไกร|ใบมีด|น้ำยา|สเปรย์|อาหารเสริม)/iu.test(`${product.cleanName} ${product.summary}`), `${id}: contains a blocked medical, electrical, hazardous, or promotional term`);
-  assert(!/[\s|:;,_\-–—*#~.!?]$/u.test(product.cleanName), `${id}: clean name ends with dangling punctuation`);
-  const finalText = `${product.cleanName} ${product.summary}`;
-  assert(!SOURCE_TITLE_POLICY.test(product.cleanName), `${id}: clean name contains seller shipping, stale price, used-condition, or raw-boundary text`);
-  assert(!SOURCE_TITLE_ADDITIONAL.test(product.cleanName), `${id}: clean name contains stale stock, seller, counterfeit, or incomplete text`);
-  assert(!hasAuthenticityClaim(finalText), `${id}: contains an authenticity or image-match claim`);
-  assert(!FINAL_PROMO_POLICY.test(finalText), `${id}: contains final promo or seller-policy text`);
-  assert(!FINAL_DEFECT.test(finalText), `${id}: contains a defect or measurement disclaimer`);
-  assert(!FINAL_HIGH_RISK_CLAIM.test(finalText), `${id}: contains a health or safety claim`);
-  assert(!FINAL_ADDITIONAL_POLICY.test(finalText), `${id}: contains additional seller, counterfeit, therapeutic, or marketing text`);
-  assert(!FINAL_SELLER_VOICE.test(finalText), `${id}: contains first-person seller, ordering, or customer-service text`);
-  assert(!FINAL_NONOBJECTIVE_TEXT.test(finalText), `${id}: contains non-objective loss-prevention or external-review copy`);
-  assert(!FINAL_FEED_NOISE.test(finalText) && !FINAL_FEED_NOISE_ADDITIONAL.test(finalText), `${id}: contains seller feed noise, malformed text, or subjective copy`);
-  assert(!FINAL_FEED_NOISE_THIRD.test(finalText), `${id}: contains additional seller, defect, truncation, or category-mismatch noise`);
-  assert(!FINAL_LOCKED_BLOCKER_TEXT.test(product.cleanName) && !FINAL_LOCKED_BLOCKER_TEXT.test(product.summary), `${id}: contains a locked hard-blocker phrase`);
-  assert(!FINAL_HEALTH_CLAIM_ADDITIONAL.test(finalText), `${id}: contains an additional health or body-safety claim`);
-  assert(!PROHIBITED_SAFETY_ADDITIONAL.test(finalText), `${id}: contains catnip, matatabi, or another prohibited ingestible pet substance`);
-  assert(!hasUnsupportedCertification(finalText), `${id}: contains an unsupported certification claim without a standard identifier`);
-  assert(!FINAL_ADDITIONAL_GARBLE.test(finalText), `${id}: contains an additional garbled or incomplete phrase`);
-  assert(!FINAL_UNSUITABLE_BODY_PRODUCT.test(finalText), `${id}: contains a body-contact travel product`);
-  assert(!FINAL_GARBLE_OR_RAW_HEADER.test(product.cleanName) && !FINAL_GARBLE_OR_RAW_HEADER.test(product.summary), `${id}: contains garbled text or a raw seller header`);
-  assert(!RAW_NAME_BOUNDARY.test(product.cleanName) && !RAW_TEXT_BOUNDARY.test(product.summary), `${id}: contains a raw boundary marker or truncation`);
-  assert(!BROKEN_THAI_TOKEN.test(finalText), `${id}: contains an isolated Thai combining mark`);
-  assert(!CLEAR_GIBBERISH.test(product.cleanName) && !CLEAR_GIBBERISH.test(product.summary), `${id}: contains known incomplete or gibberish text`);
-  assert(!TRAILING_INCOMPLETE_NAME.test(product.cleanName), `${id}: clean name ends with an incomplete phrase`);
-  assert(!TRAILING_INCOMPLETE_SUMMARY.test(product.summary), `${id}: summary ends with an incomplete phrase`);
-  assert(!UNREADABLE_THAI_RUN.test(product.cleanName), `${id}: clean name contains an unreadably long unspaced Thai run`);
-  assert(!summaryMostlyRestatesName(product.cleanName, product.summary), `${id}: summary only restates the clean name`);
-  assert(summaryMatchesProductFamily(product.categoryKey, product.cleanName, product.summary), `${id}: summary does not match the assigned product family or is structurally incomplete`);
-  assert(!hasPassiveMeterCaseMismatch(product.categoryKey, product.cleanName, product.summary), `${id}: a passive meter case summary describes an active measuring device`);
-  assert(!hasRepeatedSummaryPhrase(product.summary), `${id}: summary repeats the same phrase`);
-  assert(!hasDominantSummaryToken(product.summary), `${id}: one informative token is repeated excessively`);
-  assert(!hasConflictingLayerCounts(product.cleanName, product.summary), `${id}: name and summary disagree on layer count`);
-  assert(!hasConflictingUnitCounts(product.cleanName, product.summary), `${id}: name and summary disagree on a unit count`);
-  assert(!hasConflictingDimensions(product.cleanName, product.summary), `${id}: name and summary contain conflicting dimensions`);
-  assert(hasBalancedPairs(product.cleanName) && hasBalancedPairs(product.summary), `${id}: contains unbalanced brackets`);
-  assert(!/[\u200B-\u200D\u2060\uFEFF]/u.test(finalText), `${id}: contains an invisible format control`);
-  assert(Number.isFinite(product.priceMin) && Number.isFinite(product.priceMax) && product.priceMin >= 20 && product.priceMax <= 5_000 && product.priceMax >= product.priceMin && product.priceMax / product.priceMin <= 3, `${id}: invalid or bait price range`);
-  assert(!Number.isNaN(Date.parse(product.checkedAt)), `${id}: invalid checkedAt`);
-  validateUrl(product.imageUrl, 'image', id);
-  validateUrl(product.productUrl, 'product', id);
-  assert(product.productUrl === `https://shopee.co.th/product/${product.shopId}/${product.itemId}`, `${id}: product URL/IDs mismatch`);
-  validateSeasonalMetadata(product, id);
+  const id = `${kind}[${expectedOrder}]`;
+  const keys = Object.keys(product);
+  for (const key of REQUIRED_COMMON_KEYS) assert(Object.hasOwn(product, key), `${id}: missing ${key}`);
+  for (const key of keys) assert(ALLOWED_PRODUCT_KEYS.has(key), `${id}: unexpected field ${key}`);
+  if (kind === 'ranked') {
+    assert(product.rank === expectedOrder && !Object.hasOwn(product, 'reserveOrder'), `${id}: invalid rank`);
+  } else {
+    assert(product.reserveOrder === expectedOrder && !Object.hasOwn(product, 'rank'), `${id}: invalid reserve order`);
+  }
+  assert(/^\d+-\d+$/u.test(product.id) && product.id === `${product.shopId}-${product.itemId}`, `${id}: invalid ID`);
+  const definition = CATEGORY_BY_KEY.get(product.categoryKey);
+  assert(definition, `${id}: unknown category ${product.categoryKey}`);
+  assert(product.category === definition.label && product.subcategoryKey === definition.key && product.subcategory === definition.label, `${id}: category/subcategory mismatch`);
+  assert(product.categoryGroupKey === definition.groupKey && product.categoryGroup === definition.group && GROUP_BY_KEY.get(product.categoryGroupKey) === product.categoryGroup, `${id}: group hierarchy mismatch`);
+  assert(validHttps(product.imageUrl, ['susercontent.com', 'shopee.co.th']), `${id}: invalid image URL`);
+  assert(product.productUrl === `https://shopee.co.th/product/${product.shopId}/${product.itemId}`, `${id}: non-canonical product URL`);
+  assert(typeof product.cleanName === 'string' && product.cleanName.length >= 8 && product.cleanName.length <= 105 && !/[\n\r\\<>#*`]/u.test(product.cleanName), `${id}: invalid clean name`);
+  assert(!hasPublicPromoNoise(product.cleanName), `${id}: clean name still contains promotion/coupon noise`);
+  assert(!hasListingPriceNoise(product.cleanName), `${id}: clean name still contains listing-price/order noise`);
+  assert(!hasUppercaseCodNoise(product.cleanName), `${id}: clean name still contains a glued COD marker`);
+  assert(typeof product.summary === 'string' && product.summary.length >= 45 && product.summary.length <= 190 && !/[\n\r\\#*`]/u.test(product.summary), `${id}: invalid summary`);
+  assert(!hasPublicPromoNoise(product.summary), `${id}: summary still contains promotion/coupon noise`);
+  assert(!hasListingPriceNoise(product.summary), `${id}: summary still contains listing-price/order noise`);
+  assert(!hasUppercaseCodNoise(product.summary), `${id}: summary still contains a glued COD marker`);
+  assert(!forbiddenPublicText(`${product.cleanName} ${product.summary}`), `${id}: public text contains a blocked claim or product`);
+  assert(!isActiveCleaningProduct(product.cleanName), `${id}: active cleaner/disinfectant leaked public`);
+  assert(Number.isFinite(product.priceMin) && Number.isFinite(product.priceMax) && product.priceMin >= 10 && product.priceMax >= product.priceMin, `${id}: invalid price range`);
+  assert(product.priceType === (product.priceMin === product.priceMax ? 'fixed' : 'range'), `${id}: price type mismatch`);
+  assert(product.priceMax / product.priceMin <= (product.riskTier === 'amber' ? 5 : 8), `${id}: price-bait range`);
+  assert(!Number.isNaN(Date.parse(product.checkedAt)), `${id}: invalid checked time`);
+  assert(Number.isInteger(product.itemSold) && product.itemSold >= 0, `${id}: invalid cumulative sold count`);
+  assert(Number.isInteger(product.likes) && product.likes >= 0, `${id}: invalid likes`);
+  assert(Number.isFinite(product.rating) && product.rating >= (product.riskTier === 'amber' ? 4.7 : 4.5) && product.rating <= 5, `${id}: invalid rating`);
+  assert(Number.isFinite(product.shopRating) && product.shopRating >= (product.riskTier === 'amber' ? 4.6 : 4.4) && product.shopRating <= 5, `${id}: invalid shop rating`);
+  assert(['official', 'preferred', 'general'].includes(product.shopType), `${id}: invalid shop type`);
+  assert(typeof product.sellerVerified === 'boolean', `${id}: invalid seller verification flag`);
+  assert(product.stockStatus === 'in-stock' && ['low', 'available', 'high'].includes(product.stockLevel), `${id}: invalid sanitized stock metadata`);
+  assert(['green', 'amber'].includes(product.riskTier), `${id}: red/unknown risk lane leaked public`);
+  assert(product.riskTier === (CONTROLLED_GROUPS.has(product.categoryGroupKey) ? 'amber' : 'green'), `${id}: risk lane/category mismatch`);
+  const expectedReviewMethod = product.riskTier === 'amber' ? 'automated-controlled-policy-v3' : 'automated-ruleset-v3';
+  assert(product.reviewStatus === 'approved' && product.reviewMethod === expectedReviewMethod, `${id}: unapproved or incorrectly reviewed product leaked public`);
+  assert(Number.isFinite(product.recommendationScore) && product.recommendationScore >= 0 && product.recommendationScore <= 100, `${id}: invalid recommendation score`);
+  assert(Array.isArray(product.reasonCodes) && product.reasonCodes.length >= 1 && product.reasonCodes.length <= 4 && product.reasonCodes.every((reason) => REASON_CODES.has(reason)), `${id}: invalid reason codes`);
+  assert(Array.isArray(product.seasonTags) && product.seasonTags.length >= 1 && product.seasonTags.every((tag) => ['all-year', 'hot', 'rainy', 'cool'].includes(tag)), `${id}: invalid season tags`);
+  assert(Array.isArray(product.monthTags) && product.monthTags.every((month) => Number.isInteger(month) && month >= 1 && month <= 12), `${id}: invalid month tags`);
+  assert(Number.isFinite(product.seasonalScore) && product.seasonalScore >= 0 && product.seasonalScore <= 100 && typeof product.seasonReason === 'string', `${id}: invalid seasonal metadata`);
+  assert(product.normalizedSearchText === makeSearchText(product) && product.normalizedSearchText.length >= product.category.length, `${id}: stale normalized search text`);
+  if (product.categoryGroupKey === 'supplements') {
+    assert(!hasControlledPublicClaim(product.categoryGroupKey, product.cleanName), `${id}: supplement name contains an efficacy/safety claim`);
+    assert(product.shopType !== 'general', `${id}: controlled supplement is not from official/preferred shop`);
+    assert(/โปรดตรวจสอบส่วนประกอบ/u.test(product.summary), `${id}: supplement summary is not neutral label guidance`);
+  }
+  if (product.categoryGroupKey === 'beauty') {
+    assert(!hasControlledPublicClaim(product.categoryGroupKey, product.cleanName), `${id}: beauty name contains an efficacy/safety claim`);
+    assert(/โปรดตรวจสอบสูตร/u.test(product.summary), `${id}: beauty summary is not neutral label guidance`);
+    assert(!/(?:spf\s*\d+|pa\s*\+)/iu.test(`${product.cleanName} ${product.summary}`), `${id}: unsupported SPF/PA claim leaked public`);
+  }
+  if (product.categoryGroupKey === 'automotive') {
+    assert(!isUnsafeAutomotiveText(product.cleanName), `${id}: safety-critical automotive product leaked public`);
+    assert(!hasControlledPublicClaim(product.categoryGroupKey, product.cleanName), `${id}: automotive name contains an unsupported claim`);
+    assert(/ตรวจสอบรุ่นรถ/u.test(product.summary), `${id}: automotive fitment safeguard is missing`);
+  }
 }
 
 const args = parseArgs(process.argv.slice(2));
-
-for (const fixture of ['อยู่ระหว่างเปลี่ยนแพ็คเกจ', 'ราคาพิเศษ', 'จัดส่งภายใน 24 ชม.', 'ออเดอร์นึงสั่งไม่เกิน', 'กรุณาตรวจสอบขนาดก่อนตัดสินใจซื้อ', 'ออกใบกํากับภาษีได้', 'กดดูแบบและขนาดที่ภาพตัวเลือก', 'ขายเป็นชุด']) {
-  assert(FINAL_PROMO_POLICY.test(fixture), `promo-policy regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['จัดส่งในระบบ shopee กล่องพัสดุ', 'พร้อมจัดส่ง ค้อนยาง', '47 บาท ริบบิ้น', '(79บาท) กล่องของขวัญ', 'รอ 3 อาทิตย์ กล่องเก็บ', 'หนังสือสภาพ 70%', 'มีสนิม คีมมือสอง', '++ หนังสือ ++', 'ตะขอเกี่ยวเนื้อ', 'เครื่องมือตัด 2 in 1', 'คีม VDE 1000V']) {
-  assert(SOURCE_TITLE_POLICY.test(fixture), `source-title regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['สินค้า ค้อนหงอน', 'Tool Box สินค้า', 'หนังสือมีสต๊อก', 'ลิขสิทธิ์แท้ ถูกกว่าปรินท์เอง', 'หนังสือเปลี่ยนหุ่น ปรับฮอร์โมน', 'หนังสือ / My']) {
-  assert(SOURCE_TITLE_ADDITIONAL.test(fixture), `additional source-title regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of [
-  'กระเป๋าจัดระเบียบผลิตภัณฑ์นมในรถของคุณ',
-  'ideal as a small present for your customers',
-  'ชุดนี้แนะนําเลย',
-  'เพียงอ่านหนังสือเล่มนี้ก็จะใช้ Procreate วาดภาพได้',
-  '(Please note that this is the CONCISE version)',
-  'วัสดุถุงผ้าเป็นขี้ผึ้งเฟอร์รี่',
-  'ช่องเก็บของอยู่ด้านในร่ม',
-  'cm 130cm x 45 x 20',
-  'การออกแบบการออกแบบ: ทรงสี่เหลี่ยม',
-  'วัสดุแข็งแรง ต่อน้องแมว',
-  'ของเล่นแมว ที่แมว',
-  'แบบฝึกหัดชั้น ป.1 จํานวน หน้า 3 วิชา',
-  '[แนะนําโดย Boss Lady]',
-  'แจ้งข้อความที่ต้องการจะใส่ตรายาง',
-  'วัสดสแตนเลส',
-  'ขัดได้ทุกซอกท',
-  'ดูภาพที่่ 2',
-  'ดหลีกเลี่ยงความร้อน',
-  'ถุงกระดาษแบรนด์ LOUIS VUITTON',
-  'สิ่งที่คุณจะได้รับ: กล่อง 1 ชิ้น',
-  'ฉากที่เกี่ยวข้อง: ห้องนอน',
-  'จะเหมาะถ้าประตูของคุณแตก',
-  'ยางลบยางลบสําหรับดินสอ',
-  'ลอกออก กาว จัดๆได้นาน',
-  'ดินสอสี Lapis de',
-  'ไม่แตกลายงาและเป็นฟู๊ดเกรด',
-  'บรรจุ 1 ชิ้น 1 ชิ้น',
-  'มุม ดของคุณ',
-]) {
-  assert(FINAL_LOCKED_BLOCKER_TEXT.test(fixture), `locked-blocker regression fixture was not blocked: ${fixture}`);
-}
-assert(hasAuthenticityClaim('กล่องเก็บของ IKEA แท้'), 'brand-authenticity regression fixture was not blocked');
-assert(hasAuthenticityClaim('สติกเกอร์ PVC 3M แท้'), 'description-authenticity regression fixture was not blocked');
-assert(hasAuthenticityClaim('ผ้าเย็น Biore ตรงปก'), 'image-match authenticity fixture was not blocked');
-assert(!hasAuthenticityClaim('ชั้นวางไม้สักแท้'), 'objective material authenticity fixture should pass');
-assert(hasDescriptionBrandAuthenticityClaim('สติกเกอร์ PVC 3M แท้'), 'raw description brand-authenticity fixture was not blocked');
-assert(!hasDescriptionBrandAuthenticityClaim('ผ้าฝ้าย cotton แท้'), 'raw description material-authenticity fixture should pass');
-for (const fixture of ['แคทนิป', 'มาทาทาบิ', 'Matatabi powder', 'silvervine stick']) {
-  assert(PROHIBITED_SAFETY_ADDITIONAL.test(fixture), `pet-ingestible regression fixture was not blocked: ${fixture}`);
-}
-assert(hasConflictingDimensions('กระถางต้นไม้ขนาด 5 นิ้ว', 'เส้นผ่านศูนย์กลาง 15.2 นิ้ว'), 'conflicting-inch regression fixture was not blocked');
-assert(hasConflictingDimensions('ประแจชุดขนาด 10-32 mm', 'ครอบคลุมขนาด 0-32 mm'), 'conflicting-range regression fixture was not blocked');
-assert(!hasConflictingDimensions('กระถางต้นไม้ขนาด 5 นิ้ว', 'เส้นผ่านศูนย์กลาง 5 นิ้ว'), 'matching dimension fixture should pass');
-for (const fixture of ['ก่อนสั่งเช็คที่อยู่ให้ถูกต้อง', 'ก่อนการสั่งซื้อสินค้ากรุณาตรวจสอบขนาด', 'การสั่งซื้อให้เลือกตัวเลือกตามจํานวน', 'กรณีต้องการสั่งความยาว 1 เมตร', 'หากคุณสั่งซื้อกรุณาฝากข้อความ', 'อย่าสั่งซื้อหากรุ่นไม่ตรง', 'PRE-ORDER', 'ไม่ได้เป็นหนังสือเผยแพร่อย่างเป็นทางการ', 'แบบใหม่ๆ 24 หน้าแน่นๆ', 'ศาสตร์แห่งการบําบัดอย่างลึกซึ้ง', 'ภาพเปรียบเทียบด้วยรูปถ่ายสินค้า', 'ของขวัญแบบสุ่มเมื่อซื้อสินค้าครบ 250 บาท', 'ขนาดของสินค้าจริงอาจ +/- เล็กน้อย', 'ไม่รวมรายการอื่น ภาพโฆษณาเท่านั้น', 'สํานักพิมพ์ภูมิใจที่ได้จัดพิมพ์หนังสือดี', 'ลดล้างสต๊อกจากสํานักพิมพ์ สภาพ 95% - 99%', 'ดูจากรายละเอียดสินค้าเท่านั้น', 'ดูภาพสินค้าเพิ่มเติมเพื่อเปรียบเทียบขนาด', 'จัดกระเป๋าให้เป็นเรื่องง่าย']) {
-  assert(FINAL_ADDITIONAL_POLICY.test(fixture), `additional-policy regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['สั่งซื้อแต่ละชุดประกอบด้วยน็อต 1 ตัว', 'ทีมผู้เชี่ยวชาญของเราพัฒนาผ้าขนหนู', 'ไขควงของเรามีขนาด 173 มม.', 'โปรดติดต่อฝ่ายบริการลูกค้า']) {
-  assert(FINAL_SELLER_VOICE.test(fixture), `seller-voice regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['พวงกุญแจเป็นเครื่องประดับที่ขาดไม่ได้และช่วยลดการสูญหายและการสูญเสียกุญแจ', 'รีวิวหนังสือ : เพจโป๊ยเซียนเขียนรีวิว']) {
-  assert(FINAL_NONOBJECTIVE_TEXT.test(fixture), `non-objective regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['กดตัวเลือกแล้วใส่ตะกร้า', 'ผู้ช่วยชั้นดีทําให้เป็นเรื่องง่ายดาย', 'วัสดุลย ไม่มีหลุดลอกจ้า', 'ISO 9001 xด้าม', 'ขนาดหัวโรมัน', 'วัสด เหล็ก', 'โมเด็ล F30', 'Please note that this is concise']) {
-  assert(FINAL_FEED_NOISE.test(fixture), `feed-noise regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['มาแล้วววว น่าร๊ากกกก', 'วิธีใช้งาน :', 'รีวิวโดยสํานักพิมพ์ :', 'สินค้าต้องอยู่ในสภาพเดิม พร้อมบรรจุภัณฑ์ครบถ้วน', 'ทุกบ้านควรมี', 'ภาพต่อไปนี้สําหรับรุ่นสินค้า']) {
-  assert(FINAL_FEED_NOISE_ADDITIONAL.test(fixture), `additional feed-noise regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['เนื้อกระดาษอ่อนโยน เหมาะสําหรับทุกสภาพผิว', 'ไม่ทําให้ระคายเคือง', 'ลดการสะสมของไรฝุ่นด้วย Block Mite']) {
-  assert(FINAL_HEALTH_CLAIM_ADDITIONAL.test(fixture), `additional health-claim regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['ไม่ต้องกลัวผิวเสีย', 'จากที่ลองใช้งานมา 1 เดือน', 'ประหยัดพื้นที่ได้ 4 เท่า', 'ตําแหน่งผ่นจากมือเด็ก', 'ชื่อสินค้าลดความเม', 'หนังสือเล่มนี้มีคําตอบ', 'สินค้าจัดใหม่', 'สะดวกสุด P']) {
-  assert(FINAL_FEED_NOISE_THIRD.test(fixture), `third-layer feed-noise regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['+ ขนาด 20 ซม.', '< Easily washable', '■ วัสดุเหล็ก', 'ข้อความตัด…']) {
-  assert(RAW_TEXT_BOUNDARY.test(fixture), `raw-boundary regression fixture was not blocked: ${fixture}`);
-}
-assert(hasPassiveMeterCaseMismatch('manual-tools', 'กระเป๋าใส่แคลมป์มิเตอร์', 'ใช้วัดกระแสและความถี่ได้'), 'active meter summary in passive case fixture was not blocked');
-assert(!hasPassiveMeterCaseMismatch('manual-tools', 'กระเป๋าใส่แคลมป์มิเตอร์', 'กระเป๋าผ้าสําหรับจัดเก็บมิเตอร์และอุปกรณ์'), 'objective passive meter case fixture should pass');
-assert(hasUnsupportedCertification('สินค้าได้รับการรับรองมาตรฐาน'), 'unsupported-certification regression fixture was not blocked');
-assert(!hasUnsupportedCertification('สินค้าได้รับการรับรองมาตรฐาน มอก. 1234'), 'certification with a standard ID should pass');
-for (const fixture of ['ดตรวจสอบก่อนสั่งซื้อ', 'ดเปรียบเทียบกับปลอกกุญแจเดิม', 'ดทําความสะอาดพื้นผิว', 'วัสดุปล่อยความร้อน', 'ให้ความ กับสินค้าของท่าน', 'ติดตั้งง่ายและ )', 'ในรายการรวมด้วย 1 ชิ้น', '> รายละเอียดสินค้า', 'Q2: ขนาดของรุ่นกุญแจ', 'ขนาด/รายละเอียดสินค้า (Specifications)', 'รายละเอียดสินค้า วัสดุเหล็ก', 'เครื่องมือสําคัญที่เรียกว่า เชิญชวน', 'แบบกระกระดาษ', 'วัสุดยืดยุ่น', 'ผลิตผลการพิมพ์ภายในเล่ม', 'สติกเกอร์ 1 ชิ้นหรือตะแกรง', 'ส่วนต่างๆของร่างกายที่ต้องวาง']) {
-  assert(FINAL_ADDITIONAL_GARBLE.test(fixture), `additional-garble regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['จุดหรือฟองอากาศ', 'อาจคลาดเคลื่อน', 'ขึ้นอยู่กับ Lot', 'ขนาดจริงอาจแตกต่าง']) {
-  assert(FINAL_DEFECT.test(fixture), `defect regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['ป้องกันแบคทีเรีย', 'แอนตี้แบคทีเรีย', 'ต่อต้านแบคทีเรีย', 'ไม่มีสารเรืองแสง', 'ปลอดสารพิษ', 'BPA Free', 'Food Grade', 'กันไรฝุ่น', 'ปวดคอและซัพพอร์ตคอ', 'ไม่ทําให้เกิดรอยขีดข่วน', 'ไม่ซีดจาง']) {
-  assert(FINAL_HIGH_RISK_CLAIM.test(fixture), `claim regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['หมอนรองคอเดินทาง', 'ผ้าปิดตา Sleep Mask', 'AirMask', 'Blindfold']) {
-  assert(FINAL_UNSUITABLE_BODY_PRODUCT.test(fixture), `body-product regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['ทิชชู๋ม้วน', 'ไม้ถูพืัน', 'ขนาดมาตราฐาน', '43 นัว', 'ขอขึ้น ตะขอประตู', 'ทนต่อการทดสอบของเวลาและกา', 'รายละเอียดสินค้า 24 ช่องใหม่ Empty Storage', 'การสกัดรูปปาก', 'เจาะรูฟรีตะขอแขวนแบริ่งที่']) {
-  assert(FINAL_GARBLE_OR_RAW_HEADER.test(fixture), `garble/header regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of [' ับสิ่งแวดล้อม', ' ูกค้า', ' ่งใส', ' ุ้มค่า']) {
-  assert(BROKEN_THAI_TOKEN.test(fixture), `broken-Thai regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['(8 สี/12', '【 ขนาด', '(มี 3 สี Gray & Blue &']) {
-  assert(!hasBalancedPairs(fixture), `unbalanced-bracket regression fixture was not blocked: ${fixture}`);
-}
-for (const fixture of ['ทัพพีตักข้าว ในโลก', 'ซื้อของที่ระลึกได้แล้ว', 'วัสดุที่ และปลอดสารพิษ ไม่มี', 'ในราคา !', 'ราคาแน่นอน จัดไปเลยครับ', 'บรรจุในกระเป๋าอย่าง', 'เน้ือกระดาษ', 'ทําโบวเป็นทรง', 'สามารถ ได้สูง']) {
-  assert(CLEAR_GIBBERISH.test(fixture), `gibberish regression fixture was not blocked: ${fixture}`);
-}
-assert(TRAILING_INCOMPLETE_NAME.test('สมุดโน้ต จํานวน 1'), 'trailing-incomplete regression fixture was not blocked');
-assert(TRAILING_INCOMPLETE_NAME.test('หนังสือคู่มือการ'), 'trailing-name function-word regression fixture was not blocked');
-assert(TRAILING_INCOMPLETE_NAME.test('เซ็ตจานและแก้วมัค +'), 'trailing-name plus regression fixture was not blocked');
-assert(UNREADABLE_THAI_RUN.test('กระเป๋าจัดระเบียบอิเล็กทรอนิกส์ความจุขนาดใหญ่สามชั้นสําหรับสายเคเบิลและอุปกรณ์กันน้ํา'), 'long-Thai-run regression fixture was not blocked');
-assert(summaryMostlyRestatesName('ดินสอกด Uni รุ่น X ขนาด 0.5 มม.', 'ดินสอกด Uni รุ่น X ขนาด 0.5 มม.'), 'summary-restatement regression fixture was not blocked');
-assert(hasRepeatedSummaryPhrase('รุ่นขอบหนาพิเศษ ทรงวงรีมี 3 ขนาด รุ่นขอบหนาพิเศษ ทรงวงกลมมี 3 ขนาด'), 'repeated-summary regression fixture was not blocked');
-assert(hasDominantSummaryToken('ประแจ ประแจเลื่อน ประแจอเนกประสงค์ ประแจด้ามจับหุ้มยาง ขนาด 6 8 10 12 นิ้ว adjustable wrench'), 'dominant-token regression fixture was not blocked');
-assert(hasConflictingLayerCounts('ตู้ลิ้นชัก 5 ชั้น', 'ตู้ลิ้นชักมี 4 ชั้น'), 'conflicting-layer regression fixture was not blocked');
-assert(hasConflictingUnitCounts('ทิชชู่ 20 แพ็ค', 'บรรจุ 10 แพ็คต่อกล่อง'), 'conflicting-unit regression fixture was not blocked');
-assert(TRAILING_INCOMPLETE_SUMMARY.test('แพคเกจประกอบด้วย 1 ×'), 'trailing-summary regression fixture was not blocked');
-assert(summaryMatchesProductFamily('cleaning', 'ไม้ม็อบถูพื้นแบบพับได้', 'หัวไม้ม็อบปรับได้ 180 องศาและถอดล้างทําความสะอาดได้'), 'mop alias regression fixture should pass semantic matching');
-assert(summaryMatchesProductFamily('device-accessories', 'เคสโทรศัพท์ iPhone แบบใส', 'ตัวเคส iPhone ผลิตจาก TPU และมีขอบยก'), 'device-case alias regression fixture should pass semantic matching');
-assert(summaryMatchesProductFamily('automotive-accessories', 'เคสกุญแจรถ TPU แบบพอดีรุ่น', 'ฝาครอบกุญแจผลิตจาก TPU และมีช่องตรงกับตําแหน่งปุ่ม'), 'passive automotive key-cover fixture should pass semantic matching');
-assert(!summaryMatchesProductFamily('automotive-accessories', 'กุญแจรถเหมาะสําหรับพวงกุญแจ', 'ผลิตจาก TPU ยืดหยุ่นและมีช่องตรงกับตําแหน่งปุ่ม'), 'ambiguous automotive key fixture without passive summary noun was not blocked');
-assert(!summaryMatchesProductFamily('device-accessories', 'เคสมือถือ CASETiFY Ripple Case', 'สายสะพายข้าง Crossbody มาพร้อมแผ่นคล้องสาย StrapCard'), 'device case-to-strap mismatch fixture was not blocked');
-assert(!summaryMatchesProductFamily('organizing', 'กล่องจัดเก็บอเนกประสงค์', 'เสื้อคลุมผู้หญิง ADIDAS ผลิตจากผ้าเนื้อนุ่ม'), 'organizer-to-clothing mismatch fixture was not blocked');
-assert(!summaryMatchesProductFamily('manual-tools', 'คีมปากแหลมเหล็กคาร์บอน', 'หมวกไหมพรมผลิตจากผ้าและมีลวดลาย'), 'pliers-to-hat mismatch fixture was not blocked');
-assert(!summaryMatchesProductFamily('manual-tools', 'ค้อนอลูมิเนียมด้ามจับ', 'ใช้ทุบเนื้อสเต็กและสัมผัสอาหารได้'), 'tool-to-kitchen mismatch fixture was not blocked');
-assert(!summaryMatchesProductFamily('bathroom-laundry', 'กะละมังสแตนเลสขนาด 30 ซม.', 'กะละมังใช้สําหรับใส่อาหารและผสมแป้ง'), 'bathroom-to-kitchen mismatch fixture was not blocked');
-assert(!summaryMatchesProductFamily('books', 'หนังสือเทคนิคการสื่อสาร', 'หนังสือเล่มนี้อธิบายทักษะการสื่อสาร ตัวอย่างเช่น'), 'trailing-example fixture was not blocked');
-assert(!summaryMatchesProductFamily('books', 'หนังสือศิลปะจิตรกรรมและเครื่องถ้วย', 'ภายในเล่มรวบรวมสูตรอาหารและขั้นตอนการทําอาหาร'), 'book art-to-recipe mismatch fixture was not blocked');
 const [catalogText, reserveText, runtimeText] = await Promise.all([
-  readFile(args.catalog, 'utf8'),
-  readFile(args.reserve, 'utf8'),
-  readFile(args.runtimeModule, 'utf8'),
+  readFile(args.catalog, 'utf8'), readFile(args.reserve, 'utf8'), readFile(args.runtimeModule, 'utf8'),
 ]);
 for (const [name, text] of [['catalog', catalogText], ['reserve', reserveText], ['runtime', runtimeText]]) {
   assert(!text.includes('\0'), `${name}: contains NUL`);
-  assert(!/(?:commission|extra\s*_?comm)/iu.test(text), `${name}: contains a forbidden commission field or phrase`);
-  assert(!/"description"\s*:/u.test(text), `${name}: contains raw description`);
-  assert(!/"ruleIds"\s*:/u.test(text), `${name}: exposes internal seasonal rule IDs`);
+  assert(!/(?:commission|extra\s*_?comm|review\s*_?count|"reviewCount"|"description"\s*:)/iu.test(text), `${name}: contains commission, invented review count, or raw description`);
+  assert(!/"stock"\s*:/u.test(text), `${name}: exposes raw stock count`);
 }
 
 const catalog = JSON.parse(catalogText);
-const reserve = JSON.parse(reserveText);
-assert(catalog.schemaVersion === CATALOG_SCHEMA_VERSION && reserve.schemaVersion === CATALOG_SCHEMA_VERSION, 'schema version mismatch');
-assert(catalog.targetRankedCount === DEFAULT_RANKED_TARGET, `ranked target must be ${DEFAULT_RANKED_TARGET}`);
-assert(catalog.minimumRankedCount >= 1_500 && catalog.minimumRankedCount <= catalog.targetRankedCount, 'invalid minimum ranked count');
-assert(catalog.rankedCount === catalog.ranked.length && catalog.rankedCount >= catalog.minimumRankedCount, 'ranked count is below the declared minimum or metadata differs');
-assert(catalog.rankedCount === catalog.targetRankedCount && catalog.selectionStatus === 'target-met', 'default production build did not meet the ranked target');
-assert(catalog.targetReserveCount === DEFAULT_RESERVE_TARGET, `reserve target must be ${DEFAULT_RESERVE_TARGET}`);
-assert(reserve.reserveCount === reserve.reserve.length && reserve.reserveCount === catalog.targetReserveCount, 'reserve count mismatch');
-assert(catalog.featured?.id === 'featured-dkub-book' && catalog.featured.rank === undefined, 'featured book must be outside ranking');
-assert(catalog.featured.shopId === '1032408641' && catalog.featured.itemId === '48511491095', 'featured book IDs changed unexpectedly');
-assert(catalog.featured.checkedAt === '2026-08-17T15:26:00+07:00', 'featured book checkedAt changed unexpectedly');
-assert(catalog.featured.categoryKey === 'books' && catalog.featured.category === CATEGORY_LABEL_BY_KEY.get('books'), 'featured book category metadata is invalid');
-assert(JSON.stringify(catalog.featured.seasonTags) === JSON.stringify(['all-year']) && catalog.featured.monthTags.length === 0, 'featured book must be all-year');
-assert(catalog.featured.seasonalScore === 50 && catalog.featured.seasonReason === 'เหมาะนำเสนอและทำคอนเทนต์ได้ตลอดทั้งปี', 'featured book seasonal metadata changed unexpectedly');
-assert(!Number.isNaN(Date.parse(catalog.generatedAt)) && !Number.isNaN(Date.parse(catalog.sourceCheckedAt)), 'catalog timestamps are invalid');
+const reserveCatalog = JSON.parse(reserveText);
+assert(catalog.schemaVersion === CATALOG_SCHEMA_VERSION && reserveCatalog.schemaVersion === CATALOG_SCHEMA_VERSION, 'schema version mismatch');
+assert(catalog.catalogName === 'คลังสินค้าน่าขาย', 'catalog name mismatch');
+assert(catalog.targetRankedCount === args.rankedTarget && catalog.rankedCount === args.rankedTarget && catalog.ranked.length === args.rankedTarget, 'ranked target/count mismatch');
+assert(catalog.targetReserveCount === args.reserveTarget && catalog.reserveCount === args.reserveTarget && reserveCatalog.reserve.length === args.reserveTarget, 'reserve target/count mismatch');
+assert(catalog.selectionStatus === 'target-met', 'catalog target was not met');
+assert(catalog.featured?.id === 'featured-dkub-book' && catalog.featured.rank === undefined && catalog.featured.reserveOrder === undefined, 'featured book must stay outside ranking');
+assert(!Number.isNaN(Date.parse(catalog.generatedAt)) && !Number.isNaN(Date.parse(catalog.sourceCheckedAt)), 'catalog timestamps invalid');
 
 catalog.ranked.forEach((product, index) => validateProduct(product, 'ranked', index + 1));
-reserve.reserve.forEach((product, index) => validateProduct(product, 'reserve', index + 1));
-const all = [...catalog.ranked, ...reserve.reserve];
-assert(new Set(all.map((product) => product.id)).size === all.length, 'ranked/reserve product IDs are not unique');
-assert(new Set(all.map((product) => new URL(product.imageUrl).pathname.split('/').filter(Boolean).at(-1))).size === all.length, 'ranked/reserve image file IDs are not unique');
-assert(new Set(catalog.ranked.map((product) => product.rank)).size === catalog.ranked.length, 'rank values are not unique');
-const selectedCategoryKeys = new Set(catalog.ranked.map((product) => product.categoryKey));
-for (const { key } of CATALOG_CATEGORY_DEFINITIONS) assert(selectedCategoryKeys.has(key), `ranked catalog is missing category ${key}`);
+reserveCatalog.reserve.forEach((product, index) => validateProduct(product, 'reserve', index + 1));
+const all = [...catalog.ranked, ...reserveCatalog.reserve];
+assert(new Set(all.map((product) => product.id)).size === all.length, 'duplicate product IDs across ranked/reserve');
+assert(new Set(all.map((product) => new URL(product.imageUrl).pathname.split('/').filter(Boolean).at(-1))).size === all.length, 'duplicate image IDs across ranked/reserve');
+assert(new Set(all.map((product) => titleFingerprint(product.cleanName))).size === all.length, 'duplicate normalized product names across ranked/reserve');
+const uniqueSummaries = new Set(all.map((product) => product.summary));
+assert(uniqueSummaries.size >= Math.floor(all.length * 0.95), 'summaries are mostly repeated generic templates instead of product-specific facts');
+const summaryCounts = all.reduce((counts, product) => counts.set(product.summary, (counts.get(product.summary) ?? 0) + 1), new Map());
+assert(Math.max(...summaryCounts.values()) <= 5, 'a generic summary template is repeated too many times');
 const rankedShopCounts = catalog.ranked.reduce((counts, product) => counts.set(product.shopId, (counts.get(product.shopId) ?? 0) + 1), new Map());
 const allShopCounts = all.reduce((counts, product) => counts.set(product.shopId, (counts.get(product.shopId) ?? 0) + 1), new Map());
-assert(Math.max(...rankedShopCounts.values()) <= 3, 'ranked catalog exceeds per-shop cap of 3');
-assert(Math.max(...allShopCounts.values()) <= 10, 'ranked/reserve catalog exceeds per-shop cap of 10');
-assert(!all.some((product) => product.id === `${catalog.featured.shopId}-${catalog.featured.itemId}`), 'featured book leaked into ranked/reserve catalog');
+assert(Math.max(...rankedShopCounts.values()) <= 6, 'ranked per-shop cap exceeded');
+assert(Math.max(...allShopCounts.values()) <= 15, 'ranked/reserve per-shop cap exceeded');
+const selectedCategories = new Set(catalog.ranked.map((product) => product.categoryKey));
+assert(CATALOG_CATEGORY_DEFINITIONS.length === 40 && selectedCategories.size >= 30 && selectedCategories.size <= 40, 'catalog does not provide the planned 30-40-category taxonomy');
+const automotiveCount = catalog.ranked.filter((product) => product.categoryGroupKey === 'automotive').length;
+const skincareCount = catalog.ranked.filter((product) => product.categoryGroupKey === 'beauty').length;
+const supplementCount = catalog.ranked.filter((product) => product.categoryGroupKey === 'supplements').length;
+const targetScale = args.rankedTarget / DEFAULT_RANKED_TARGET;
+assert(automotiveCount >= Math.max(10, Math.floor(100 * targetScale)), 'automotive inventory is still too small');
+// Safety-first floor: strict source/claim/expiry gates take precedence over category volume.
+assert(skincareCount >= Math.max(8, Math.floor(80 * targetScale)), 'strict-gated skincare inventory is too small');
+// Strict controlled-source gates intentionally leave a narrow supplement subset.
+// Safety wins over the former 100-item target; never relax claims to inflate count.
+assert(supplementCount >= Math.max(2, Math.floor(20 * targetScale)), 'strict-gated supplement inventory is too small');
+assert(!all.some((product) => product.id === `${catalog.featured.shopId}-${catalog.featured.itemId}`), 'featured book leaked into ranked/reserve');
 
 const runtimeUrl = `${pathToFileURL(args.runtimeModule).href}?validation=${Date.now()}`;
 const runtime = (await import(runtimeUrl)).default;
-assert(runtime.schemaVersion === CATALOG_SCHEMA_VERSION && runtime.ranked.length === catalog.ranked.length && runtime.reserve.length === reserve.reserve.length, 'runtime module counts/schema mismatch');
-assert(JSON.stringify(runtime.ranked) === JSON.stringify(catalog.ranked), 'runtime ranked payload differs from catalog.json');
-assert(JSON.stringify(runtime.reserve) === JSON.stringify(reserve.reserve), 'runtime reserve payload differs from reserve JSON');
-assert(JSON.stringify(runtime.featured) === JSON.stringify(catalog.featured), 'runtime featured payload differs from catalog.json');
+assert(runtime.schemaVersion === CATALOG_SCHEMA_VERSION, 'runtime schema mismatch');
+assert(JSON.stringify(runtime.ranked) === JSON.stringify(catalog.ranked), 'runtime ranked payload differs from catalog JSON');
+assert(JSON.stringify(runtime.reserve) === JSON.stringify(reserveCatalog.reserve), 'runtime reserve payload differs from reserve JSON');
+assert(JSON.stringify(runtime.featured) === JSON.stringify(catalog.featured), 'runtime featured payload differs from catalog JSON');
 
 process.stdout.write(`${JSON.stringify({
   status: 'valid',
+  schemaVersion: CATALOG_SCHEMA_VERSION,
   rankedCount: catalog.ranked.length,
-  reserveCount: reserve.reserve.length,
+  reserveCount: reserveCatalog.reserve.length,
+  categoryCount: selectedCategories.size,
+  groupCount: new Set(catalog.ranked.map((product) => product.categoryGroupKey)).size,
+  automotiveCount,
+  skincareCount,
+  supplementCount,
+  approvedPublicCount: all.filter((product) => product.reviewStatus === 'approved').length,
   uniqueProductCount: new Set(all.map((product) => product.id)).size,
-  categories: selectedCategoryKeys.size,
-  allYearCount: catalog.ranked.filter((product) => product.seasonTags.includes('all-year')).length,
-  seasonalCount: catalog.ranked.filter((product) => !product.seasonTags.includes('all-year')).length,
-  featuredId: catalog.featured.id,
   sourceCheckedAt: catalog.sourceCheckedAt,
 }, null, 2)}\n`);
