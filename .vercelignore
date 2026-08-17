@@ -3,3 +3,4 @@ build-gen3.mjs
 gen3.js
 qa-runs/
 scripts/
+data/

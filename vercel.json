@@ -9,6 +9,10 @@
   ],
   "rewrites": [
     {
+      "source": "/gen3/products",
+      "destination": "/api/gen3-page?view=products"
+    },
+    {
       "source": "/gen3/identity",
       "destination": "/api/gen3-page?view=identity"
     },

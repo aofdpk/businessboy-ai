@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "catalogName": "Top 500 ที่คัดสำหรับทำคลิปแนวโกดัง",
+  "generatedAt": "2026-08-17T10:35:46.342Z",
+  "sourceCheckedAt": "2026-08-17T05:31:45+07:00",
+  "rankedCount": 500,
+  "reserveCount": 100,
+  "sourceFile": "1006_200101_Product Feed All Global Category_20260817T053145_1.csv",
+  "sourceRowsScanned": 1000000,
+  "sourceColumns": 47,
+  "nulBytesRemoved": 5,
+  "eligibleRows": 3909,
+  "rejectionCounts": {
+    "malformed": 0,
+    "blockedCategory": 71868,
+    "unsuitableCategory": 410786,
+    "blockedText": 15398,
+    "prohibitedFormat": 117190,
+    "highRiskTitle": 10819,
+    "nonWarehouse": 327364,
+    "outOfStock": 0,
+    "holidayMode": 0,
+    "invalidIds": 0,
+    "invalidImage": 0,
+    "invalidPrice": 0,
+    "baitPrice": 19441,
+    "invalidName": 1213,
+    "invalidSummary": 5441,
+    "contentQuality": 3793,
+    "lowRating": 929,
+    "lowSignal": 11849
+  },
+  "eligibleByCategory": {
+    "เครื่องเขียนและงานฝีมือ": 1557,
+    "ครัวและโต๊ะอาหาร": 959,
+    "ของใช้ในบ้านและสิ่งทอ": 415,
+    "อุปกรณ์จัดระเบียบและจัดเก็บ": 381,
+    "อุปกรณ์ทำความสะอาด": 326,
+    "อุปกรณ์สัตว์เลี้ยง": 132,
+    "สวนและกิจกรรมกลางแจ้ง": 125,
+    "กระเป๋าและอุปกรณ์เดินทาง": 14
+  },
+  "selectedByCategory": {
+    "อุปกรณ์ทำความสะอาด": 80,
+    "ครัวและโต๊ะอาหาร": 80,
+    "เครื่องเขียนและงานฝีมือ": 106,
+    "ของใช้ในบ้านและสิ่งทอ": 45,
+    "อุปกรณ์สัตว์เลี้ยง": 45,
+    "สวนและกิจกรรมกลางแจ้ง": 30,
+    "อุปกรณ์จัดระเบียบและจัดเก็บ": 100,
+    "กระเป๋าและอุปกรณ์เดินทาง": 14
+  }
+}

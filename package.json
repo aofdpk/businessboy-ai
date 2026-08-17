@@ -4,7 +4,9 @@
   "private": true,
   "description": "38 AI tools (BYO-key local / keyless via proxy on deploy) by เด็กประกอบการ",
   "scripts": {
-    "build:gen3": "node build-gen3.mjs"
+    "build:gen3": "node build-gen3.mjs",
+    "build:catalog": "node scripts/catalog/build-product-catalog.mjs",
+    "validate:catalog": "node scripts/catalog/validate-product-catalog.mjs"
   },
   "dependencies": {
     "ioredis": "^5.4.1",

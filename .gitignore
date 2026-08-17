@@ -3,6 +3,7 @@ node_modules/
 .playwright-mcp/
 _*.js
 !api/_gen3-bundle.js
+!api/_gen3-products.js
 _assets/
 local-gen3-server.js
 qa-runs/

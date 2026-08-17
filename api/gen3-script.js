@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const bundles = require('./_gen3-bundle');
-const ALLOWED_VIEWS = new Set(['identity', 'sales']);
+const ALLOWED_VIEWS = new Set(['identity', 'sales', 'products']);
 
 function safeEqual(left, right) {
   const a = Buffer.from(String(left));
