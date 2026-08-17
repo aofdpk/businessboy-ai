@@ -16,7 +16,7 @@ Generated artifacts:
 - `data/products/catalog.json`: schema-v2 metadata, the unranked featured DKUB book, and ranked products.
 - `data/products/catalog-reserve.json`: schema-v2 unranked replacements.
 - `data/products/build-report.json`: row counts, filtering diagnostics, category totals, month/season totals, and internal seasonal rule traces; it contains no raw descriptions.
-- `api/_gen3-products.js`: generated CommonJS source for authenticated, filtered, paginated server endpoints. Browsers receive only the requested page.
+- `api/_gen3-products.js`: generated gzip-compressed CommonJS payload for authenticated, filtered, paginated server endpoints. It expands server-side; browsers receive only the requested page.
 
 Ranked product contract:
 
