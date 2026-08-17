@@ -373,7 +373,7 @@ function CatalogApp() {
       <div className="catalog-shell">
         <section className="catalog-intro" aria-labelledby="catalog-title">
           <div><span className="eyebrow">PRODUCT LIBRARY · รุ่น 3</span><h1 id="catalog-title">500 สินค้าสำหรับทำคลิปแนวโกดัง</h1><p>ค้นหารูป ชื่อ รายละเอียดย่อ และราคาของสินค้าที่คัดมาให้แล้ว</p></div>
-          <div className="catalog-intro__stats" aria-label="ข้อมูลคลังสินค้า">
+          <div className="catalog-intro__stats" role="group" aria-label="ข้อมูลคลังสินค้า">
             <span><b>{catalog?.total ?? 500}</b> รายการ</span>
             <span>{catalog?.generatedAt ? formatCatalogUpdatedAt(catalog.generatedAt) : "กำลังโหลดเวลาอัปเดต"}</span>
           </div>
@@ -383,7 +383,7 @@ function CatalogApp() {
           <label htmlFor="catalog-query"><span>ค้นหาสินค้า</span>
             <input id="catalog-query" type="search" placeholder="เช่น กล่องจัดระเบียบ, ของใช้ในครัว" value={query} onChange={(event) => setQuery(event.target.value)} />
           </label>
-          <button ref={filterButton} className="catalog-filter-mobile" type="button" onClick={() => setFilterOpen(true)} aria-controls="catalog-filter-dialog" aria-expanded={filterOpen} aria-haspopup="dialog">ตัวกรอง</button>
+          <button ref={filterButton} className="catalog-filter-mobile" type="button" onClick={() => setFilterOpen(true)} aria-expanded={filterOpen} aria-haspopup="dialog">ตัวกรอง</button>
         </section>
 
         {catalog?.featured?.length ? (
