@@ -55,6 +55,10 @@ body:has(.catalog-app) { background: #f5f7fb; }
 .catalog-active-filters .catalog-active-filters__clear { border-color:#d7dfe9; background:#fff; color:#647087; }
 
 .catalog-section-heading--results { margin:0 0 14px; }
+.catalog-period-summary { display:flex; flex-wrap:wrap; gap:8px; margin:-4px 0 14px; }
+.catalog-period-summary span { border:1px solid #c8d8e8; border-radius:999px; padding:6px 10px; background:#fff; color:#526078; font-size:10px; }
+.catalog-period-summary span:first-child { border-color:#99cfbb; background:#eefaf5; color:#086346; }
+.catalog-period-summary b { margin-right:3px; font-size:11px; }
 .catalog-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; align-items:stretch; }
 .catalog-card { min-width:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid #dce5f2; border-radius:17px; background:#fff; box-shadow:0 7px 24px rgba(28,55,92,.045); }
 .catalog-card__media { position:relative; aspect-ratio:1/1; overflow:hidden; display:grid; place-items:center; border-bottom:1px solid #e5ebf4; background:#f7f9fc; }
@@ -70,6 +74,10 @@ body:has(.catalog-app) { background: #f5f7fb; }
 .catalog-card__summary { display:-webkit-box; min-height:43px; max-height:43px; margin:8px 0 13px; overflow:hidden; color:#5d6b80; font-size:12px; line-height:1.65; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
 .catalog-card__signals { display:flex; flex-wrap:wrap; gap:5px 9px; min-height:36px; margin:0 0 9px; color:#536177; font-size:10px; line-height:1.45; }
 .catalog-card__signals span:first-child { color:#9b6500; font-weight:700; }
+.catalog-card__period-match { display:grid; gap:3px; margin:0 0 9px; border:1px solid #b7ddcf; border-radius:10px; padding:7px 8px; background:#f2fbf7; color:#315d4e; font-size:9px; line-height:1.4; }
+.catalog-card__period-match b { color:#087052; font-size:9.5px; }
+.catalog-card__period-match--evergreen-fallback,.catalog-card__period-match--evergreen { border-color:#d6dce6; background:#f7f8fa; color:#5e6879; }
+.catalog-card__period-match--evergreen-fallback b,.catalog-card__period-match--evergreen b { color:#4e5a6d; }
 .catalog-card__badges { display:flex; flex-wrap:wrap; gap:5px; margin:0 0 10px; }
 .catalog-card__badges span { max-width:100%; overflow:hidden; border-radius:999px; padding:4px 7px; background:#eaf7f2; color:#086346; font-size:9px; font-weight:650; line-height:1.25; text-overflow:ellipsis; white-space:nowrap; }
 .catalog-card__notice { margin:0 0 10px; border-left:3px solid #e2b34e; padding:5px 0 5px 8px; color:#725b2a; font-size:9px; line-height:1.45; }

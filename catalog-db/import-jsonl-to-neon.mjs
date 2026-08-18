@@ -20,7 +20,8 @@ const columns = [
   'subcategory_key', 'subcategory', 'image_url', 'clean_name', 'summary', 'price_min', 'price_max', 'price_type',
   'checked_at', 'product_url', 'shop_name', 'item_sold', 'rating', 'likes', 'shop_rating', 'shop_type',
   'stock_status', 'stock_level', 'recommendation_score', 'reason_codes', 'season_tags', 'month_tags',
-  'seasonal_score', 'season_reason', 'risk_tier', 'review_status', 'review_method', 'normalized_search_text', 'source_hash',
+  'seasonal_score', 'season_reason', 'metadata_version', 'evergreen', 'season_scores', 'season_reasons', 'month_scores',
+  'month_reasons', 'campaign_tags', 'risk_tier', 'review_status', 'review_method', 'normalized_search_text', 'source_hash',
 ];
 
 function publicIdFor(record) {
@@ -48,7 +49,9 @@ function valueFor(record) {
     record.checkedAt, record.productUrl, record.shopName || null, record.itemSold ?? null, record.rating ?? null,
     record.likes ?? null, record.shopRating ?? null, record.shopType || 'general', record.stockStatus || 'unknown',
     record.stockLevel || null, record.recommendationScore ?? 0, record.reasonCodes || [], record.seasonTags || [],
-    record.monthTags || [], record.seasonalScore ?? 0, record.seasonReason || '', record.riskTier || 'green',
+    record.monthTags || [], record.seasonalScore ?? 0, record.seasonReason || '', record.metadataVersion || 'seasonal-legacy',
+    record.evergreen === true, JSON.stringify(record.seasonScores || {}), JSON.stringify(record.seasonReasons || {}),
+    JSON.stringify(record.monthScores || {}), JSON.stringify(record.monthReasons || {}), record.campaignTags || [], record.riskTier || 'green',
     record.reviewStatus, record.reviewMethod || null, record.normalizedSearchText, record.sourceHash || null,
   ];
 }
@@ -74,6 +77,54 @@ async function preflight() {
   let ranked = 0;
   let featured = 0;
   let total = 0;
+  const rankedMetadataVersions = new Set();
+
+  function validateScores(value, allowedKeys, fieldName, lineNumber, id) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}`);
+    for (const [key, score] of Object.entries(value)) {
+      if (!allowedKeys.has(String(key)) || !Number.isInteger(score) || score < 0 || score > 100) {
+        throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}.${key}`);
+      }
+    }
+  }
+
+  function validateReasons(value, allowedKeys, fieldName, lineNumber, id) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}`);
+    for (const [key, reasons] of Object.entries(value)) {
+      if (!allowedKeys.has(String(key)) || !Array.isArray(reasons) || reasons.length < 1 || reasons.length > 3 || reasons.some((reason) => !String(reason || '').trim() || String(reason).length > 180)) {
+        throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}.${key}`);
+      }
+    }
+  }
+
+  function validateSeasonalV4(record, lineNumber, id) {
+    const seasonKeys = new Set(['hot', 'rainy', 'cool']);
+    const monthKeys = new Set(Array.from({ length: 12 }, (_, index) => String(index + 1)));
+    if (typeof record.evergreen !== 'boolean') throw new Error(`Line ${lineNumber} (${id}) is missing evergreen`);
+    validateScores(record.seasonScores, seasonKeys, 'seasonScores', lineNumber, id);
+    validateReasons(record.seasonReasons, seasonKeys, 'seasonReasons', lineNumber, id);
+    validateScores(record.monthScores, monthKeys, 'monthScores', lineNumber, id);
+    validateReasons(record.monthReasons, monthKeys, 'monthReasons', lineNumber, id);
+    const seasonTags = Array.isArray(record.seasonTags) ? record.seasonTags : [];
+    const monthTags = Array.isArray(record.monthTags) ? record.monthTags : [];
+    if (record.evergreen !== seasonTags.includes('all-year')) throw new Error(`Line ${lineNumber} (${id}) has inconsistent evergreen/all-year metadata`);
+    for (const month of monthTags) {
+      if (!Number.isInteger(month) || month < 1 || month > 12 || !(Number(record.monthScores[String(month)]) > 0)) {
+        throw new Error(`Line ${lineNumber} (${id}) has a monthTags/monthScores mismatch`);
+      }
+    }
+    for (const [month, score] of Object.entries(record.monthScores)) {
+      if (score > 0 && (!monthTags.includes(Number(month)) || !record.monthReasons[month]?.length)) {
+        throw new Error(`Line ${lineNumber} (${id}) has a monthScores/monthReasons mismatch`);
+      }
+    }
+    for (const season of seasonTags.filter((tag) => seasonKeys.has(tag))) {
+      if (!(record.seasonScores[season] > 0) || !record.seasonReasons[season]?.length) {
+        throw new Error(`Line ${lineNumber} (${id}) has a season tag/score/reason mismatch`);
+      }
+    }
+  }
+
   for await (const { lineNumber, record } of jsonLines()) {
     const id = String(record?.id || '');
     const requiredText = ['cleanName', 'summary', 'normalizedSearchText', 'categoryGroupKey', 'categoryGroup', 'categoryKey', 'category', 'imageUrl', 'productUrl', 'checkedAt'];
@@ -81,6 +132,8 @@ async function preflight() {
       throw new Error(`Line ${lineNumber} is missing one or more required catalog fields`);
     }
     if (record.reviewStatus !== 'approved') throw new Error(`Line ${lineNumber} (${id}) is not approved`);
+    if (record.metadataVersion === 'seasonal-v4') validateSeasonalV4(record, lineNumber, id);
+    else if (record.metadataVersion && record.metadataVersion !== 'seasonal-legacy') throw new Error(`Line ${lineNumber} (${id}) has unsupported metadataVersion`);
     if (!['green', 'amber'].includes(record.riskTier)) throw new Error(`Line ${lineNumber} (${id}) has invalid riskTier`);
     if (!Number.isFinite(Date.parse(record.checkedAt))) throw new Error(`Line ${lineNumber} (${id}) has invalid checkedAt`);
     if (![record.priceMin, record.priceMax].some((value) => Number.isFinite(Number(value)) && Number(value) >= 0)) {
@@ -95,6 +148,7 @@ async function preflight() {
     publicIds.add(publicId);
     if (record.featured === true) featured += 1;
     else {
+      rankedMetadataVersions.add(record.metadataVersion === 'seasonal-v4' ? 'seasonal-v4' : 'seasonal-legacy');
       if (!Number.isInteger(record.rank) || record.rank < 1 || ranks.has(record.rank)) throw new Error(`Line ${lineNumber} (${id}) has invalid or duplicate rank`);
       ranks.add(record.rank);
       ranked += 1;
@@ -107,7 +161,8 @@ async function preflight() {
   for (let rank = 1; rank <= expectedRanked; rank += 1) {
     if (!ranks.has(rank)) throw new Error(`JSONL is missing rank ${rank}`);
   }
-  return { ranked, featured, total };
+  if (rankedMetadataVersions.size !== 1) throw new Error('Ranked records mix legacy and seasonal-v4 metadata');
+  return { ranked, featured, total, schemaVersion: rankedMetadataVersions.has('seasonal-v4') ? 4 : 3 };
 }
 
 const counts = await preflight();
@@ -123,7 +178,7 @@ const existing = await sql.query(`SELECT r.id, r.status, COUNT(p.id)::int AS row
 if (existing[0]) throw new Error(`Run ID ${runId} already exists (${existing[0].status}, ${existing[0].row_count} rows); use a new run ID`);
 
 await sql.query(`INSERT INTO gen3_catalog_runs (id, status, schema_version, generated_at, total_count, metadata)
-  VALUES ($1, 'staged', 3, NOW(), $2, $3::jsonb)`, [runId, expectedRanked, JSON.stringify({ importedFrom: basename(filePath), expectedRanked })]);
+  VALUES ($1, 'staged', $2, NOW(), $3, $4::jsonb)`, [runId, counts.schemaVersion, expectedRanked, JSON.stringify({ importedFrom: basename(filePath), expectedRanked, metadataVersion: counts.schemaVersion >= 4 ? 'seasonal-v4' : 'seasonal-legacy' })]);
 
 let imported = 0;
 let batch = [];

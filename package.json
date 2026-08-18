@@ -6,6 +6,7 @@
   "scripts": {
     "build:gen3": "node build-gen3.mjs",
     "build:catalog": "node scripts/catalog/build-product-catalog.mjs",
+    "retag:catalog": "node scripts/catalog/retag-product-catalog-v4.mjs",
     "validate:catalog": "node scripts/catalog/validate-product-catalog.mjs",
     "test:catalog-api": "node catalog-db/smoke-test.mjs",
     "test:catalog-db": "node catalog-db/pipeline-contract-test.mjs",

@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS gen3_catalog_products (
   month_tags SMALLINT[] NOT NULL DEFAULT ARRAY[]::SMALLINT[],
   seasonal_score SMALLINT NOT NULL DEFAULT 0 CHECK (seasonal_score BETWEEN 0 AND 100),
   season_reason TEXT NOT NULL DEFAULT '',
+  metadata_version TEXT NOT NULL DEFAULT 'seasonal-legacy',
+  evergreen BOOLEAN NOT NULL DEFAULT FALSE,
+  season_scores JSONB NOT NULL DEFAULT '{}'::JSONB,
+  season_reasons JSONB NOT NULL DEFAULT '{}'::JSONB,
+  month_scores JSONB NOT NULL DEFAULT '{}'::JSONB,
+  month_reasons JSONB NOT NULL DEFAULT '{}'::JSONB,
+  campaign_tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   risk_tier TEXT NOT NULL CHECK (risk_tier IN ('green', 'amber')),
   review_status TEXT NOT NULL CHECK (review_status IN ('approved', 'conditional', 'blocked', 'pending')),
   review_method TEXT,
@@ -62,8 +69,20 @@ CREATE TABLE IF NOT EXISTS gen3_catalog_products (
   CHECK (price_min IS NULL OR price_min >= 0),
   CHECK (price_max IS NULL OR price_max >= 0),
   CHECK (rating IS NULL OR rating BETWEEN 0 AND 5),
-  CHECK (shop_rating IS NULL OR shop_rating BETWEEN 0 AND 5)
+  CHECK (shop_rating IS NULL OR shop_rating BETWEEN 0 AND 5),
+  CHECK (jsonb_typeof(season_scores) = 'object'),
+  CHECK (jsonb_typeof(season_reasons) = 'object'),
+  CHECK (jsonb_typeof(month_scores) = 'object'),
+  CHECK (jsonb_typeof(month_reasons) = 'object')
 );
+
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS metadata_version TEXT NOT NULL DEFAULT 'seasonal-legacy';
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS evergreen BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS season_scores JSONB NOT NULL DEFAULT '{}'::JSONB;
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS season_reasons JSONB NOT NULL DEFAULT '{}'::JSONB;
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS month_scores JSONB NOT NULL DEFAULT '{}'::JSONB;
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS month_reasons JSONB NOT NULL DEFAULT '{}'::JSONB;
+ALTER TABLE gen3_catalog_products ADD COLUMN IF NOT EXISTS campaign_tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
 
 CREATE INDEX IF NOT EXISTS gen3_catalog_recommended_idx
   ON gen3_catalog_products (run_id, featured, review_status, recommendation_score DESC, rank, public_id);
@@ -87,6 +106,8 @@ CREATE INDEX IF NOT EXISTS gen3_catalog_seasons_gin
   ON gen3_catalog_products USING GIN (season_tags);
 CREATE INDEX IF NOT EXISTS gen3_catalog_months_gin
   ON gen3_catalog_products USING GIN (month_tags);
+CREATE INDEX IF NOT EXISTS gen3_catalog_evergreen_idx
+  ON gen3_catalog_products (run_id, evergreen, recommendation_score DESC, public_id);
 CREATE INDEX IF NOT EXISTS gen3_catalog_search_trgm
   ON gen3_catalog_products USING GIN (normalized_search_text gin_trgm_ops);
 

@@ -9,10 +9,26 @@ import {
   sanitizeText,
   toFiniteNumber,
 } from './catalog-lib.mjs';
+import {
+  makeSeasonalMetadataV4,
+  SEASONAL_METADATA_VERSION,
+} from './seasonal-metadata-v4.mjs';
 
 export { MinHeap };
+export {
+  CAMPAIGN_RULES,
+  CAMPAIGN_TAGS,
+  CLIMATE_MONTH_PROFILES,
+  CLIMATE_RULES,
+  CLIMATE_SEASONS,
+  INTENTIONAL_WHOLE_CATEGORY_CAMPAIGN_RULE_IDS,
+  makeSeasonalMetadataV4,
+  SEASONAL_METADATA_VERSION,
+  SEASONAL_V4_GOLDEN_FIXTURES,
+  STRICT_SUN_TOKEN,
+} from './seasonal-metadata-v4.mjs';
 
-export const CATALOG_SCHEMA_VERSION = 3;
+export const CATALOG_SCHEMA_VERSION = 4;
 export const DEFAULT_RANKED_TARGET = 20_000;
 export const DEFAULT_RESERVE_TARGET = 2_000;
 export const MINIMUM_RANKED_COUNT = 18_000;
@@ -515,34 +531,6 @@ function passesControlledReview({ category, cleanName, summary, sourceText, chec
   return true;
 }
 
-function seasonalMetadata(category, title) {
-  const text = `${category.key} ${title}`;
-  const tags = [];
-  const months = new Set();
-  const add = (tag, values) => { tags.push(tag); values.forEach((month) => months.add(month)); };
-  let reason = 'เหมาะนำเสนอและทำคอนเทนต์ได้ตลอดทั้งปี';
-  if (/กันฝน|ร่ม|เสื้อกันฝน|ผ้าใบ|dry\s*bag|rain|umbrella|bath-laundry|cleaning/iu.test(text)) {
-    add('rainy', [6, 7, 8, 9, 10]); reason = 'เหมาะกับการใช้งานและทำคอนเทนต์ในช่วงหน้าฝน';
-  }
-  if (/กันแดด|บังแดด|sun|แก้ว|ขวดน้ํา|ขวดน้ำ|camping/iu.test(text)) {
-    add('hot', [3, 4, 5]); reason = 'เหมาะกับการใช้งานและทำคอนเทนต์ในช่วงอากาศร้อน';
-  }
-  if (/หนังสือ|สมุด|ปากกา|ดินสอ|school|physical-books|writing|paper/iu.test(text)) {
-    [1, 5, 6, 10].forEach((month) => months.add(month)); reason = 'เหมาะกับช่วงเปิดเทอมและการเริ่มต้นเรียนรู้';
-  }
-  if (/gift|packing|home-decor|fashion|hobby/iu.test(text)) {
-    [11, 12, 1].forEach((month) => months.add(month)); reason = 'เหมาะกับคอนเทนต์ของขวัญและเทศกาลปลายปี';
-  }
-  const uniqueTags = [...new Set(tags)];
-  if (!uniqueTags.length) uniqueTags.push('all-year');
-  return {
-    seasonTags: uniqueTags,
-    monthTags: [...months].sort((a, b) => a - b),
-    seasonalScore: uniqueTags.includes('all-year') ? 50 : Math.min(95, 70 + months.size * 3),
-    seasonReason: reason,
-  };
-}
-
 function priceFitScore(priceMin) {
   if (priceMin >= 39 && priceMin <= 799) return 1;
   if (priceMin >= 20 && priceMin <= 1_999) return 0.85;
@@ -678,7 +666,7 @@ export function evaluateSellableRow(row, index, checkedAt, rejectionCounts) {
   if (!passesControlledReview({ category, cleanName, summary, sourceText: controlledSourceText, checkedAt, shopType: type })) {
     increment(rejectionCounts, 'controlledReview'); return null;
   }
-  const seasonal = seasonalMetadata(category, cleanName);
+  const seasonal = makeSeasonalMetadataV4(category, cleanName, summary);
   const score = recommendationScore({
     itemSold, rating, likes, shopRating, shopType: type, stock, priceMin: prices.priceMin,
     descriptionLength: description.trim().length, seasonalScore: seasonal.seasonalScore,
@@ -801,6 +789,11 @@ export function parseCheckedAtFromFilename(inputPath) {
 }
 
 export function makeFeaturedBook() {
+  const seasonal = makeSeasonalMetadataV4(
+    'physical-books',
+    'หนังสือคว้าเงินล้านในอากาศ ด้วยคลิป AI ปักตะกร้า ฉบับนายหน้า TikTok',
+    'หนังสือสอนสร้างคลิป AI สำหรับนายหน้า TikTok ตั้งแต่หาแนวคิด วางเนื้อหา ไปจนถึงทำคลิปปักตะกร้าเป็นขั้นตอน',
+  );
   const base = {
     id: 'featured-dkub-book', featured: true,
     categoryGroupKey: 'learning', categoryGroup: GROUPS.learning,
@@ -811,8 +804,7 @@ export function makeFeaturedBook() {
     summary: 'หนังสือสอนสร้างคลิป AI สำหรับนายหน้า TikTok ตั้งแต่หาแนวคิด วางเนื้อหา ไปจนถึงทำคลิปปักตะกร้าเป็นขั้นตอน',
     priceMin: 345, priceMax: 345, priceType: 'fixed', checkedAt: '2026-08-17T15:26:00+07:00',
     productUrl: 'https://shopee.co.th/product/1032408641/48511491095',
-    seasonTags: ['all-year'], monthTags: [], seasonalScore: 50,
-    seasonReason: 'เหมาะนำเสนอและทำคอนเทนต์ได้ตลอดทั้งปี',
+    ...seasonal,
     shopName: 'DkubStore', shopId: '1032408641', itemId: '48511491095',
   };
   return { ...base, normalizedSearchText: makeSearchText(base) };

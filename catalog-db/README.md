@@ -37,12 +37,15 @@ Importing never modifies the active run. The database function refuses activatio
 - There is intentionally no review-count or commission field.
 - Seller IDs and item IDs remain inside the import pipeline and are not returned by the public API.
 - `normalizedSearchText` must be precomputed before import.
+- Seasonal metadata v4 keeps legacy `seasonTags`, `monthTags`, `seasonalScore`, and `seasonReason` for rollback compatibility, and adds `evergreen`, per-season scores/reasons, and per-month scores/reasons. A v4 run may not mix legacy and v4 ranked rows.
+- Month browsing returns explicit peak-month matches first, followed by clearly labelled evergreen fallback products. Climate-season browsing remains exact; `all-year` is presented as “ไม่เน้นฤดูกาล”.
+- Facet counts are contextual and self-excluding: category counts retain the selected parent group, subcategory counts retain group and category, and period counts retain all non-period filters.
 
 ## Performance contract
 
 - The browser receives at most 48 rows per request; the UI defaults to 24 and replaces the page rather than growing the DOM.
 - API pagination uses an HMAC-signed, snapshot-bound opaque cursor compatible with indexed keyset queries. Neon rejects deep `offset`; legacy `offset` remains bundled-only.
-- Bundled mode keeps a bounded 50-page, two-minute per-instance LRU result cache. It contains catalog responses only—never cookies, sessions, or secrets.
-- Neon facets are aggregated once per warm runtime and cached for 60 seconds. No 20,000-row payload is sent to a browser.
+- Both runtime modes keep a bounded 50-page, two-minute per-instance LRU result cache keyed by snapshot and filters. It contains catalog responses only—never cookies, sessions, or secrets.
+- Neon keeps the snapshot taxonomy warm for 60 seconds and computes contextual aggregate counts in SQL. No 20,000-row payload is sent to a browser.
 - Run `npm run benchmark:catalog` to measure cold/warm common queries plus 50 concurrent identical and distinct requests.
 - Run `npm run test:catalog-db` for offline JSONL preflight and activation/rollback contract checks; it does not connect to Neon.

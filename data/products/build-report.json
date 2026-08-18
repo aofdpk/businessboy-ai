@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "catalogName": "คลังสินค้าน่าขาย",
   "catalogDescription": "สินค้าคัดจากยอดขายสะสม คะแนนสินค้า คุณภาพร้าน ราคา และความเหมาะกับช่วงเวลา",
-  "generatedAt": "2026-08-17T18:42:49.321Z",
+  "generatedAt": "2026-08-18T03:57:09.197Z",
   "sourceCheckedAt": "2026-08-17T05:31:45+07:00",
   "targetRankedCount": 20000,
   "minimumRankedCount": 18000,
@@ -530,23 +530,24 @@
     "skincare-mask-lip": 2
   },
   "selectedBySeasonTag": {
-    "rainy": 2062,
-    "all-year": 16359,
-    "hot": 2172
+    "all-year": 19009,
+    "hot": 458,
+    "rainy": 409,
+    "cool": 132
   },
   "selectedByMonth": {
-    "1": 5625,
-    "2": 0,
-    "3": 2172,
-    "4": 2172,
-    "5": 4919,
-    "6": 4853,
-    "7": 2062,
-    "8": 2062,
-    "9": 2062,
-    "10": 4853,
-    "11": 2865,
-    "12": 2865
+    "1": 779,
+    "2": 727,
+    "3": 638,
+    "4": 655,
+    "5": 2105,
+    "6": 1631,
+    "7": 427,
+    "8": 423,
+    "9": 952,
+    "10": 1850,
+    "11": 1777,
+    "12": 1111
   },
   "selectedByGroup": {
     "บ้าน ครัว และการจัดเก็บ": 7135,
@@ -592,6 +593,90 @@
     "selectedPriceBaitCount": 0,
     "selectedDuplicateIdCount": 0,
     "reviewCountFieldPresent": false,
-    "commissionFieldPresent": false
+    "commissionFieldPresent": false,
+    "seasonalRetagOnly": true,
+    "rankedIdOrderPreserved": true,
+    "reserveIdOrderPreserved": true,
+    "nonSeasonalRecordContentPreserved": true,
+    "everySeasonCovered": true,
+    "everyMonthCovered": true
+  },
+  "seasonalMetadataVersion": "seasonal-v4",
+  "selectedEvergreenCount": 19009,
+  "selectedByCampaignTag": {
+    "new-year-organize": 543,
+    "new-year-planner": 13,
+    "travel-organizing": 91,
+    "camping-travel": 89,
+    "valentine-explicit-gift": 46,
+    "songkran-waterproof": 17,
+    "school-education-books": 160,
+    "school-writing": 637,
+    "school-paper-notebooks": 204,
+    "school-art": 203,
+    "school-backpack-explicit": 18,
+    "rainy-season-prep": 429,
+    "rain-drying-water-management": 423,
+    "mothers-day-explicit": 14,
+    "indoor-organizing": 543,
+    "year-end-gift-packing": 238,
+    "year-end-explicit-gift": 95
+  },
+  "selectedSeasonCombinations": {
+    "all-year": 19009,
+    "hot": 454,
+    "cool": 128,
+    "rainy": 401,
+    "hot+rainy": 4,
+    "rainy+cool": 4
+  },
+  "reserveSeasonalMetadata": {
+    "seasonalMetadataVersion": "seasonal-v4",
+    "selectedEvergreenCount": 1910,
+    "selectedBySeasonTag": {
+      "all-year": 1910,
+      "hot": 64,
+      "rainy": 20,
+      "cool": 6
+    },
+    "selectedByMonth": {
+      "1": 58,
+      "2": 78,
+      "3": 69,
+      "4": 70,
+      "5": 353,
+      "6": 288,
+      "7": 21,
+      "8": 20,
+      "9": 70,
+      "10": 296,
+      "11": 299,
+      "12": 81
+    },
+    "selectedByCampaignTag": {
+      "new-year-organize": 50,
+      "new-year-planner": 0,
+      "travel-organizing": 2,
+      "camping-travel": 3,
+      "valentine-explicit-gift": 6,
+      "songkran-waterproof": 1,
+      "school-education-books": 30,
+      "school-writing": 123,
+      "school-paper-notebooks": 65,
+      "school-art": 50,
+      "school-backpack-explicit": 0,
+      "rainy-season-prep": 21,
+      "rain-drying-water-management": 21,
+      "mothers-day-explicit": 0,
+      "indoor-organizing": 50,
+      "year-end-gift-packing": 9,
+      "year-end-explicit-gift": 14
+    },
+    "selectedSeasonCombinations": {
+      "all-year": 1910,
+      "rainy": 20,
+      "hot": 64,
+      "cool": 6
+    }
   }
 }

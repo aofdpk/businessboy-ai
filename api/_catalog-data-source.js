@@ -5,9 +5,11 @@ const crypto = require('crypto');
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 48;
 const CONTEXT_TTL_MS = 60_000;
-const BUNDLED_RESULT_TTL_MS = 120_000;
-const BUNDLED_RESULT_CACHE_MAX = 50;
-const SEASONS = new Set(['all-year', 'hot', 'rainy', 'cool']);
+const RESULT_TTL_MS = 120_000;
+const RESULT_CACHE_MAX = 50;
+const CLIMATE_SEASONS = new Set(['hot', 'rainy', 'cool']);
+const SEASONS = new Set(['all-year', ...CLIMATE_SEASONS]);
+const MONTH_KEYS = new Set(Array.from({ length: 12 }, (_, index) => String(index + 1)));
 const SHOP_TYPES = new Set(['official', 'preferred', 'general']);
 const SORTS = new Set(['recommended', 'sold-desc', 'rating-desc', 'price-asc', 'price-desc', 'seasonal', 'newest']);
 const PRICE_RANGES = Object.freeze({
@@ -19,11 +21,12 @@ const PRICE_RANGES = Object.freeze({
   'over-1000': { min: 1000.01, max: Number.POSITIVE_INFINITY },
 });
 const PERIOD_LABELS = Object.freeze({
-  'all-year': 'ขายได้ตลอดปี',
-  hot: 'หน้าร้อน',
-  rainy: 'หน้าฝน',
-  cool: 'หน้าหนาว/อากาศเย็น',
+  'all-year': 'ไม่เน้นฤดูกาล',
+  hot: 'หน้าร้อน/ช่วงอากาศร้อน',
+  rainy: 'หน้าฝน/ช่วงฝน',
+  cool: 'หน้าหนาว/ช่วงอากาศเย็น',
 });
+const MONTH_LABELS = Object.freeze(['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']);
 const REASON_LABELS = Object.freeze({
   'strong-sales': 'ยอดขายสะสมสูง',
   'high-sales': 'ยอดขายสะสมสูง',
@@ -50,7 +53,7 @@ const REASON_LABELS = Object.freeze({
 let bundledContext;
 let neonClient;
 let neonContextCache;
-const bundledResultCache = new Map();
+const catalogResultCache = new Map();
 
 function first(value) {
   return Array.isArray(value) ? value[0] : value;
@@ -139,6 +142,53 @@ function numberArray(value, min, max) {
   return [...new Set(values(value).map(Number).filter((entry) => Number.isInteger(entry) && entry >= min && entry <= max))].sort((a, b) => a - b);
 }
 
+function trustedBundledUrl(value, kind) {
+  const candidate = typeof value === 'string' ? value.trim().slice(0, 2_000) : '';
+  if (!candidate) return '';
+  const shopee = /^https:\/\/(?:[a-z0-9-]+\.)*shopee\.co\.th(?:[/:?#]|$)/i;
+  const suresource = /^https:\/\/(?:[a-z0-9-]+\.)*susercontent\.com(?:[/:?#]|$)/i;
+  return (shopee.test(candidate) || (kind === 'image' && suresource.test(candidate))) ? candidate : '';
+}
+
+function objectValue(value) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+  if (typeof value !== 'string' || !value.trim()) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function scoreMap(value, allowedKeys) {
+  const result = {};
+  for (const [rawKey, rawScore] of Object.entries(objectValue(value))) {
+    const cleanKey = String(rawKey).toLowerCase();
+    if (!allowedKeys.has(cleanKey)) continue;
+    const score = integer(rawScore, 0, 100);
+    if (score !== null) result[cleanKey] = score;
+  }
+  return result;
+}
+
+function reasonMap(value, allowedKeys) {
+  const result = {};
+  for (const [rawKey, rawReasons] of Object.entries(objectValue(value))) {
+    const cleanKey = String(rawKey).toLowerCase();
+    if (!allowedKeys.has(cleanKey)) continue;
+    const entries = Array.isArray(rawReasons) ? rawReasons : [rawReasons];
+    const reasons = [];
+    for (const entry of entries) {
+      const clean = text(entry, 180);
+      if (clean && !reasons.includes(clean)) reasons.push(clean);
+      if (reasons.length >= 3) break;
+    }
+    if (reasons.length) result[cleanKey] = reasons;
+  }
+  return result;
+}
+
 function fallbackKey(label, prefix) {
   return `${prefix}-${crypto.createHash('sha256').update(label).digest('hex').slice(0, 12)}`;
 }
@@ -147,13 +197,21 @@ function field(record, camel, snake) {
   return record?.[camel] ?? record?.[snake];
 }
 
-function normalizeProduct(record, featuredOverride = false) {
+function normalizeProduct(record, featuredOverride = false, trustedBundle = false) {
   if (!record || typeof record !== 'object') return null;
   const sourceId = identifier(field(record, 'id', 'id'));
-  const id = publicIdFor(sourceId, field(record, 'publicId', 'public_id'));
+  const suppliedId = identifier(field(record, 'publicId', 'public_id'));
+  // Bundled rows do not carry public IDs. Defer their SHA-256 derivation until a
+  // row is actually returned (or the download index is requested) so the first
+  // catalog page does not hash all 20,000 records.
+  const id = /^[A-Za-z0-9_-]{12,80}$/.test(suppliedId) ? suppliedId : '';
   const cleanName = text(field(record, 'cleanName', 'clean_name'), 300);
-  const imageUrl = trustedUrl(field(record, 'imageUrl', 'image_url'), 'image');
-  const productUrl = trustedUrl(field(record, 'productUrl', 'product_url'), 'product');
+  const imageUrl = trustedBundle
+    ? trustedBundledUrl(field(record, 'imageUrl', 'image_url'), 'image')
+    : trustedUrl(field(record, 'imageUrl', 'image_url'), 'image');
+  const productUrl = trustedBundle
+    ? trustedBundledUrl(field(record, 'productUrl', 'product_url'), 'product')
+    : trustedUrl(field(record, 'productUrl', 'product_url'), 'product');
   const reviewStatus = text(field(record, 'reviewStatus', 'review_status'), 24).toLowerCase();
   if (!sourceId || !cleanName || !imageUrl || !productUrl || (reviewStatus && reviewStatus !== 'approved')) return null;
 
@@ -175,8 +233,15 @@ function normalizeProduct(record, featuredOverride = false) {
   const recommendationScore = finiteNumber(field(record, 'recommendationScore', 'recommendation_score'), 0, 1_000_000) ?? (rank ? Math.max(0, 1_000_000 - rank) : 0);
   const seasonTags = stringArray(field(record, 'seasonTags', 'season_tags'), SEASONS, 4);
   const monthTags = numberArray(field(record, 'monthTags', 'month_tags'), 1, 12);
+  const metadataVersion = text(field(record, 'metadataVersion', 'metadata_version'), 40).toLowerCase();
+  const evergreen = field(record, 'evergreen', 'evergreen') === true || seasonTags.includes('all-year');
+  const seasonScores = scoreMap(field(record, 'seasonScores', 'season_scores'), CLIMATE_SEASONS);
+  const seasonReasons = reasonMap(field(record, 'seasonReasons', 'season_reasons'), CLIMATE_SEASONS);
+  const monthScores = scoreMap(field(record, 'monthScores', 'month_scores'), MONTH_KEYS);
+  const monthReasons = reasonMap(field(record, 'monthReasons', 'month_reasons'), MONTH_KEYS);
   const summary = text(field(record, 'summary', 'summary'), 700);
-  const normalizedSearchText = normalizeSearch(field(record, 'normalizedSearchText', 'normalized_search_text'))
+  const suppliedSearchText = field(record, 'normalizedSearchText', 'normalized_search_text');
+  const normalizedSearchText = (trustedBundle && typeof suppliedSearchText === 'string' ? suppliedSearchText.slice(0, 2_000) : normalizeSearch(suppliedSearchText))
     || normalizeSearch(`${cleanName} ${summary} ${categoryGroup} ${category} ${subcategory}`);
 
   return {
@@ -207,6 +272,12 @@ function normalizeProduct(record, featuredOverride = false) {
     stockStatus,
     seasonTags,
     monthTags,
+    metadataVersion,
+    evergreen,
+    seasonScores,
+    seasonReasons,
+    monthScores,
+    monthReasons,
     seasonalScore: integer(field(record, 'seasonalScore', 'seasonal_score'), 0, 100) ?? 0,
     seasonReason: text(field(record, 'seasonReason', 'season_reason'), 240),
     reasonCodes: stringArray(field(record, 'reasonCodes', 'reason_codes'), null, 12),
@@ -215,8 +286,55 @@ function normalizeProduct(record, featuredOverride = false) {
   };
 }
 
-function reasonBadges(product) {
+function productPublicId(product) {
+  if (!product.id) product.id = publicIdFor(product.sourceId, '');
+  return product.id;
+}
+
+function isPeakMonth(product, month) {
+  return Number(product.monthScores[String(month)]) > 0 || product.monthTags.includes(month);
+}
+
+function selectedPeriodMatch(product, period) {
+  if (!period || period === 'all') return { period: 'all', kind: 'none', score: 0, reason: '', badge: '' };
+  if (period === 'all-year') {
+    return product.evergreen
+      ? { period, kind: 'evergreen', score: 0, reason: 'เหมาะใช้เป็นสินค้าที่ไม่เน้นฤดูกาล', badge: 'ไม่เน้นฤดูกาล' }
+      : { period, kind: 'none', score: 0, reason: '', badge: '' };
+  }
+  if (CLIMATE_SEASONS.has(period)) {
+    if (!product.seasonTags.includes(period)) return { period, kind: 'none', score: 0, reason: '', badge: '' };
+    const mappedScore = integer(product.seasonScores[period], 0, 100);
+    const score = mappedScore !== null && mappedScore > 0 ? mappedScore : product.seasonalScore;
+    const reason = product.seasonReasons[period]?.[0] || product.seasonReason || `เหมาะกับ${PERIOD_LABELS[period]}`;
+    return { period, kind: 'season', score, reason, badge: `เด่น${PERIOD_LABELS[period]}` };
+  }
+  if (period.startsWith('month-')) {
+    const month = Number(period.slice(6));
+    const monthKey = String(month);
+    const mappedScore = integer(product.monthScores[monthKey], 0, 100);
+    const isPeak = isPeakMonth(product, month);
+    if (isPeak) {
+      const score = mappedScore !== null && mappedScore > 0 ? mappedScore : product.seasonalScore;
+      const reason = product.monthReasons[monthKey]?.[0] || product.seasonReason || `เหมาะทำคอนเทนต์ในเดือน${MONTH_LABELS[month - 1]}`;
+      return { period, kind: 'peak', score, reason, badge: `เด่นเดือน${MONTH_LABELS[month - 1]}` };
+    }
+    if (product.evergreen) {
+      return { period, kind: 'evergreen-fallback', score: 0, reason: `สินค้าไม่เน้นฤดูกาล ใช้เป็นตัวเลือกสำรองของเดือน${MONTH_LABELS[month - 1]}ได้`, badge: 'ไม่เน้นฤดูกาล' };
+    }
+  }
+  return { period, kind: 'none', score: 0, reason: '', badge: '' };
+}
+
+function periodSortTier(match) {
+  if (match.kind === 'peak' || match.kind === 'season') return 2;
+  if (match.kind === 'evergreen' || match.kind === 'evergreen-fallback') return 1;
+  return 0;
+}
+
+function reasonBadges(product, periodMatch) {
   const labels = [];
+  if (periodMatch?.badge) labels.push(periodMatch.badge);
   for (const code of product.reasonCodes) {
     const label = REASON_LABELS[code];
     if (label && !labels.includes(label)) labels.push(label);
@@ -242,9 +360,10 @@ function safetyNotice(product) {
   return '';
 }
 
-function toPublicProduct(product) {
+function toPublicProduct(product, filters) {
+  const periodMatch = selectedPeriodMatch(product, filters?.period || 'all');
   return {
-    id: product.id,
+    id: productPublicId(product),
     rank: product.rank,
     featured: product.featured,
     category: product.category,
@@ -271,23 +390,27 @@ function toPublicProduct(product) {
     monthTags: product.monthTags,
     seasonalScore: product.seasonalScore,
     seasonReason: product.seasonReason,
-    reasonBadges: reasonBadges(product).slice(0, 3),
+    periodMatch,
+    reasonBadges: reasonBadges(product, periodMatch).slice(0, 3),
     safetyNotice: safetyNotice(product),
   };
 }
 
 function parseFilters(query = {}) {
+  const q = queryText(query.q, 100);
   const requestedPeriod = queryText(query.period, 24).toLowerCase();
   const period = requestedPeriod === 'all' || SEASONS.has(requestedPeriod) || /^month-(?:[1-9]|1[0-2])$/.test(requestedPeriod) ? requestedPeriod : 'all';
   const requestedPrice = queryText(query.price, 24).toLowerCase();
   const price = Object.prototype.hasOwnProperty.call(PRICE_RANGES, requestedPrice) ? requestedPrice : 'all';
   const legacySort = queryText(query.sort, 24).toLowerCase();
-  const sort = legacySort === 'rank' ? 'recommended' : SORTS.has(legacySort) ? legacySort : 'recommended';
+  let sort = legacySort === 'rank' ? 'recommended' : SORTS.has(legacySort) ? legacySort : 'recommended';
+  if (sort === 'seasonal' && period === 'all') sort = 'recommended';
   const requestedShop = queryText(query.shopType, 20).toLowerCase();
   const shopType = SHOP_TYPES.has(requestedShop) ? requestedShop : 'all';
   const freshness = [7, 30, 90].includes(integerQuery(query.freshness, 0, 0, 90)) ? integerQuery(query.freshness, 0, 0, 90) : 0;
   return {
-    q: queryText(query.q, 100),
+    q,
+    normalizedQ: normalizeSearch(q),
     group: key(queryText(query.group, 80).toLowerCase(), 'all'),
     category: key(queryText(query.category, 80).toLowerCase(), 'all'),
     subcategory: key(queryText(query.subcategory, 80).toLowerCase(), 'all'),
@@ -313,46 +436,63 @@ function priceRange(product) {
     : { min: Math.min(firstPrice, lastPrice), max: Math.max(firstPrice, lastPrice) };
 }
 
-function matchesFilters(product, filters) {
-  if (filters.q && !product.normalizedSearchText.includes(normalizeSearch(filters.q))) return false;
-  if (filters.group !== 'all' && product.categoryGroupKey !== filters.group) return false;
-  if (filters.category !== 'all' && product.categoryKey !== filters.category) return false;
-  if (filters.subcategory !== 'all' && product.subcategoryKey !== filters.subcategory) return false;
-  if (filters.period !== 'all') {
-    if (SEASONS.has(filters.period) && !product.seasonTags.includes(filters.period)) return false;
-    if (filters.period.startsWith('month-') && !product.monthTags.includes(Number(filters.period.slice(6)))) return false;
+const NO_EXCLUSIONS = new Set();
+const GROUP_EXCLUSIONS = new Set(['group', 'category', 'subcategory']);
+const CATEGORY_EXCLUSIONS = new Set(['category', 'subcategory']);
+const SUBCATEGORY_EXCLUSIONS = new Set(['subcategory']);
+const PERIOD_EXCLUSIONS = new Set(['period']);
+const SHOP_EXCLUSIONS = new Set(['shopType']);
+
+function matchesFilters(product, filters, excluded = NO_EXCLUSIONS) {
+  if (!excluded.has('q') && filters.normalizedQ && !product.normalizedSearchText.includes(filters.normalizedQ)) return false;
+  if (!excluded.has('group') && filters.group !== 'all' && product.categoryGroupKey !== filters.group) return false;
+  if (!excluded.has('category') && filters.category !== 'all' && product.categoryKey !== filters.category) return false;
+  if (!excluded.has('subcategory') && filters.subcategory !== 'all' && product.subcategoryKey !== filters.subcategory) return false;
+  if (!excluded.has('period') && filters.period !== 'all') {
+    if (filters.period === 'all-year' && !product.evergreen) return false;
+    if (CLIMATE_SEASONS.has(filters.period) && !product.seasonTags.includes(filters.period)) return false;
+    if (filters.period.startsWith('month-')) {
+      const month = Number(filters.period.slice(6));
+      if (!isPeakMonth(product, month) && !product.evergreen) return false;
+    }
   }
-  if (filters.price !== 'all') {
+  if (!excluded.has('price') && filters.price !== 'all') {
     const selected = PRICE_RANGES[filters.price];
     const range = priceRange(product);
     if (!range || range.max < selected.min || range.min > selected.max) return false;
   }
-  if (filters.minSold && (product.itemSold === null || product.itemSold < filters.minSold)) return false;
-  if (filters.minRating && (product.rating === null || product.rating < filters.minRating)) return false;
-  if (filters.shopType !== 'all' && product.shopType !== filters.shopType) return false;
-  if (filters.stock === 'in-stock' && product.stockStatus !== 'in-stock') return false;
-  if (filters.freshness) {
+  if (!excluded.has('minSold') && filters.minSold && (product.itemSold === null || product.itemSold < filters.minSold)) return false;
+  if (!excluded.has('minRating') && filters.minRating && (product.rating === null || product.rating < filters.minRating)) return false;
+  if (!excluded.has('shopType') && filters.shopType !== 'all' && product.shopType !== filters.shopType) return false;
+  if (!excluded.has('stock') && filters.stock === 'in-stock' && product.stockStatus !== 'in-stock') return false;
+  if (!excluded.has('freshness') && filters.freshness) {
     const checked = Date.parse(product.checkedAt);
     if (!Number.isFinite(checked) || checked < Date.now() - filters.freshness * 86_400_000) return false;
   }
   return true;
 }
 
-function sortValues(product, sort) {
-  if (sort === 'sold-desc') return [product.itemSold ?? -1, product.recommendationScore];
-  if (sort === 'rating-desc') return [product.rating ?? -1, product.itemSold ?? -1];
-  if (sort === 'price-asc') return [product.priceMin ?? product.priceMax ?? Number.MAX_SAFE_INTEGER, 0];
-  if (sort === 'price-desc') return [product.priceMax ?? product.priceMin ?? -1, 0];
-  if (sort === 'seasonal') return [product.seasonalScore, product.recommendationScore];
-  if (sort === 'newest') return [Date.parse(product.checkedAt) || 0, 0];
-  return [product.recommendationScore, -(product.rank ?? Number.MAX_SAFE_INTEGER)];
+function sortValues(product, filters) {
+  const sort = filters.sort;
+  const monthMatch = filters.period.startsWith('month-') ? selectedPeriodMatch(product, filters.period) : null;
+  const monthTier = monthMatch ? periodSortTier(monthMatch) : 0;
+  if (sort === 'sold-desc') return [(monthTier ? monthTier * 1_000_000_000_000 : 0) + Math.min(product.itemSold ?? -1, 999_999_999_999), product.recommendationScore];
+  if (sort === 'rating-desc') return [(monthTier ? monthTier * 10 : 0) + (product.rating ?? -1), product.itemSold ?? -1];
+  if (sort === 'price-asc') return [(monthMatch ? (2 - monthTier) * 10_000_000_000_000 : 0) + (product.priceMin ?? product.priceMax ?? 9_000_000_000_000), 0];
+  if (sort === 'price-desc') return [(monthTier ? monthTier * 10_000_000_000_000 : 0) + (product.priceMax ?? product.priceMin ?? -1), 0];
+  if (sort === 'seasonal') {
+    const match = selectedPeriodMatch(product, filters.period);
+    return [periodSortTier(match) * 101 + match.score, product.recommendationScore];
+  }
+  if (sort === 'newest') return [(monthTier ? monthTier * 10_000_000_000_000 : 0) + (Date.parse(product.checkedAt) || 0), 0];
+  return [(monthTier ? monthTier * 10_000_000 : 0) + product.recommendationScore, -(product.rank ?? Number.MAX_SAFE_INTEGER)];
 }
 
-function compareProducts(left, right, sort) {
-  const [leftA, leftB] = sortValues(left, sort);
-  const [rightA, rightB] = sortValues(right, sort);
-  if (sort === 'price-asc') return leftA - rightA || left.id.localeCompare(right.id);
-  return rightA - leftA || rightB - leftB || left.id.localeCompare(right.id);
+function compareProducts(left, right, filters) {
+  const [leftA, leftB] = sortValues(left, filters);
+  const [rightA, rightB] = sortValues(right, filters);
+  if (filters.sort === 'price-asc') return leftA - rightA || productPublicId(left).localeCompare(productPublicId(right));
+  return rightA - leftA || rightB - leftB || productPublicId(left).localeCompare(productPublicId(right));
 }
 
 function appliedSignature(filters) {
@@ -370,8 +510,8 @@ function cursorMac(payload) {
 }
 
 function encodeCursor(product, filters, snapshotToken) {
-  const [a, b] = sortValues(product, filters.sort);
-  const payload = Buffer.from(JSON.stringify({ v: 2, q: appliedSignature(filters), c: snapshotToken, s: filters.sort, a, b, id: product.id }), 'utf8').toString('base64url');
+  const [a, b] = sortValues(product, filters);
+  const payload = Buffer.from(JSON.stringify({ v: 2, q: appliedSignature(filters), c: snapshotToken, s: filters.sort, a, b, id: productPublicId(product) }), 'utf8').toString('base64url');
   return `${payload}.${cursorMac(payload)}`;
 }
 
@@ -400,36 +540,36 @@ function snapshotTokenFor(context) {
     .digest('base64url').slice(0, 18);
 }
 
-function bundledCacheKey(context, filters) {
+function resultCacheKey(context, filters) {
   return `${context.snapshotToken}:${JSON.stringify(filters)}`;
 }
 
-function bundledCacheGet(key) {
-  const cached = bundledResultCache.get(key);
+function resultCacheGet(key) {
+  const cached = catalogResultCache.get(key);
   if (!cached) return null;
   if (cached.expiresAt <= Date.now()) {
-    bundledResultCache.delete(key);
+    catalogResultCache.delete(key);
     return null;
   }
-  bundledResultCache.delete(key);
-  bundledResultCache.set(key, cached);
+  catalogResultCache.delete(key);
+  catalogResultCache.set(key, cached);
   return cached.value;
 }
 
-function bundledCacheSet(key, value) {
-  if (bundledResultCache.has(key)) bundledResultCache.delete(key);
-  while (bundledResultCache.size >= BUNDLED_RESULT_CACHE_MAX) {
-    const oldest = bundledResultCache.keys().next().value;
+function resultCacheSet(key, value) {
+  if (catalogResultCache.has(key)) catalogResultCache.delete(key);
+  while (catalogResultCache.size >= RESULT_CACHE_MAX) {
+    const oldest = catalogResultCache.keys().next().value;
     if (oldest === undefined) break;
-    bundledResultCache.delete(oldest);
+    catalogResultCache.delete(oldest);
   }
-  bundledResultCache.set(key, { value, expiresAt: Date.now() + BUNDLED_RESULT_TTL_MS });
+  catalogResultCache.set(key, { value, expiresAt: Date.now() + RESULT_TTL_MS });
 }
 
 function createFacets(products) {
   const groups = new Map();
   const seasonCounts = Object.fromEntries([...SEASONS].map((season) => [season, 0]));
-  const monthCounts = Array.from({ length: 12 }, () => 0);
+  const monthCounts = Array.from({ length: 12 }, () => ({ peak: 0, evergreenFallback: 0 }));
   const shopCounts = { official: 0, preferred: 0, general: 0 };
   for (const product of products) {
     let group = groups.get(product.categoryGroupKey);
@@ -449,8 +589,14 @@ function createFacets(products) {
       sub.count += 1;
       category.subcategories.set(product.subcategoryKey, sub);
     }
-    for (const season of product.seasonTags) seasonCounts[season] += 1;
-    for (const month of product.monthTags) monthCounts[month - 1] += 1;
+    if (product.evergreen) seasonCounts['all-year'] += 1;
+    for (const season of CLIMATE_SEASONS) {
+      if (product.seasonTags.includes(season)) seasonCounts[season] += 1;
+    }
+    for (let month = 1; month <= 12; month += 1) {
+      if (isPeakMonth(product, month)) monthCounts[month - 1].peak += 1;
+      else if (product.evergreen) monthCounts[month - 1].evergreenFallback += 1;
+    }
     shopCounts[product.shopType] += 1;
   }
   return {
@@ -458,16 +604,118 @@ function createFacets(products) {
       key: group.key,
       label: group.label,
       count: group.count,
+      available: group.count > 0,
       categories: [...group.categories.values()].map((category) => ({
         key: category.key,
         label: category.label,
         count: category.count,
-        subcategories: [...category.subcategories.values()].sort((a, b) => a.label.localeCompare(b.label, 'th')),
+        available: category.count > 0,
+        subcategories: [...category.subcategories.values()].map((subcategory) => ({ ...subcategory, available: subcategory.count > 0 })).sort((a, b) => a.label.localeCompare(b.label, 'th')),
       })).sort((a, b) => a.label.localeCompare(b.label, 'th')),
     })).sort((a, b) => a.label.localeCompare(b.label, 'th')),
-    seasons: Object.entries(PERIOD_LABELS).map(([facetKey, label]) => ({ key: facetKey, label, count: seasonCounts[facetKey] || 0 })),
-    months: monthCounts.map((count, index) => ({ month: index + 1, count })),
-    shopTypes: Object.entries(shopCounts).map(([facetKey, count]) => ({ key: facetKey, count })),
+    seasons: Object.entries(PERIOD_LABELS).map(([facetKey, label]) => ({ key: facetKey, label, count: seasonCounts[facetKey] || 0, available: (seasonCounts[facetKey] || 0) > 0 })),
+    months: monthCounts.map((counts, index) => ({
+      month: index + 1,
+      count: counts.peak + counts.evergreenFallback,
+      peakCount: counts.peak,
+      evergreenFallbackCount: counts.evergreenFallback,
+      available: counts.peak + counts.evergreenFallback > 0,
+    })),
+    shopTypes: Object.entries(shopCounts).map(([facetKey, count]) => ({ key: facetKey, count, available: count > 0 })),
+  };
+}
+
+function increment(map, mapKey) {
+  map.set(mapKey, (map.get(mapKey) || 0) + 1);
+}
+
+function createContextualFacets(context, filters) {
+  const groupCounts = new Map();
+  const categoryCounts = new Map();
+  const subcategoryCounts = new Map();
+  const seasonCounts = Object.fromEntries([...SEASONS].map((season) => [season, 0]));
+  const monthCounts = Array.from({ length: 12 }, () => ({ peak: 0, evergreenFallback: 0 }));
+  const shopCounts = { official: 0, preferred: 0, general: 0 };
+
+  for (const product of context.ranked) {
+    if (matchesFilters(product, filters, GROUP_EXCLUSIONS)) {
+      increment(groupCounts, product.categoryGroupKey);
+    }
+    if (matchesFilters(product, filters, CATEGORY_EXCLUSIONS)) {
+      increment(categoryCounts, `${product.categoryGroupKey}\u0000${product.categoryKey}`);
+    }
+    if (product.subcategoryKey && matchesFilters(product, filters, SUBCATEGORY_EXCLUSIONS)) {
+      increment(subcategoryCounts, `${product.categoryGroupKey}\u0000${product.categoryKey}\u0000${product.subcategoryKey}`);
+    }
+    if (matchesFilters(product, filters, PERIOD_EXCLUSIONS)) {
+      if (product.evergreen) seasonCounts['all-year'] += 1;
+      for (const season of CLIMATE_SEASONS) {
+        if (product.seasonTags.includes(season)) seasonCounts[season] += 1;
+      }
+      for (let month = 1; month <= 12; month += 1) {
+        if (isPeakMonth(product, month)) monthCounts[month - 1].peak += 1;
+        else if (product.evergreen) monthCounts[month - 1].evergreenFallback += 1;
+      }
+    }
+    if (matchesFilters(product, filters, SHOP_EXCLUSIONS)) shopCounts[product.shopType] += 1;
+  }
+
+  return {
+    groups: context.facets.groups.map((group) => {
+      const groupCount = groupCounts.get(group.key) || 0;
+      return {
+        ...group,
+        count: groupCount,
+        available: groupCount > 0,
+        categories: group.categories.map((category) => {
+          const categoryCount = categoryCounts.get(`${group.key}\u0000${category.key}`) || 0;
+          return {
+            ...category,
+            count: categoryCount,
+            available: categoryCount > 0,
+            subcategories: category.subcategories.map((subcategory) => {
+              const subcategoryCount = subcategoryCounts.get(`${group.key}\u0000${category.key}\u0000${subcategory.key}`) || 0;
+              return { ...subcategory, count: subcategoryCount, available: subcategoryCount > 0 };
+            }),
+          };
+        }),
+      };
+    }),
+    seasons: Object.entries(PERIOD_LABELS).map(([facetKey, label]) => ({
+      key: facetKey,
+      label,
+      count: seasonCounts[facetKey] || 0,
+      available: (seasonCounts[facetKey] || 0) > 0,
+    })),
+    months: monthCounts.map((counts, index) => ({
+      month: index + 1,
+      count: counts.peak + counts.evergreenFallback,
+      peakCount: counts.peak,
+      evergreenFallbackCount: counts.evergreenFallback,
+      available: counts.peak + counts.evergreenFallback > 0,
+    })),
+    shopTypes: Object.entries(shopCounts).map(([facetKey, count]) => ({ key: facetKey, count, available: count > 0 })),
+  };
+}
+
+function periodSummary(products, period) {
+  if (!period || period === 'all') return null;
+  let peakMatches = 0;
+  let evergreenFallbackMatches = 0;
+  let exactMatches = 0;
+  for (const product of products) {
+    const match = selectedPeriodMatch(product, period);
+    if (match.kind === 'peak') peakMatches += 1;
+    else if (match.kind === 'evergreen-fallback') evergreenFallbackMatches += 1;
+    else if (match.kind === 'season' || match.kind === 'evergreen') exactMatches += 1;
+  }
+  return {
+    period,
+    mode: period.startsWith('month-') ? 'month-with-evergreen-fallback' : 'exact',
+    peakMatches,
+    evergreenFallbackMatches,
+    exactMatches,
+    total: products.length,
   };
 }
 
@@ -476,10 +724,9 @@ function getBundledContext() {
   // Lazy load keeps local tools fast and provides a zero-configuration fallback.
   const catalog = require('./_gen3-products');
   const featuredRecords = Array.isArray(catalog.featured) ? catalog.featured : catalog.featured ? [catalog.featured] : [];
-  const featured = featuredRecords.map((record) => normalizeProduct(record, true)).filter(Boolean);
-  const ranked = (Array.isArray(catalog.ranked) ? catalog.ranked : []).map((record) => normalizeProduct(record)).filter(Boolean);
+  const featured = featuredRecords.map((record) => normalizeProduct(record, true, true)).filter(Boolean);
+  const ranked = (Array.isArray(catalog.ranked) ? catalog.ranked : []).map((record) => normalizeProduct(record, false, true)).filter(Boolean);
   ranked.sort((left, right) => (left.rank ?? Number.MAX_SAFE_INTEGER) - (right.rank ?? Number.MAX_SAFE_INTEGER));
-  const byId = new Map([...featured, ...ranked].map((product) => [product.id, product]));
   bundledContext = {
     source: 'bundled',
     schemaVersion: Number(catalog.schemaVersion) || 1,
@@ -487,7 +734,7 @@ function getBundledContext() {
     total: ranked.length,
     featured,
     ranked,
-    byId,
+    byId: null,
     facets: createFacets(ranked),
   };
   bundledContext.snapshotToken = snapshotTokenFor(bundledContext);
@@ -590,9 +837,9 @@ async function contextWithFallback() {
 
 function bundledQuery(context, filters) {
   const matching = context.ranked.filter((product) => matchesFilters(product, filters));
-  matching.sort((left, right) => compareProducts(left, right, filters.sort));
+  matching.sort((left, right) => compareProducts(left, right, filters));
   const decoded = decodeCursor(filters.cursor, filters);
-  let start = filters.cursor && decoded ? matching.findIndex((product) => product.id === decoded.id) + 1 : filters.offset;
+  let start = filters.cursor && decoded ? matching.findIndex((product) => productPublicId(product) === decoded.id) + 1 : filters.offset;
   if (start < 0) start = 0;
   const internalItems = matching.slice(start, start + filters.limit);
   const nextCursor = start + internalItems.length < matching.length && internalItems.length
@@ -603,7 +850,9 @@ function bundledQuery(context, filters) {
     offset: start,
     nextOffset: start + internalItems.length < matching.length ? start + internalItems.length : null,
     nextCursor,
-    items: internalItems.map(toPublicProduct),
+    items: internalItems.map((product) => toPublicProduct(product, filters)),
+    facets: createContextualFacets(context, filters),
+    periodSummary: periodSummary(matching, filters.period),
   };
 }
 
@@ -612,71 +861,245 @@ function addParameter(params, value) {
   return `$${params.length}`;
 }
 
-function sqlFilters(filters, runId, includeCursor) {
+function sqlEvergreenExpression(schemaVersion) {
+  return schemaVersion >= 4
+    ? `(COALESCE(p.evergreen, FALSE) OR p.season_tags @> ARRAY['all-year']::text[])`
+    : `p.season_tags @> ARRAY['all-year']::text[]`;
+}
+
+function sqlMonthPeakExpression(month) {
+  return `p.month_tags @> ARRAY[${Number(month)}]::smallint[]`;
+}
+
+function sqlPeriodScoreExpression(period, schemaVersion) {
+  if (schemaVersion >= 4 && CLIMATE_SEASONS.has(period)) {
+    return `COALESCE(NULLIF((p.season_scores ->> '${period}')::int, 0), p.seasonal_score, 0)`;
+  }
+  if (schemaVersion >= 4 && period.startsWith('month-')) {
+    const month = Number(period.slice(6));
+    return `COALESCE(NULLIF((p.month_scores ->> '${month}')::int, 0), p.seasonal_score, 0)`;
+  }
+  return `COALESCE(p.seasonal_score, 0)`;
+}
+
+function sqlPeriodSortExpression(filters, schemaVersion) {
+  if (filters.period.startsWith('month-')) {
+    const month = Number(filters.period.slice(6));
+    const peak = sqlMonthPeakExpression(month);
+    const evergreen = sqlEvergreenExpression(schemaVersion);
+    const score = sqlPeriodScoreExpression(filters.period, schemaVersion);
+    return `(CASE WHEN ${peak} THEN 202 + ${score} WHEN ${evergreen} THEN 101 ELSE 0 END)`;
+  }
+  if (CLIMATE_SEASONS.has(filters.period)) return `(202 + ${sqlPeriodScoreExpression(filters.period, schemaVersion)})`;
+  if (filters.period === 'all-year') return `101`;
+  return `0`;
+}
+
+function sqlMonthTierExpression(filters, schemaVersion) {
+  if (!filters.period.startsWith('month-')) return `0`;
+  const month = Number(filters.period.slice(6));
+  const peak = sqlMonthPeakExpression(month);
+  const evergreen = sqlEvergreenExpression(schemaVersion);
+  return `(CASE WHEN ${peak} THEN 2 WHEN ${evergreen} THEN 1 ELSE 0 END)`;
+}
+
+function sqlSortExpressions(filters, schemaVersion) {
+  const tier = sqlMonthTierExpression(filters, schemaVersion);
+  const hasMonthTier = filters.period.startsWith('month-');
+  const expressions = {
+    'sold-desc': [hasMonthTier ? `(${tier} * 1000000000000 + LEAST(COALESCE(p.item_sold, -1), 999999999999))` : `COALESCE(p.item_sold, -1)`, `COALESCE(p.recommendation_score, 0)`],
+    'rating-desc': [hasMonthTier ? `(${tier} * 10 + COALESCE(p.rating, -1))` : `COALESCE(p.rating, -1)`, `COALESCE(p.item_sold, -1)`],
+    'price-asc': [hasMonthTier ? `((2 - ${tier}) * 10000000000000 + COALESCE(p.price_min, p.price_max, 9000000000000))` : `COALESCE(p.price_min, p.price_max, 9007199254740991)`, `0`],
+    'price-desc': [hasMonthTier ? `(${tier} * 10000000000000 + COALESCE(p.price_max, p.price_min, -1))` : `COALESCE(p.price_max, p.price_min, -1)`, `0`],
+    seasonal: [sqlPeriodSortExpression(filters, schemaVersion), `COALESCE(p.recommendation_score, 0)`],
+    newest: [hasMonthTier ? `(${tier} * 10000000000000 + COALESCE(EXTRACT(EPOCH FROM p.checked_at) * 1000, 0))` : `COALESCE(EXTRACT(EPOCH FROM p.checked_at) * 1000, 0)`, `0`],
+    recommended: [hasMonthTier ? `(${tier} * 10000000 + COALESCE(p.recommendation_score, 0))` : `COALESCE(p.recommendation_score, 0)`, `-COALESCE(p.rank, 2147483647)`],
+  };
+  return expressions[filters.sort];
+}
+
+function sqlFilters(filters, runId, includeCursor, schemaVersion, excluded = NO_EXCLUSIONS) {
   const params = [runId];
   const conditions = [`p.run_id = $1`, `p.featured = false`, `p.review_status = 'approved'`];
-  if (filters.q) conditions.push(`p.normalized_search_text LIKE '%' || ${addParameter(params, escapeLike(filters.q))} || '%' ESCAPE '!'`);
-  if (filters.group !== 'all') conditions.push(`p.category_group_key = ${addParameter(params, filters.group)}`);
-  if (filters.category !== 'all') conditions.push(`p.category_key = ${addParameter(params, filters.category)}`);
-  if (filters.subcategory !== 'all') conditions.push(`p.subcategory_key = ${addParameter(params, filters.subcategory)}`);
-  if (SEASONS.has(filters.period)) conditions.push(`p.season_tags @> ARRAY[${addParameter(params, filters.period)}]::text[]`);
-  if (filters.period.startsWith('month-')) conditions.push(`p.month_tags @> ARRAY[${addParameter(params, Number(filters.period.slice(6)))}]::smallint[]`);
-  if (filters.price !== 'all') {
+  if (!excluded.has('q') && filters.q) conditions.push(`p.normalized_search_text LIKE '%' || ${addParameter(params, escapeLike(filters.q))} || '%' ESCAPE '!'`);
+  if (!excluded.has('group') && filters.group !== 'all') conditions.push(`p.category_group_key = ${addParameter(params, filters.group)}`);
+  if (!excluded.has('category') && filters.category !== 'all') conditions.push(`p.category_key = ${addParameter(params, filters.category)}`);
+  if (!excluded.has('subcategory') && filters.subcategory !== 'all') conditions.push(`p.subcategory_key = ${addParameter(params, filters.subcategory)}`);
+  if (!excluded.has('period') && filters.period === 'all-year') conditions.push(sqlEvergreenExpression(schemaVersion));
+  if (!excluded.has('period') && CLIMATE_SEASONS.has(filters.period)) conditions.push(`p.season_tags @> ARRAY[${addParameter(params, filters.period)}]::text[]`);
+  if (!excluded.has('period') && filters.period.startsWith('month-')) {
+    const month = Number(filters.period.slice(6));
+    conditions.push(`(${sqlMonthPeakExpression(month)} OR ${sqlEvergreenExpression(schemaVersion)})`);
+  }
+  if (!excluded.has('price') && filters.price !== 'all') {
     const range = PRICE_RANGES[filters.price];
     if (Number.isFinite(range.min)) conditions.push(`COALESCE(p.price_max, p.price_min) >= ${addParameter(params, range.min)}`);
     if (Number.isFinite(range.max)) conditions.push(`COALESCE(p.price_min, p.price_max) <= ${addParameter(params, range.max)}`);
   }
-  if (filters.minSold) conditions.push(`p.item_sold >= ${addParameter(params, filters.minSold)}`);
-  if (filters.minRating) conditions.push(`p.rating >= ${addParameter(params, filters.minRating)}`);
-  if (filters.shopType !== 'all') conditions.push(`p.shop_type = ${addParameter(params, filters.shopType)}`);
-  if (filters.stock === 'in-stock') conditions.push(`p.stock_status = 'in-stock'`);
-  if (filters.freshness) conditions.push(`p.checked_at >= NOW() - (${addParameter(params, filters.freshness)} * INTERVAL '1 day')`);
+  if (!excluded.has('minSold') && filters.minSold) conditions.push(`p.item_sold >= ${addParameter(params, filters.minSold)}`);
+  if (!excluded.has('minRating') && filters.minRating) conditions.push(`p.rating >= ${addParameter(params, filters.minRating)}`);
+  if (!excluded.has('shopType') && filters.shopType !== 'all') conditions.push(`p.shop_type = ${addParameter(params, filters.shopType)}`);
+  if (!excluded.has('stock') && filters.stock === 'in-stock') conditions.push(`p.stock_status = 'in-stock'`);
+  if (!excluded.has('freshness') && filters.freshness) conditions.push(`p.checked_at >= NOW() - (${addParameter(params, filters.freshness)} * INTERVAL '1 day')`);
 
   const cursor = includeCursor ? decodeCursor(filters.cursor, filters) : null;
   if (cursor) {
     const a = addParameter(params, cursor.a);
     const b = addParameter(params, cursor.b);
     const id = addParameter(params, cursor.id);
-    if (filters.sort === 'price-asc') conditions.push(`(COALESCE(p.price_min, p.price_max, 9007199254740991) > ${a} OR (COALESCE(p.price_min, p.price_max, 9007199254740991) = ${a} AND p.public_id > ${id}))`);
+    if (filters.sort === 'price-asc') {
+      const [firstExpression] = sqlSortExpressions(filters, schemaVersion);
+      conditions.push(`(${firstExpression} > ${a} OR (${firstExpression} = ${a} AND p.public_id > ${id}))`);
+    }
     else {
-      const expressions = {
-        'sold-desc': [`COALESCE(p.item_sold, -1)`, `COALESCE(p.recommendation_score, 0)`],
-        'rating-desc': [`COALESCE(p.rating, -1)`, `COALESCE(p.item_sold, -1)`],
-        'price-desc': [`COALESCE(p.price_max, p.price_min, -1)`, `0`],
-        seasonal: [`COALESCE(p.seasonal_score, 0)`, `COALESCE(p.recommendation_score, 0)`],
-        newest: [`EXTRACT(EPOCH FROM p.checked_at) * 1000`, `0`],
-        recommended: [`COALESCE(p.recommendation_score, 0)`, `-COALESCE(p.rank, 2147483647)`],
-      };
-      const [firstExpression, secondExpression] = expressions[filters.sort];
+      const [firstExpression, secondExpression] = sqlSortExpressions(filters, schemaVersion);
       conditions.push(`(${firstExpression} < ${a} OR (${firstExpression} = ${a} AND ${secondExpression} < ${b}) OR (${firstExpression} = ${a} AND ${secondExpression} = ${b} AND p.public_id > ${id}))`);
     }
   }
   return { params, where: conditions.join(' AND ') };
 }
 
-function sqlOrder(sort) {
-  if (sort === 'sold-desc') return `COALESCE(p.item_sold, -1) DESC, COALESCE(p.recommendation_score, 0) DESC, p.public_id ASC`;
-  if (sort === 'rating-desc') return `COALESCE(p.rating, -1) DESC, COALESCE(p.item_sold, -1) DESC, p.public_id ASC`;
-  if (sort === 'price-asc') return `COALESCE(p.price_min, p.price_max, 9007199254740991) ASC, p.public_id ASC`;
-  if (sort === 'price-desc') return `COALESCE(p.price_max, p.price_min, -1) DESC, p.public_id ASC`;
-  if (sort === 'seasonal') return `COALESCE(p.seasonal_score, 0) DESC, COALESCE(p.recommendation_score, 0) DESC, p.public_id ASC`;
-  if (sort === 'newest') return `p.checked_at DESC NULLS LAST, p.public_id ASC`;
-  return `COALESCE(p.recommendation_score, 0) DESC, p.rank ASC NULLS LAST, p.public_id ASC`;
+function sqlOrder(filters, schemaVersion) {
+  const sort = filters.sort;
+  const [firstExpression, secondExpression] = sqlSortExpressions(filters, schemaVersion);
+  if (sort === 'price-asc') return `${firstExpression} ASC, p.public_id ASC`;
+  return `${firstExpression} DESC, ${secondExpression} DESC, p.public_id ASC`;
+}
+
+function periodAggregateSelect(schemaVersion) {
+  const evergreen = sqlEvergreenExpression(schemaVersion);
+  const fields = [
+    `COUNT(*) FILTER (WHERE ${evergreen})::int AS all_year_count`,
+    ...[...CLIMATE_SEASONS].map((season) => `COUNT(*) FILTER (WHERE p.season_tags @> ARRAY['${season}']::text[])::int AS ${season}_count`),
+  ];
+  for (let month = 1; month <= 12; month += 1) {
+    const peak = sqlMonthPeakExpression(month);
+    fields.push(`COUNT(*) FILTER (WHERE ${peak})::int AS month_${month}_peak`);
+    fields.push(`COUNT(*) FILTER (WHERE ${evergreen} AND NOT (${peak}))::int AS month_${month}_evergreen`);
+  }
+  return fields.join(',\n');
+}
+
+function contextualFacetsFromDatabaseRows(context, groupRows, categoryRows, subcategoryRows, periodRow, shopRows) {
+  const groupCounts = new Map();
+  const categoryCounts = new Map();
+  const subcategoryCounts = new Map();
+  for (const row of groupRows) {
+    const groupKey = key(row.category_group_key, 'other');
+    groupCounts.set(groupKey, Number(row.count) || 0);
+  }
+  for (const row of categoryRows) {
+    const groupKey = key(row.category_group_key, 'other');
+    const categoryKey = key(row.category_key, 'other');
+    const count = Number(row.count) || 0;
+    categoryCounts.set(`${groupKey}\u0000${categoryKey}`, count);
+  }
+  for (const row of subcategoryRows) {
+    const groupKey = key(row.category_group_key, 'other');
+    const categoryKey = key(row.category_key, 'other');
+    const subcategoryKey = key(row.subcategory_key);
+    if (subcategoryKey) subcategoryCounts.set(`${groupKey}\u0000${categoryKey}\u0000${subcategoryKey}`, Number(row.count) || 0);
+  }
+  const shopCounts = Object.fromEntries(shopRows.map((row) => [String(row.key), Number(row.count) || 0]));
+  return {
+    groups: context.facets.groups.map((group) => {
+      const groupCount = groupCounts.get(group.key) || 0;
+      return {
+        ...group,
+        count: groupCount,
+        available: groupCount > 0,
+        categories: group.categories.map((category) => {
+          const categoryCount = categoryCounts.get(`${group.key}\u0000${category.key}`) || 0;
+          return {
+            ...category,
+            count: categoryCount,
+            available: categoryCount > 0,
+            subcategories: category.subcategories.map((subcategory) => {
+              const subcategoryCount = subcategoryCounts.get(`${group.key}\u0000${category.key}\u0000${subcategory.key}`) || 0;
+              return { ...subcategory, count: subcategoryCount, available: subcategoryCount > 0 };
+            }),
+          };
+        }),
+      };
+    }),
+    seasons: Object.entries(PERIOD_LABELS).map(([facetKey, label]) => {
+      const column = facetKey === 'all-year' ? 'all_year_count' : `${facetKey}_count`;
+      const count = Number(periodRow?.[column]) || 0;
+      return { key: facetKey, label, count, available: count > 0 };
+    }),
+    months: Array.from({ length: 12 }, (_, index) => {
+      const month = index + 1;
+      const peakCount = Number(periodRow?.[`month_${month}_peak`]) || 0;
+      const evergreenFallbackCount = Number(periodRow?.[`month_${month}_evergreen`]) || 0;
+      return { month, count: peakCount + evergreenFallbackCount, peakCount, evergreenFallbackCount, available: peakCount + evergreenFallbackCount > 0 };
+    }),
+    shopTypes: ['official', 'preferred', 'general'].map((facetKey) => {
+      const count = shopCounts[facetKey] || 0;
+      return { key: facetKey, count, available: count > 0 };
+    }),
+  };
+}
+
+async function neonContextualFacets(context, filters) {
+  const sql = getNeonClient();
+  const groupFilter = sqlFilters(filters, context.runId, false, context.schemaVersion, GROUP_EXCLUSIONS);
+  const categoryFilter = sqlFilters(filters, context.runId, false, context.schemaVersion, CATEGORY_EXCLUSIONS);
+  const subcategoryFilter = sqlFilters(filters, context.runId, false, context.schemaVersion, SUBCATEGORY_EXCLUSIONS);
+  const periodFilter = sqlFilters(filters, context.runId, false, context.schemaVersion, PERIOD_EXCLUSIONS);
+  const shopFilter = sqlFilters(filters, context.runId, false, context.schemaVersion, SHOP_EXCLUSIONS);
+  const [groupRows, categoryRows, subcategoryRows, periodRows, shopRows] = await Promise.all([
+    sql.query(`SELECT p.category_group_key, COUNT(*)::int AS count
+      FROM gen3_catalog_products p WHERE ${groupFilter.where}
+      GROUP BY p.category_group_key`, groupFilter.params),
+    sql.query(`SELECT p.category_group_key, p.category_key, COUNT(*)::int AS count
+      FROM gen3_catalog_products p WHERE ${categoryFilter.where}
+      GROUP BY p.category_group_key, p.category_key`, categoryFilter.params),
+    sql.query(`SELECT p.category_group_key, p.category_key, p.subcategory_key, COUNT(*)::int AS count
+      FROM gen3_catalog_products p WHERE ${subcategoryFilter.where}
+      GROUP BY p.category_group_key, p.category_key, p.subcategory_key`, subcategoryFilter.params),
+    sql.query(`SELECT ${periodAggregateSelect(context.schemaVersion)}
+      FROM gen3_catalog_products p WHERE ${periodFilter.where}`, periodFilter.params),
+    sql.query(`SELECT p.shop_type AS key, COUNT(*)::int AS count
+      FROM gen3_catalog_products p WHERE ${shopFilter.where} GROUP BY p.shop_type`, shopFilter.params),
+  ]);
+  return contextualFacetsFromDatabaseRows(context, groupRows, categoryRows, subcategoryRows, periodRows[0] || {}, shopRows);
+}
+
+function periodSummaryFromFacets(facets, period, total) {
+  if (!period || period === 'all') return null;
+  if (period.startsWith('month-')) {
+    const month = Number(period.slice(6));
+    const facet = facets.months.find((item) => item.month === month);
+    return {
+      period,
+      mode: 'month-with-evergreen-fallback',
+      peakMatches: facet?.peakCount || 0,
+      evergreenFallbackMatches: facet?.evergreenFallbackCount || 0,
+      exactMatches: 0,
+      total,
+    };
+  }
+  const facet = facets.seasons.find((item) => item.key === period);
+  return { period, mode: 'exact', peakMatches: 0, evergreenFallbackMatches: 0, exactMatches: facet?.count || 0, total };
 }
 
 async function neonQuery(context, filters) {
   const sql = getNeonClient();
-  const countFilter = sqlFilters(filters, context.runId, false);
-  const itemFilter = sqlFilters(filters, context.runId, true);
+  const countFilter = sqlFilters(filters, context.runId, false, context.schemaVersion);
+  const itemFilter = sqlFilters(filters, context.runId, true, context.schemaVersion);
   const limitParameter = addParameter(itemFilter.params, filters.limit + 1);
+  const v4Select = context.schemaVersion >= 4
+    ? `p.metadata_version, p.evergreen, p.season_scores, p.season_reasons, p.month_scores, p.month_reasons,`
+    : `'seasonal-legacy' AS metadata_version, FALSE AS evergreen, '{}'::jsonb AS season_scores, '{}'::jsonb AS season_reasons, '{}'::jsonb AS month_scores, '{}'::jsonb AS month_reasons,`;
   const select = `p.id, p.public_id, p.rank, p.featured, p.category_group_key, p.category_group, p.category_key, p.category,
     p.subcategory_key, p.subcategory, p.image_url, p.clean_name, p.summary, p.price_min, p.price_max, p.price_type,
     p.checked_at, p.product_url, p.shop_name, p.item_sold, p.rating, p.likes, p.shop_rating, p.shop_type, p.stock_status,
-    p.season_tags, p.month_tags, p.seasonal_score, p.season_reason, p.reason_codes, p.recommendation_score,
+    p.season_tags, p.month_tags, ${v4Select} p.seasonal_score, p.season_reason, p.reason_codes, p.recommendation_score,
     p.normalized_search_text, p.review_status`;
-  const [countRows, rows] = await Promise.all([
+  const [countRows, rows, facets] = await Promise.all([
     sql.query(`SELECT COUNT(*)::int AS count FROM gen3_catalog_products p WHERE ${countFilter.where}`, countFilter.params),
-    sql.query(`SELECT ${select} FROM gen3_catalog_products p WHERE ${itemFilter.where} ORDER BY ${sqlOrder(filters.sort)} LIMIT ${limitParameter}`, itemFilter.params),
+    sql.query(`SELECT ${select} FROM gen3_catalog_products p WHERE ${itemFilter.where} ORDER BY ${sqlOrder(filters, context.schemaVersion)} LIMIT ${limitParameter}`, itemFilter.params),
+    neonContextualFacets(context, filters),
   ]);
   const hasMore = rows.length > filters.limit;
   const internalItems = rows.slice(0, filters.limit).map((record) => normalizeProduct(record)).filter(Boolean);
@@ -690,7 +1113,9 @@ async function neonQuery(context, filters) {
     offset: start,
     nextOffset: !filters.cursor && start + internalItems.length < matched ? start + internalItems.length : null,
     nextCursor,
-    items: internalItems.map(toPublicProduct),
+    items: internalItems.map((product) => toPublicProduct(product, filters)),
+    facets,
+    periodSummary: periodSummaryFromFacets(facets, filters.period, matched),
   };
 }
 
@@ -713,11 +1138,9 @@ async function queryCatalog(query) {
     error.code = 'CATALOG_CHANGED';
     throw error;
   }
-  const resultCacheKey = context.source === 'bundled' ? bundledCacheKey(context, filters) : '';
-  if (resultCacheKey) {
-    const cached = bundledCacheGet(resultCacheKey);
-    if (cached) return cached;
-  }
+  const cacheKey = resultCacheKey(context, filters);
+  const cached = resultCacheGet(cacheKey);
+  if (cached) return cached;
   let result;
   if (context.source === 'neon') {
     try {
@@ -745,9 +1168,10 @@ async function queryCatalog(query) {
     limit: filters.limit,
     nextOffset: result.nextOffset,
     nextCursor: result.nextCursor,
-    featured: firstPage ? context.featured.map(toPublicProduct) : [],
+    featured: firstPage ? context.featured.map((product) => toPublicProduct(product)) : [],
     items: result.items,
-    facets: context.facets,
+    facets: result.facets,
+    periodSummary: result.periodSummary,
     applied: {
       q: filters.q,
       group: filters.group,
@@ -763,7 +1187,7 @@ async function queryCatalog(query) {
       freshness: filters.freshness,
     },
   };
-  if (resultCacheKey) bundledCacheSet(resultCacheKey, response);
+  resultCacheSet(resultCacheKey(context, filters), response);
   return response;
 }
 
@@ -780,7 +1204,11 @@ async function getCatalogProductById(id) {
       console.error('Catalog image lookup failed; using bundled fallback', error);
     }
   }
-  return getBundledContext().byId.get(cleanId) || null;
+  const bundled = getBundledContext();
+  if (!bundled.byId) {
+    bundled.byId = new Map([...bundled.featured, ...bundled.ranked].map((product) => [productPublicId(product), product]));
+  }
+  return bundled.byId.get(cleanId) || null;
 }
 
 module.exports = {
@@ -788,4 +1216,5 @@ module.exports = {
   MAX_LIMIT,
   getCatalogProductById,
   queryCatalog,
+  _testing: Object.freeze({ parseFilters, sortValues, sqlFilters, sqlOrder, sqlSortExpressions }),
 };

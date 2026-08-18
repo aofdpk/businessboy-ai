@@ -24,6 +24,13 @@ type CatalogProduct = {
   monthTags: number[];
   seasonalScore: number;
   seasonReason: string;
+  periodMatch: {
+    period: string;
+    kind: "none" | "peak" | "evergreen-fallback" | "season" | "evergreen";
+    score: number;
+    reason: string;
+    badge: string;
+  };
   itemSold: number | null;
   rating: number | null;
   shopRating: number | null;
@@ -33,11 +40,19 @@ type CatalogProduct = {
   safetyNotice: string;
 };
 
-type SubcategoryFacet = { key: string; label: string; count: number };
-type CategoryFacet = { key: string; label: string; count: number; subcategories: SubcategoryFacet[] };
-type GroupFacet = { key: string; label: string; count: number; categories: CategoryFacet[] };
-type SeasonFacet = { key: string; label: string; count: number };
-type MonthFacet = { month: number; count: number };
+type SubcategoryFacet = { key: string; label: string; count: number; available: boolean };
+type CategoryFacet = { key: string; label: string; count: number; available: boolean; subcategories: SubcategoryFacet[] };
+type GroupFacet = { key: string; label: string; count: number; available: boolean; categories: CategoryFacet[] };
+type SeasonFacet = { key: string; label: string; count: number; available: boolean };
+type MonthFacet = { month: number; count: number; peakCount: number; evergreenFallbackCount: number; available: boolean };
+type PeriodSummary = {
+  period: string;
+  mode: "month-with-evergreen-fallback" | "exact";
+  peakMatches: number;
+  evergreenFallbackMatches: number;
+  exactMatches: number;
+  total: number;
+};
 
 type CatalogResponse = {
   schemaVersion: number;
@@ -54,13 +69,14 @@ type CatalogResponse = {
     groups: GroupFacet[];
     seasons: SeasonFacet[];
     months: MonthFacet[];
-    shopTypes: Array<{ key: string; count: number }>;
+    shopTypes: Array<{ key: string; count: number; available: boolean }>;
   };
+  periodSummary: PeriodSummary | null;
 };
 
 type PriceFilter = "all" | "under-100" | "100-300" | "301-500" | "501-1000" | "over-1000";
 type SortMode = "recommended" | "sold-desc" | "rating-desc" | "price-asc" | "price-desc" | "seasonal" | "newest";
-type PeriodFilter = "all" | "current-month" | "all-year" | "hot" | "rainy" | "cool" | `month-${number}`;
+type PeriodFilter = "all" | "all-year" | "hot" | "rainy" | "cool" | `month-${number}`;
 type ShopTypeFilter = "all" | "official" | "preferred" | "general";
 type StockFilter = "all" | "in-stock";
 type FreshnessFilter = 0 | 7 | 30 | 90;
@@ -77,10 +93,10 @@ const PRICE_FILTERS: Array<{ value: PriceFilter; label: string }> = [
 const MONTH_LABELS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 const PERIOD_LABELS: Record<string, string> = {
   all: "ทุกช่วงเวลา",
-  "all-year": "ขายได้ตลอดปี",
-  hot: "หน้าร้อน (มี.ค.–พ.ค.)",
-  rainy: "หน้าฝน (มิ.ย.–ต.ค.)",
-  cool: "หน้าหนาว/อากาศเย็น (พ.ย.–ก.พ.)",
+  "all-year": "ไม่เน้นฤดูกาล",
+  hot: "หน้าร้อน/ช่วงอากาศร้อน",
+  rainy: "หน้าฝน/ช่วงฝน",
+  cool: "หน้าหนาว/ช่วงอากาศเย็น",
 };
 const SORT_LABELS: Record<SortMode, string> = {
   recommended: "น่าขาย",
@@ -114,17 +130,19 @@ function currentBangkokMonth() {
 
 const CURRENT_BANGKOK_MONTH = currentBangkokMonth();
 
-function apiPeriod(period: PeriodFilter) {
-  return period === "current-month" ? `month-${CURRENT_BANGKOK_MONTH}` : period;
-}
-
 function periodLabel(period: PeriodFilter) {
-  if (period === "current-month") return `เดือนนี้ (${MONTH_LABELS[CURRENT_BANGKOK_MONTH - 1]})`;
   if (period.startsWith("month-")) {
     const month = Number(period.slice("month-".length));
     return MONTH_LABELS[month - 1] || "เดือนที่เลือก";
   }
   return PERIOD_LABELS[period] || "ช่วงเวลาที่เลือก";
+}
+
+function seasonalSortLabel(period: PeriodFilter) {
+  if (period === "all") return "เลือกช่วงเวลาก่อน";
+  if (period === "all-year") return "ไม่เน้นฤดูกาลก่อน";
+  if (period.startsWith("month-")) return `เหมาะกับเดือน${periodLabel(period)}ก่อน`;
+  return `เหมาะกับ${periodLabel(period)}ก่อน`;
 }
 
 function buildCatalogUrl(filters: {
@@ -137,7 +155,7 @@ function buildCatalogUrl(filters: {
     group: filters.group,
     category: filters.category,
     subcategory: filters.subcategory,
-    period: apiPeriod(filters.period),
+    period: filters.period,
     price: filters.price,
     sort: filters.sort,
     minSold: String(filters.minSold),
@@ -308,8 +326,11 @@ function ProductCard(props: CardProps) {
           <span>{formatSold(product.itemSold)}</span>
           <span>{shopTypeLabel(product.shopType)}</span>
         </div>}
+        {!featured && product.periodMatch?.kind !== "none" && <p className={`catalog-card__period-match catalog-card__period-match--${product.periodMatch.kind}`}>
+          <b>{product.periodMatch.badge}</b><span>{product.periodMatch.reason}</span>
+        </p>}
         {!featured && product.reasonBadges?.length > 0 && <div className="catalog-card__badges" aria-label="เหตุผลที่แนะนำ">
-          {product.reasonBadges.slice(0, 3).map((badge) => <span key={badge}>{badge}</span>)}
+          {product.reasonBadges.filter((badge) => badge !== product.periodMatch?.badge).slice(0, product.periodMatch?.kind !== "none" ? 2 : 3).map((badge) => <span key={badge}>{badge}</span>)}
         </div>}
         {!featured && product.safetyNotice && <p className="catalog-card__notice">{product.safetyNotice}</p>}
         <div className="catalog-card__price">
@@ -327,6 +348,7 @@ type FilterFieldsProps = {
   groups: GroupFacet[];
   seasonFacets: SeasonFacet[];
   monthFacets: MonthFacet[];
+  shopFacets: Array<{ key: string; count: number; available: boolean }>;
   group: string;
   category: string;
   subcategory: string;
@@ -355,46 +377,54 @@ type FilterFieldsProps = {
 
 function FilterFields(props: FilterFieldsProps) {
   const currentMonth = CURRENT_BANGKOK_MONTH;
-  const currentMonthCount = props.monthFacets.find((item) => item.month === currentMonth)?.count ?? 0;
   const selectedGroup = props.groups.find((item) => item.key === props.group);
   const categories = selectedGroup?.categories ?? (props.group === "all" ? props.groups.flatMap((item) => item.categories) : []);
   const selectedCategory = categories.find((item) => item.key === props.category);
   const subcategories = (selectedCategory?.subcategories ?? []).filter((item) => item.key !== selectedCategory?.key || item.label !== selectedCategory?.label);
-  function seasonCount(key: string) {
-    return props.seasonFacets.find((item) => item.key === key)?.count ?? 0;
+  function seasonFacet(key: string) {
+    return props.seasonFacets.find((item) => item.key === key) ?? { key, label: "", count: 0, available: false };
   }
-  function monthCount(month: number) {
-    return props.monthFacets.find((item) => item.month === month)?.count ?? 0;
+  function monthFacet(month: number) {
+    return props.monthFacets.find((item) => item.month === month) ?? { month, count: 0, peakCount: 0, evergreenFallbackCount: 0, available: false };
+  }
+  function shopFacet(key: string) {
+    return props.shopFacets.find((item) => item.key === key) ?? { key, count: 0, available: false };
   }
   return (
     <div className="catalog-filter-fields">
       <label htmlFor={`${props.idPrefix}-group`}><span>หมวดหลัก</span>
         <select id={`${props.idPrefix}-group`} value={props.group} onChange={(event) => props.onGroup(event.target.value)}>
           <option value="all">ทุกหมวดหลัก</option>
-          {props.groups.map((item) => <option key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
+          {props.groups.map((item) => <option disabled={!item.available && props.group !== item.key} key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
         </select>
       </label>
       <label htmlFor={`${props.idPrefix}-category`}><span>หมวดย่อย</span>
         <select id={`${props.idPrefix}-category`} value={props.category} onChange={(event) => props.onCategory(event.target.value)}>
           <option value="all">ทุกหมวดย่อย</option>
-          {categories.map((item) => <option key={`${item.key}-${item.label}`} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
+          {categories.map((item) => <option disabled={!item.available && props.category !== item.key} key={`${item.key}-${item.label}`} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
         </select>
       </label>
       {subcategories.length > 0 && <label htmlFor={`${props.idPrefix}-subcategory`}><span>ประเภทสินค้า</span>
         <select id={`${props.idPrefix}-subcategory`} value={props.subcategory} onChange={(event) => props.onSubcategory(event.target.value)}>
           <option value="all">ทุกประเภท</option>
-          {subcategories.map((item) => <option key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
+          {subcategories.map((item) => <option disabled={!item.available && props.subcategory !== item.key} key={item.key} value={item.key}>{item.label} ({numberFormatter.format(item.count)})</option>)}
         </select>
       </label>}
       <label htmlFor={`${props.idPrefix}-period`}><span>ช่วงเวลาที่เหมาะทำคอนเทนต์</span>
         <select id={`${props.idPrefix}-period`} value={props.period} onChange={(event) => props.onPeriod(event.target.value as PeriodFilter)}>
           <option value="all">ทุกช่วงเวลา</option>
-          <option value="all-year">ขายได้ตลอดปี ({numberFormatter.format(seasonCount("all-year"))})</option>
-          <option value="hot">หน้าร้อน · มี.ค.–พ.ค. ({numberFormatter.format(seasonCount("hot"))})</option>
-          <option value="rainy">หน้าฝน · มิ.ย.–ต.ค. ({numberFormatter.format(seasonCount("rainy"))})</option>
-          <option value="cool">หน้าหนาว/อากาศเย็น · พ.ย.–ก.พ. ({numberFormatter.format(seasonCount("cool"))})</option>
-          <option value="current-month">เดือนนี้ · {MONTH_LABELS[currentMonth - 1]} ({numberFormatter.format(currentMonthCount)})</option>
-          {MONTH_LABELS.map((label, index) => <option key={label} value={`month-${index + 1}`}>{index + 1}. {label} ({numberFormatter.format(monthCount(index + 1))})</option>)}
+          {(["all-year", "hot", "rainy", "cool"] as const).map((value) => {
+            const facet = seasonFacet(value);
+            const label = value === "all-year" ? "ไม่เน้นฤดูกาล" : PERIOD_LABELS[value];
+            return <option disabled={!facet.available && props.period !== value} key={value} value={value}>{label} ({numberFormatter.format(facet.count)})</option>;
+          })}
+          {MONTH_LABELS.map((label, index) => {
+            const month = index + 1;
+            const facet = monthFacet(month);
+            return <option disabled={!facet.available && props.period !== `month-${month}`} key={label} value={`month-${month}`}>
+              {month}. {label}{month === currentMonth ? " · เดือนนี้" : ""} ({numberFormatter.format(facet.count)} · เด่น {numberFormatter.format(facet.peakCount)})
+            </option>;
+          })}
         </select>
       </label>
       <label htmlFor={`${props.idPrefix}-price`}><span>ช่วงราคา</span>
@@ -409,7 +439,7 @@ function FilterFields(props: FilterFieldsProps) {
           <option value="rating-desc">คะแนนสูง</option>
           <option value="price-asc">ราคาต่ำไปสูง</option>
           <option value="price-desc">ราคาสูงไปต่ำ</option>
-          <option value="seasonal">เหมาะกับช่วงนี้</option>
+          <option disabled={props.period === "all"} value="seasonal">{seasonalSortLabel(props.period)}</option>
           <option value="newest">ตรวจข้อมูลล่าสุด</option>
         </select>
       </label>
@@ -425,7 +455,12 @@ function FilterFields(props: FilterFieldsProps) {
       </label>
       <label htmlFor={`${props.idPrefix}-shop`}><span>ประเภทร้าน</span>
         <select id={`${props.idPrefix}-shop`} value={props.shopType} onChange={(event) => props.onShopType(event.target.value as ShopTypeFilter)}>
-          <option value="all">ทุกร้าน</option><option value="official">Official</option><option value="preferred">Preferred</option><option value="general">ร้านทั่วไป</option>
+          <option value="all">ทุกร้าน</option>
+          {(["official", "preferred", "general"] as const).map((value) => {
+            const facet = shopFacet(value);
+            const label = value === "official" ? "Official" : value === "preferred" ? "Preferred" : "ร้านทั่วไป";
+            return <option disabled={!facet.available && props.shopType !== value} key={value} value={value}>{label} ({numberFormatter.format(facet.count)})</option>;
+          })}
         </select>
       </label>
       <label htmlFor={`${props.idPrefix}-stock`}><span>สถานะสินค้า</span>
@@ -564,6 +599,7 @@ function CatalogApp() {
   const groups = catalog?.facets?.groups ?? [];
   const seasonFacets = catalog?.facets?.seasons ?? [];
   const monthFacets = catalog?.facets?.months ?? [];
+  const shopFacets = catalog?.facets?.shopTypes ?? [];
   const activeCount = Number(group !== "all") + Number(category !== "all") + Number(subcategory !== "all")
     + Number(period !== "all") + Number(priceFilter !== "all") + Number(sortMode !== "recommended")
     + Number(minSold > 0) + Number(minRating > 0) + Number(shopType !== "all") + Number(stock !== "all") + Number(freshness > 0);
@@ -586,6 +622,11 @@ function CatalogApp() {
     setQuery("");
     setDebouncedQuery("");
     clearFilters();
+  }
+
+  function changePeriod(value: PeriodFilter) {
+    setPeriod(value);
+    if (value === "all" && sortMode === "seasonal") setSortMode("recommended");
   }
 
   function moveResultsIntoView() {
@@ -643,6 +684,7 @@ function CatalogApp() {
     groups,
     seasonFacets,
     monthFacets,
+    shopFacets,
     group,
     category,
     subcategory,
@@ -658,7 +700,7 @@ function CatalogApp() {
     onGroup: (value: string) => { setGroup(value); setCategory("all"); setSubcategory("all"); },
     onCategory: (value: string) => { setCategory(value); setSubcategory("all"); },
     onSubcategory: setSubcategory,
-    onPeriod: setPeriod,
+    onPeriod: changePeriod,
     onPrice: setPriceFilter,
     onSort: setSortMode,
     onMinSold: setMinSold,
@@ -712,7 +754,7 @@ function CatalogApp() {
           <button className={minSold === 1000 ? "is-active" : ""} type="button" onClick={() => setMinSold(minSold === 1000 ? 0 : 1000)}>ขายสะสม 1,000+</button>
           <button className={minRating === 4.7 ? "is-active" : ""} type="button" onClick={() => setMinRating(minRating === 4.7 ? 0 : 4.7)}>คะแนน 4.7+</button>
           <button className={shopType === "official" ? "is-active" : ""} type="button" onClick={() => setShopType(shopType === "official" ? "all" : "official")}>ร้าน Official</button>
-          <button className={period === "current-month" ? "is-active" : ""} type="button" onClick={() => setPeriod(period === "current-month" ? "all" : "current-month")}>เหมาะเดือนนี้</button>
+          <button className={period === `month-${CURRENT_BANGKOK_MONTH}` ? "is-active" : ""} type="button" onClick={() => changePeriod(period === `month-${CURRENT_BANGKOK_MONTH}` ? "all" : `month-${CURRENT_BANGKOK_MONTH}`)}>เหมาะเดือนนี้</button>
           <button className={stock === "in-stock" ? "is-active" : ""} type="button" onClick={() => setStock(stock === "in-stock" ? "all" : "in-stock")}>มีสินค้า</button>
         </div>
 
@@ -732,9 +774,9 @@ function CatalogApp() {
           {group !== "all" && <button type="button" onClick={() => { setGroup("all"); setCategory("all"); setSubcategory("all"); }} aria-label={`ยกเลิกหมวดหลัก ${activeGroup?.label || "ที่เลือก"}`}>{activeGroup?.label || "หมวดหลัก"} ×</button>}
           {category !== "all" && <button type="button" onClick={() => { setCategory("all"); setSubcategory("all"); }} aria-label={`ยกเลิกหมวดย่อย ${activeCategory?.label || "ที่เลือก"}`}>{activeCategory?.label || "หมวดย่อย"} ×</button>}
           {subcategory !== "all" && <button type="button" onClick={() => setSubcategory("all")} aria-label={`ยกเลิกประเภท ${activeSubcategory?.label || "ที่เลือก"}`}>{activeSubcategory?.label || "ประเภทสินค้า"} ×</button>}
-          {period !== "all" && <button type="button" onClick={() => setPeriod("all")} aria-label={`ยกเลิกช่วงเวลา ${periodLabel(period)}`}>{periodLabel(period)} ×</button>}
+          {period !== "all" && <button type="button" onClick={() => changePeriod("all")} aria-label={`ยกเลิกช่วงเวลา ${periodLabel(period)}`}>{periodLabel(period)} ×</button>}
           {priceFilter !== "all" && <button type="button" onClick={() => setPriceFilter("all")} aria-label={`ยกเลิกช่วงราคา ${activePrice}`}>{activePrice} ×</button>}
-          {sortMode !== "recommended" && <button type="button" onClick={() => setSortMode("recommended")} aria-label={`ยกเลิกการเรียง ${SORT_LABELS[sortMode]}`}>{SORT_LABELS[sortMode]} ×</button>}
+          {sortMode !== "recommended" && <button type="button" onClick={() => setSortMode("recommended")} aria-label={`ยกเลิกการเรียง ${sortMode === "seasonal" ? seasonalSortLabel(period) : SORT_LABELS[sortMode]}`}>{sortMode === "seasonal" ? seasonalSortLabel(period) : SORT_LABELS[sortMode]} ×</button>}
           {minSold > 0 && <button type="button" onClick={() => setMinSold(0)}>ยอดขายสะสม {numberFormatter.format(minSold)}+ ×</button>}
           {minRating > 0 && <button type="button" onClick={() => setMinRating(0)}>คะแนน {minRating}+ ×</button>}
           {shopType !== "all" && <button type="button" onClick={() => setShopType("all")}>{shopTypeLabel(shopType)} ×</button>}
@@ -748,6 +790,11 @@ function CatalogApp() {
             <div><span>PRODUCT CATALOG</span><h2 id="results-title">รายการสินค้า</h2></div>
             <small aria-live="polite">{isLoading ? "กำลังค้นหา…" : `พบ ${numberFormatter.format(catalog?.matched ?? 0)} รายการ${debouncedQuery ? ` จากคำค้น “${debouncedQuery}”` : ""}`}</small>
           </div>
+
+          {!isLoading && catalog?.periodSummary?.mode === "month-with-evergreen-fallback" && <div className="catalog-period-summary" role="status">
+            <span><b>{numberFormatter.format(catalog.periodSummary.peakMatches)}</b> เหมาะเด่นเดือน{periodLabel(period)}</span>
+            <span><b>{numberFormatter.format(catalog.periodSummary.evergreenFallbackMatches)}</b> ไม่เน้นฤดูกาล</span>
+          </div>}
 
           {isLoading && <LoadingGrid />}
           {!isLoading && loadError && <div className="catalog-state" role="alert"><h3>เปิดคลังสินค้าไม่สำเร็จ</h3><p>ตรวจการเชื่อมต่อแล้วลองโหลดรายการอีกครั้ง</p><button type="button" onClick={() => setRetryCount((value) => value + 1)}>ลองอีกครั้ง</button></div>}

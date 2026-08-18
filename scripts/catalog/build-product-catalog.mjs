@@ -2,11 +2,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { streamCsvRows } from './catalog-lib.mjs';
 import {
+  CAMPAIGN_TAGS,
   CATALOG_SCHEMA_VERSION,
   CATALOG_CATEGORY_DEFINITIONS,
   CATALOG_GROUP_DEFINITIONS,
   DEFAULT_RANKED_TARGET,
   DEFAULT_RESERVE_TARGET,
+  CLIMATE_SEASONS,
   MINIMUM_RANKED_COUNT,
   MinHeap,
   evaluateSellableRow,
@@ -15,6 +17,7 @@ import {
   newRejectionCounts,
   parseCheckedAtFromFilename,
   selectSellableCatalog,
+  SEASONAL_METADATA_VERSION,
   toRuntimeModule,
 } from './sellable-catalog-lib.mjs';
 
@@ -87,6 +90,7 @@ if (ranked.length < args.minimumRankedCount) {
 const generatedAt = new Date().toISOString();
 const metadata = {
   schemaVersion: CATALOG_SCHEMA_VERSION,
+  seasonalMetadataVersion: SEASONAL_METADATA_VERSION,
   catalogName: 'คลังสินค้าน่าขาย',
   catalogDescription: 'สินค้าคัดจากยอดขายสะสม คะแนนสินค้า คุณภาพร้าน ราคา และความเหมาะกับช่วงเวลา',
   generatedAt,
@@ -122,6 +126,14 @@ const report = {
   selectedByCategoryKey: Object.fromEntries([...ranked.reduce((counts, product) => counts.set(product.categoryKey, (counts.get(product.categoryKey) ?? 0) + 1), new Map())]),
   selectedBySeasonTag: Object.fromEntries([...ranked.reduce((counts, product) => {
     for (const tag of product.seasonTags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    return counts;
+  }, new Map())]),
+  selectedEvergreenCount: ranked.filter((product) => product.evergreen).length,
+  selectedByClimateSeason: Object.fromEntries(CLIMATE_SEASONS.map((season) => [season, ranked.filter((product) => product.seasonTags.includes(season)).length])),
+  selectedByCampaignTag: Object.fromEntries(CAMPAIGN_TAGS.map((campaign) => [campaign, ranked.filter((product) => product.campaignTags.includes(campaign)).length])),
+  selectedSeasonCombinations: Object.fromEntries([...ranked.reduce((counts, product) => {
+    const combination = product.seasonTags.join('+');
+    counts.set(combination, (counts.get(combination) ?? 0) + 1);
     return counts;
   }, new Map())]),
   selectedByMonth: Object.fromEntries(Array.from({ length: 12 }, (_, index) => {
