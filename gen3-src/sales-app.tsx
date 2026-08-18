@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { Gen3Analytics } from "./analytics";
 import { SalesPromptBuilder } from "./sales-prompt-builder";
 
 function SalesBuilderApp() {
@@ -25,4 +26,4 @@ function SalesBuilderApp() {
 
 const root = document.getElementById("builder-root");
 if (!root) throw new Error("Missing #builder-root");
-createRoot(root).render(<SalesBuilderApp />);
+createRoot(root).render(<><SalesBuilderApp /><Gen3Analytics /></>);

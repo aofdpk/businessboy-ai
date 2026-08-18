@@ -8,6 +8,7 @@
     "build:catalog": "node scripts/catalog/build-product-catalog.mjs",
     "retag:catalog": "node scripts/catalog/retag-product-catalog-v4.mjs",
     "validate:catalog": "node scripts/catalog/validate-product-catalog.mjs",
+    "test:gen3-analytics": "node scripts/gen3-analytics-qa.mjs",
     "test:catalog-api": "node catalog-db/smoke-test.mjs",
     "test:catalog-db": "node catalog-db/pipeline-contract-test.mjs",
     "export:catalog-jsonl": "node catalog-db/export-approved-jsonl.mjs",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@vercel/analytics": "^2.0.1",
     "ioredis": "^5.4.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

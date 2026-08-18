@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { trackGen3Event } from "./analytics";
 import {
   buildStepOnePrompt,
   buildStepThreePrompt,
@@ -302,6 +303,7 @@ export function PromptBuilder() {
   async function copyPrompt() {
     if (missing.length) return;
     await navigator.clipboard.writeText(prompt);
+    if (activeStep === 3) trackGen3Event("identity_prompt_copied");
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2200);
   }

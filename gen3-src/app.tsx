@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { Gen3Analytics } from "./analytics";
 import { PromptBuilder } from "./prompt-builder";
 
 function BuilderApp() {
@@ -25,4 +26,4 @@ function BuilderApp() {
 
 const root = document.getElementById("builder-root");
 if (!root) throw new Error("Missing #builder-root");
-createRoot(root).render(<BuilderApp />);
+createRoot(root).render(<><BuilderApp /><Gen3Analytics /></>);

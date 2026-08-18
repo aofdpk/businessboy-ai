@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Gen3Analytics, trackGen3Event } from "./analytics";
 
 type CatalogProduct = {
   id: string;
@@ -256,7 +257,7 @@ type CardProps = {
   showRank?: boolean;
   eager?: boolean;
   copiedKey: string;
-  onCopy: (key: string, value: string, label: string) => void;
+  onCopy: (key: string, value: string, label: string, copyType: "name" | "summary" | "summary_price") => void;
   onPreview: (product: CatalogProduct) => void;
 };
 
@@ -275,9 +276,9 @@ function ProductActions({ product, imageFailed, copiedKey, onCopy, onPreview }: 
       {imageFailed ? (
         <span className="catalog-action catalog-action--disabled" aria-disabled="true">ดาวน์โหลดไม่ได้</span>
       ) : (
-        <a aria-label={`ดาวน์โหลดรูป ${product.cleanName}`} className="catalog-action" href={downloadHref}>ดาวน์โหลดรูป</a>
+        <a aria-label={`ดาวน์โหลดรูป ${product.cleanName}`} className="catalog-action" href={downloadHref} onClick={() => trackGen3Event("product_image_download_clicked")}>ดาวน์โหลดรูป</a>
       )}
-      <button aria-label={`${copiedKey === nameKey ? "คัดลอกชื่อแล้ว" : "คัดลอกชื่อ"}: ${product.cleanName}`} className="catalog-action" type="button" onClick={() => onCopy(nameKey, product.cleanName, "ชื่อสินค้า")}>
+      <button aria-label={`${copiedKey === nameKey ? "คัดลอกชื่อแล้ว" : "คัดลอกชื่อ"}: ${product.cleanName}`} className="catalog-action" type="button" onClick={() => onCopy(nameKey, product.cleanName, "ชื่อสินค้า", "name")}>
         {copiedKey === nameKey ? "คัดลอกแล้ว ✓" : "คัดลอกชื่อ"}
       </button>
       <button
@@ -285,7 +286,7 @@ function ProductActions({ product, imageFailed, copiedKey, onCopy, onPreview }: 
         className="catalog-action"
         disabled={!product.summary}
         type="button"
-        onClick={() => onCopy(summaryKey, summaryText, "รายละเอียดสินค้า")}
+        onClick={() => onCopy(summaryKey, summaryText, "รายละเอียดสินค้า", "summary")}
       >
         {copiedKey === summaryKey ? "คัดลอกแล้ว ✓" : "คัดลอกรายละเอียด"}
       </button>
@@ -294,11 +295,11 @@ function ProductActions({ product, imageFailed, copiedKey, onCopy, onPreview }: 
         className="catalog-action catalog-action--summary-price"
         disabled={!canCopySummaryPrice}
         type="button"
-        onClick={() => onCopy(summaryPriceKey, summaryPrice, "รายละเอียดพร้อมราคา")}
+        onClick={() => onCopy(summaryPriceKey, summaryPrice, "รายละเอียดพร้อมราคา", "summary_price")}
       >
         {copiedKey === summaryPriceKey ? "คัดลอกแล้ว ✓" : "คัดลอกรายละเอียดพร้อมราคา"}
       </button>
-      <a aria-label={`เปิด ${product.cleanName} ใน Shopee`} className="catalog-action catalog-action--shopee" href={product.productUrl} rel="noopener noreferrer" target="_blank">เปิด Shopee ↗</a>
+      <a aria-label={`เปิด ${product.cleanName} ใน Shopee`} className="catalog-action catalog-action--shopee" href={product.productUrl} onClick={() => trackGen3Event("product_shopee_opened")} rel="noopener noreferrer" target="_blank">เปิด Shopee ↗</a>
     </div>
   );
 }
@@ -650,9 +651,10 @@ function CatalogApp() {
     moveResultsIntoView();
   }
 
-  async function handleCopy(key: string, value: string, label: string) {
+  async function handleCopy(key: string, value: string, label: string, copyType: "name" | "summary" | "summary_price") {
     try {
       await copyText(value);
+      trackGen3Event("product_details_copied", { copy_type: copyType });
       setCopiedKey(key);
       setToast(`คัดลอก${label}แล้ว`);
       window.setTimeout(() => setCopiedKey((current) => current === key ? "" : current), 1800);
@@ -812,7 +814,7 @@ function CatalogApp() {
         {preview && <div className="catalog-preview__panel">
           <div className="catalog-preview__heading"><div><span>{preview.category}</span><h2 id="catalog-preview-title">{preview.cleanName}</h2></div><button type="button" onClick={closePreview} aria-label="ปิดรูปตัวอย่าง">×</button></div>
           <div className="catalog-preview__image">{previewFailed ? <div className="catalog-image-placeholder" role="img" aria-label={`ไม่สามารถแสดงรูป ${preview.cleanName}`}>ไม่สามารถแสดงรูปตัวอย่างได้</div> : <img alt={preview.cleanName} src={preview.imageUrl} referrerPolicy="no-referrer" onError={() => setPreviewFailed(true)} />}</div>
-          <div className="catalog-preview__actions">{previewFailed ? <span aria-disabled="true">ดาวน์โหลดไม่ได้</span> : <a href={`/api/gen3-product-image?id=${encodeURIComponent(preview.id)}`}>ดาวน์โหลดรูป</a>}<a href={preview.productUrl} target="_blank" rel="noopener noreferrer">เปิด Shopee ↗</a></div>
+          <div className="catalog-preview__actions">{previewFailed ? <span aria-disabled="true">ดาวน์โหลดไม่ได้</span> : <a href={`/api/gen3-product-image?id=${encodeURIComponent(preview.id)}`} onClick={() => trackGen3Event("product_image_download_clicked")}>ดาวน์โหลดรูป</a>}<a href={preview.productUrl} onClick={() => trackGen3Event("product_shopee_opened")} target="_blank" rel="noopener noreferrer">เปิด Shopee ↗</a></div>
         </div>}
       </dialog>
 
@@ -829,4 +831,4 @@ function CatalogApp() {
 
 const root = document.getElementById("catalog-root");
 if (!root) throw new Error("Missing #catalog-root");
-createRoot(root).render(<CatalogApp />);
+createRoot(root).render(<><CatalogApp /><Gen3Analytics /></>);

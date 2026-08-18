@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { trackGen3Event } from "./analytics";
 import { buildSalesPrompt, initialSalesPrompt, type SalesProductSceneMode, type SalesPromptData, type SalesSpeechSpeed } from "./sales-prompt-data";
 
 const STORAGE_KEY = "businessboy-gen3-sales-v3";
@@ -241,7 +242,7 @@ export function SalesPromptBuilder() {
   async function copyPrompt() {
     if (missing.length) return;
     setCopyError("");
-    try { await copyToClipboard(prompt); setCopied(true); window.setTimeout(() => setCopied(false), 2200); }
+    try { await copyToClipboard(prompt); trackGen3Event("sales_prompt_copied"); setCopied(true); window.setTimeout(() => setCopied(false), 2200); }
     catch { setCopyError("คัดลอกอัตโนมัติไม่สำเร็จ กรุณากดดู Prompt แล้วคัดลอกด้วยตนเอง"); }
   }
 
