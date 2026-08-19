@@ -63,15 +63,45 @@ const noContextPlan = presenter.resolvePosePlan({
 assert.ok(noContextPlan.every((item) => item.poseId !== "crawl_search"), "Crawling must never appear without a supporting context");
 
 const one = presenter.initialStepOne;
-const two = { ...presenter.initialStepTwo, characterDescription: "ผู้หญิงสมมติ อายุ 29 ปี ลุคไทยร่วมสมัย ชุดคลีนคงที่" };
+const two = { ...presenter.initialStepTwo, characterDescription: "ผู้หญิงสมมติ อายุ 31 ปี ลุคไทยร่วมสมัย ชุดคลีนคงที่" };
+assert.equal(presenter.initialStepTwo.characterName, "", "Step 2 must not ship a sample character name");
+assert.equal(presenter.initialStepTwo.characterDescription, "", "Step 2 must not ship a sample identity description");
 assert.ok(presenter.FACE_STYLES.includes("หล่อเข้ม") && presenter.FACE_STYLES.includes("น่ารักสดใส"), "Required face-style choices are missing");
 assert.ok(presenter.COUNTRY_STYLES.includes("ไทยร่วมสมัย") && presenter.COUNTRY_STYLES.includes("เกาหลีร่วมสมัย"), "Required regional looks are missing");
 const ideaPrompt = presenter.buildPresenterIdeaPrompt(one);
 assert.match(ideaPrompt, /ยังไม่มีสินค้า ราคา โปรโมชั่น ลิงก์ซื้อ หรือ CTA ขาย/);
 assert.match(ideaPrompt, /อายุหนึ่งค่าอย่างน้อย 25 ปี/);
-const characterPrompt = presenter.buildPresenterCharacterPrompt(two, one);
+const characterState = {
+  ...two,
+  characterName: "ตัวละครตรวจสอบแบบไดนามิก",
+  groomingLock: "ล็อกทรงผมและการดูแลใบหน้าตามสถานะทดสอบ",
+  wardrobeLock: "ล็อกชุดสีน้ำเงินหนึ่งชุดตามสถานะทดสอบ",
+  expressionSet: "เป็นกลาง, ยิ้ม, มั่นใจ",
+};
+const characterStepOne = {
+  ...one,
+  presenterType: "หนุ่มหล่อ",
+  faceStyle: "หล่อเข้ม",
+  countryStyle: "เกาหลีร่วมสมัย",
+};
+const characterPrompt = presenter.buildPresenterCharacterPrompt(characterState, characterStepOne);
 assert.match(characterPrompt, /2 คอลัมน์ × 3 แถว รวม 6 ช่อง/);
-assert.match(characterPrompt, /gpt-image-2-text-to-image/);
+assert.match(characterPrompt, /ตัวละครตรวจสอบแบบไดนามิก/, "Step 2 must use the current character name");
+assert.match(characterPrompt, /หนุ่มหล่อ · หล่อเข้ม/, "Step 2 must use the current Step 1 Presenter DNA");
+assert.match(characterPrompt, /ล็อกทรงผมและการดูแลใบหน้าตามสถานะทดสอบ/, "Step 2 must use the current grooming lock");
+assert.match(characterPrompt, /ล็อกชุดสีน้ำเงินหนึ่งชุดตามสถานะทดสอบ/, "Step 2 must use the current wardrobe lock");
+assert.match(characterPrompt, /FINAL IDENTITY_LOCK/);
+assert.match(characterPrompt, /MASTER IMAGE PROMPT/);
+assert.match(characterPrompt, /NEGATIVE CONSTRAINTS/);
+assert.match(characterPrompt, /QC CHECKLIST 10 ข้อ/);
+assert.match(characterPrompt, /อย่าสร้างภาพในคำตอบนี้ ให้ส่งเฉพาะ Prompt พร้อมใช้/);
+assert.doesNotMatch(characterPrompt, /Kie|gpt-image|task\s*ID|credits|manifest/i, "Step 2 must be tool-neutral");
+const userExampleName = ["พี่", "เบิ้ม"].join("");
+assert.equal(characterPrompt.includes(userExampleName), false, "The user's example character must never become a default or output fixture");
+const userExampleAge = ["2", "9"].join("");
+const userExampleHeight = ["18", "2"].join("");
+assert.equal(characterPrompt.includes(`อายุ ${userExampleAge} ปี`), false, "The user's example age must not leak into a neutral fixture");
+assert.equal(characterPrompt.includes(userExampleHeight), false, "The user's example height must not leak into a neutral fixture");
 const revision = presenter.computeIdentityRevision(one, two);
 const sanitized = presenter.sanitizePresenterIdentityState({
   schemaVersion: 1,
@@ -139,7 +169,9 @@ const storyPrompt = presenter.buildPresenterStoryPrompt({
 }, one);
 assert.match(storyPrompt, /same take/i, "Story prompt must lock native same-take speech");
 assert.match(storyPrompt, /— ไม่มีบทพูด/, "Story prompt must define dialogue-free action scenes");
-assert.match(storyPrompt, /gpt-image-2-image-to-image/, "Scene workflow must preserve the Character Reference through Kie GPT Image2");
+assert.match(storyPrompt, /Character Reference ที่ผู้ใช้อัปโหลดเป็นแหล่งความจริงด้านตัวตนเพียงชุดเดียว/, "Scene workflow must preserve identity through the uploaded Character Reference");
+assert.match(storyPrompt, /โหมด reference หรือ image edit ของเครื่องมือปลายทาง/, "Scene workflow must remain tool-neutral while requiring reference mode");
+assert.doesNotMatch(storyPrompt, /Kie|gpt-image|task\s*ID|credits|manifest/i, "Step 3 must not leak internal image-tool workflow claims");
 assert.match(storyPrompt, /ลำดับฉาก \| ประเภทฉากและอิริยาบถ \| คำอธิบายฉาก \| Image Prompt \| Video Prompt \| บทพูดภาษาไทย/);
 assert.match(storyPrompt, /ไม่มีสินค้าและไม่มีการขาย/);
 
