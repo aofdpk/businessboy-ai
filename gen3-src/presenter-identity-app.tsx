@@ -19,7 +19,7 @@ function PresenterIdentityApp() {
           <img alt="เด็กประกอบการ" height="64" src="/businessboy-logo.jpg" width="64" />
           <div><b>AI Prompt Builder</b><span>Presenter Identity · EP6</span></div>
         </a>
-        <div className="header-message"><span>สร้างคนที่จำง่าย ไม่ใช่แค่หน้าตาดี</span><small>Channel DNA → Character Sheet → Pose Engine</small></div>
+        <div className="header-message"><span>สร้างคนที่จำง่าย ไม่ใช่แค่หน้าตาดี</span><small>Channel DNA → Character Sheet → AI เลือกฉากตามบท</small></div>
         <button className="logout-button" onClick={logout} type="button">ออกจากระบบ</button>
       </header>
       <PresenterIdentityBuilder />

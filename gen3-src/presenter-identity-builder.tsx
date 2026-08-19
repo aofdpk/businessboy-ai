@@ -436,7 +436,7 @@ export function PresenterIdentityBuilder() {
     <div className="builder-shell presenter-identity-builder">
       <aside className="mode-banner" aria-label="โหมดที่กำลังใช้งาน">
         <span className="mode-banner__mark" aria-hidden="true">★</span>
-        <span className="mode-banner__copy"><span className="mode-banner__kicker">ใหม่ · EP6</span><strong>คลิปสร้างตัวตนสาวสวย/หนุ่มหล่อ</strong><small>เลือกหน้าตา ลุคประเทศ บุคลิก และคลังท่า · ตัวละครสมมติอายุ 25+</small></span>
+        <span className="mode-banner__copy"><span className="mode-banner__kicker">ใหม่ · EP6</span><strong>คลิปสร้างตัวตนสาวสวย/หนุ่มหล่อ</strong><small>เลือกหน้าตา ลุคประเทศ และบุคลิก · ให้ AI เลือกฉากตามบท · ตัวละครสมมติอายุ 25+</small></span>
         <a className="mode-banner__link" href="/gen3">กลับหน้าเลือกประเภทคลิป</a>
       </aside>
       <nav className="stepper" aria-label="ขั้นตอนสร้าง Presenter Identity Prompt">
