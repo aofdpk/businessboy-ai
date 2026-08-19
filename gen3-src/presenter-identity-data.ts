@@ -1,7 +1,7 @@
 export type StepId = 1 | 2 | 3;
 
 export const PRESENTER_IDENTITY_STORAGE_KEY = "businessboy-gen3-presenter-identity-v1";
-export const PRESENTER_IDENTITY_SCHEMA_VERSION = 1;
+export const PRESENTER_IDENTITY_SCHEMA_VERSION = 2;
 export const PRESENTER_IDENTITY_MODE = "presenter-identity" as const;
 
 export const PRESENTER_TYPES = [
@@ -119,19 +119,6 @@ export const FRAMEWORKS = [
   "Moment → Meaning → Conversation",
 ] as const;
 
-export const POSE_FAMILIES = [
-  { id: "standing", label: "ยืนและพูด" },
-  { id: "sitting", label: "นั่ง" },
-  { id: "walking", label: "เดิน" },
-  { id: "reclining", label: "เอนหรือนอนแบบมีบริบท" },
-  { id: "low_context", label: "ย่อ คุกเข่า หรือคลานแบบมีเหตุผล" },
-  { id: "daily", label: "ชีวิตประจำวัน" },
-  { id: "comedy", label: "ปฏิกิริยาตลก" },
-] as const;
-
-export type PoseFamily = typeof POSE_FAMILIES[number]["id"];
-export type SceneKind = "พูดเน้นหน้า" | "แอ็กชันนำเรื่อง" | "แอ็กชันแล้วหยุดพูด";
-
 export type StepOneData = {
   ideaCount: string;
   presenterType: string;
@@ -179,12 +166,6 @@ export type StepThreeData = {
   sceneCount: string;
   sceneDuration: string;
   speechSpeed: string;
-  poseBalance: string;
-  allowedPoseFamilies: PoseFamily[];
-  movementLevel: string;
-  poseSeed: string;
-  customPoseContext: string;
-  excludedPoses: string;
   tone: string;
   settingPreferences: string;
   excludedSettings: string;
@@ -192,7 +173,7 @@ export type StepThreeData = {
 };
 
 export type PresenterIdentitySavedState = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   mode: typeof PRESENTER_IDENTITY_MODE;
   activeStep: StepId;
   stepOne: StepOneData;
@@ -247,12 +228,6 @@ export const initialStepThree: StepThreeData = {
   sceneCount: "3",
   sceneDuration: "10 วินาที",
   speechSpeed: "ปกติ — 20–25 คำ",
-  poseBalance: "สมดุล — แอ็กชันประมาณทุก 3 ฉาก",
-  allowedPoseFamilies: ["standing", "sitting", "walking", "daily", "comedy"],
-  movementLevel: "กลาง — หนึ่งการกระทำชัดเจนต่อฉาก",
-  poseSeed: "EP6",
-  customPoseContext: "",
-  excludedPoses: "",
   tone: "เป็นธรรมชาติ มีเสน่ห์ และฟังเหมือนคนไทยจริง",
   settingPreferences: "สถานที่จริงในประเทศไทยที่ตรงกับเรื่องและบุคลิกช่อง",
   excludedSettings: "",
@@ -317,9 +292,6 @@ export function sanitizeStepTwo(input: unknown): StepTwoData {
 
 export function sanitizeStepThree(input: unknown): StepThreeData {
   const source = record(input);
-  const families = Array.isArray(source.allowedPoseFamilies)
-    ? source.allowedPoseFamilies.filter((item): item is PoseFamily => typeof item === "string" && POSE_FAMILIES.some((family) => family.id === item))
-    : initialStepThree.allowedPoseFamilies;
   return {
     channelName: cleanText(source.channelName, "", 300),
     channelConcept: cleanText(source.channelConcept, "", 2500),
@@ -333,21 +305,6 @@ export function sanitizeStepThree(input: unknown): StepThreeData {
     sceneCount: oneOf(source.sceneCount, Array.from({ length: 10 }, (_, index) => String(index + 1)), initialStepThree.sceneCount),
     sceneDuration: oneOf(source.sceneDuration, ["8 วินาที", "10 วินาที", "15 วินาที"], initialStepThree.sceneDuration),
     speechSpeed: oneOf(source.speechSpeed, ["ช้า — 10–15 คำ", "ปกติ — 20–25 คำ", "เร็ว — 30–35 คำ"], initialStepThree.speechSpeed),
-    poseBalance: oneOf(source.poseBalance, [
-      "เน้นพูด — ไม่มีฉากแอ็กชันล้วน",
-      "เน้นพูด — แอ็กชันประมาณทุก 4 ฉาก",
-      "สมดุล — แอ็กชันประมาณทุก 3 ฉาก",
-      "เน้นภาพ — แอ็กชันประมาณทุก 2 ฉาก",
-    ], initialStepThree.poseBalance),
-    allowedPoseFamilies: families.length ? [...new Set(families)] : initialStepThree.allowedPoseFamilies,
-    movementLevel: oneOf(source.movementLevel, [
-      "ต่ำ — สีหน้าและท่าทางเล็กน้อย",
-      "กลาง — หนึ่งการกระทำชัดเจนต่อฉาก",
-      "สูง — แอ็กชันเด่นเฉพาะฉากที่ไม่มีบทพูด",
-    ], initialStepThree.movementLevel),
-    poseSeed: cleanText(source.poseSeed, initialStepThree.poseSeed, 80),
-    customPoseContext: cleanText(source.customPoseContext, "", 1500),
-    excludedPoses: cleanText(source.excludedPoses, "", 1500),
     tone: cleanText(source.tone, initialStepThree.tone, 1000),
     settingPreferences: cleanText(source.settingPreferences, initialStepThree.settingPreferences, 1500),
     excludedSettings: cleanText(source.excludedSettings, "", 1500),
@@ -384,8 +341,10 @@ export function computeIdentityRevision(stepOne: StepOneData, stepTwo: StepTwoDa
   return `pi-${(hash >>> 0).toString(36)}`;
 }
 
-export function sanitizePresenterIdentityState(input: unknown): PresenterIdentitySavedState {
+export function sanitizePresenterIdentityState(input: unknown): PresenterIdentitySavedState | null {
   const source = record(input);
+  if (source.mode !== PRESENTER_IDENTITY_MODE) return null;
+  if (source.schemaVersion !== 1 && source.schemaVersion !== PRESENTER_IDENTITY_SCHEMA_VERSION) return null;
   const stepOne = sanitizeStepOne(source.stepOne);
   const rawStepTwo = sanitizeStepTwo(source.stepTwo);
   const revision = computeIdentityRevision(stepOne, rawStepTwo);
@@ -474,7 +433,7 @@ Presenter DNA ที่ผู้ใช้เลือก
 - แนวช่อง: ${displayCustom(data.channelNiche, data.channelNicheCustom)}
 - โทนช่อง: ${displayCustom(data.tone, data.toneCustom)}
 - ระดับความแซ่บ: ${data.spiceLevel}
-- กลุ่มผู้ชมที่สนใจ: ${value(data.audiencePreference)}
+- กลุ่มเป้าหมายที่สนใจ: ${value(data.audiencePreference)}
 - สิ่งที่ไม่ต้องการ: ${value(data.exclusions, "ไม่มีข้อห้ามเพิ่มเติม")}
 
 การใช้ลุคประเทศ
@@ -485,7 +444,7 @@ ${hardSafetyRules()}
 กฎออกแบบ
 1. หากผู้ใช้เลือกให้ AI เสนอทั้งสาวสวยและหนุ่มหล่อ ให้กระจายแนวทางทั้งสองประเภทอย่างสมดุล ห้ามทำตัวละครก้ำกึ่งโดยไม่ได้รับคำขอ
 2. ใช้สไตล์ใบหน้าหลักเป็นแกน สไตล์รองเป็นอารมณ์เสริม ห้ามผสมจนขัดกัน
-3. Presenter เป็น hook ทางภาพ แต่เหตุผลที่ผู้ชมติดตามต้องมาจาก Content Promise, บุคลิก, ประโยชน์หรืออารมณ์ที่ได้รับ และรูปแบบซีรีส์ที่ทำซ้ำได้
+3. Presenter เป็น hook ทางภาพ แต่เหตุผลที่ผู้ชมติดตามต้องมาจากแก่นหลักของช่อง บุคลิก ประโยชน์หรืออารมณ์ที่ได้รับ และรูปแบบซีรีส์ที่ทำซ้ำได้
 4. ห้ามแต่งประสบการณ์จริง อาชีพ ใบรับรอง หรือความเชี่ยวชาญที่ผู้ใช้ไม่ได้ให้มา ตัวละครเป็นตัวละคร AI สมมติ
 5. สิ่งที่ไม่ต้องการเป็น HARD EXCLUSION ครอบคลุมคำพ้องและแนวคิดใกล้เคียง ห้ามทวนข้อห้ามกลับมาในผลงาน
 6. ทุกแนวทางต้องให้ IDENTITY_LOCK เป็นค่าคงที่ชุดเดียว: เพศการนำเสนอ อายุหนึ่งค่าอย่างน้อย 25 ปี รูปหน้า ผิว ตา คิ้ว จมูก ปาก ผม รูปร่าง ส่วนสูง ชุด รองเท้า เครื่องประดับ บุคลิก จุดจำ และระบุพร็อพประจำตัวว่าไม่มี ห้ามใช้คำว่า หรือ อาจ สลับ เปลี่ยนได้ ช่วงค่า หรือหลายตัวเลือกใน lock เดียว
@@ -493,20 +452,20 @@ ${hardSafetyRules()}
 8. รอบนี้เป็น Identity Content เท่านั้น อาจวิเคราะห์หมวดสินค้าที่เข้ากันในอนาคตเป็นข้อมูลประกอบ แต่ห้ามใส่สินค้าในหัวข้อคลิป บทพูด หรือ CTA
 
 รูปแบบผลลัพธ์ของแต่ละแนวทาง
-## แนวทาง 01 — ชื่อแนวคิด
-1. ชื่อช่อง 3 ตัวเลือก
-2. Presenter DNA ฉบับสรุป
-3. Content Promise หนึ่งประโยค
-4. กลุ่มผู้ชมและเหตุผลที่ติดตาม
-5. ลายเซ็นการพูดและลายเซ็นทางภาพ
-6. เสาหลักเนื้อหา 5 ข้อ
-7. ซีรีส์ทำซ้ำได้ 5 รูปแบบ
-8. หัวข้อ 10 คลิปแรก โดยไม่มีสินค้า
-9. หมวดสินค้าที่อาจต่อยอดในอนาคต 3 หมวด พร้อมเหตุผล แต่ห้ามเขียนบทขาย
-10. ความยากในการผลิตและสิ่งที่ต้องระวัง
-11. IDENTITY_LOCK ฉบับเต็มหนึ่งชุด
+## แนวทาง 01 — ชื่อแนวทางช่อง
+1. ชื่อช่องที่แนะนำ 3 ชื่อ
+2. กลุ่มเป้าหมาย พร้อมปัญหา ความสนใจ และเหตุผลที่เขาจะติดตาม
+3. Presenter DNA ฉบับสรุป
+4. IDENTITY_LOCK ฉบับเต็มหนึ่งชุด
+5. จุดจำ ลายเซ็นการพูด และลายเซ็นทางภาพที่ตรงกับ IDENTITY_LOCK
+6. แก่นหลักของช่องในหนึ่งประโยค
+7. เสาหลักเนื้อหา 3–5 ข้อ พร้อมตัวอย่างหัวข้อคลิปเสาละ 2 หัวข้อ
+8. ซีรีส์ทำซ้ำได้ 5 รูปแบบ
+9. หัวข้อ 10 คลิปแรก โดยไม่มีสินค้า
+10. หมวดสินค้าที่อาจต่อยอดในอนาคต 3 หมวด พร้อมเหตุผล แต่ห้ามเขียนบทขาย
+11. ความยากในการผลิตและสิ่งที่ต้องระวัง
 
-ปิดท้ายด้วยตารางเปรียบเทียบทุกแนวทาง: ลำดับ | ชื่อแนวคิด | ประเภทพรีเซนเตอร์ | เสน่ห์หลัก | กลุ่มผู้ชม | จุดจำ | ความง่ายในการผลิต | โอกาสทำต่อเนื่อง
+ปิดท้ายด้วยตารางเปรียบเทียบทุกแนวทาง: ลำดับ | ชื่อแนวทางช่อง | กลุ่มเป้าหมาย | แก่นหลักของช่อง | เสาหลักเนื้อหา 3–5 ข้อ | ประเภทพรีเซนเตอร์ | เสน่ห์หลัก | จุดจำ | ความง่ายในการผลิต | โอกาสทำต่อเนื่อง
 
 ตรวจความปลอดภัย ความแตกต่าง และความสอดคล้องกับ Presenter DNA ทุกบรรทัดก่อนแสดงเฉพาะฉบับสุดท้าย`;
 }
@@ -552,212 +511,21 @@ ${hardSafetyRules()}
 อย่าสร้างภาพในคำตอบนี้ ให้ส่งเฉพาะ Prompt พร้อมใช้และห้ามอ้างว่าสร้างภาพแล้ว`;
 }
 
-type PoseDefinition = {
-  id: string;
-  label: string;
-  family: PoseFamily;
-  kinds: SceneKind[];
-  minSeconds: 8 | 10 | 15;
-  maxSpeech: "fast" | "normal" | "none";
-  requiresContext?: RegExp;
-  contextHint?: string;
-};
-
-const POSES: PoseDefinition[] = [
-  { id: "stand_relaxed", label: "ยืนผ่อนคลาย ถ่ายน้ำหนักข้างเดียว", family: "standing", kinds: ["พูดเน้นหน้า", "แอ็กชันแล้วหยุดพูด"], minSeconds: 8, maxSpeech: "fast" },
-  { id: "lean_counter", label: "พิงเคาน์เตอร์เบา ๆ แล้วสบกล้อง", family: "standing", kinds: ["พูดเน้นหน้า"], minSeconds: 8, maxSpeech: "fast", requiresContext: /(เคาน์เตอร์|ครัว|ร้าน|โต๊ะ|counter)/i },
-  { id: "turn_to_camera", label: "หันไหล่กลับมาสบกล้องแล้วหยุดนิ่ง", family: "standing", kinds: ["แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal" },
-  { id: "sit_chair", label: "นั่งเก้าอี้มุม 45 องศา ท่าตรงและเป็นธรรมชาติ", family: "sitting", kinds: ["พูดเน้นหน้า"], minSeconds: 8, maxSpeech: "fast" },
-  { id: "sit_steps", label: "นั่งขั้นบันไดแล้วเงยหน้าสบกล้อง", family: "sitting", kinds: ["พูดเน้นหน้า", "แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal", requiresContext: /(บันได|ขั้น|ทางเข้า|steps)/i },
-  { id: "sit_floor", label: "นั่งพื้นขัดสมาธิในพื้นที่สะอาด", family: "sitting", kinds: ["พูดเน้นหน้า"], minSeconds: 8, maxSpeech: "normal", requiresContext: /(พื้น|เสื่อ|บ้าน|ห้อง|ปิกนิก|โยคะ|floor)/i },
-  { id: "walk_in_stop", label: "เดินเข้าหากล้องสองก้าวแล้วหยุดก่อนพูด", family: "walking", kinds: ["แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal" },
-  { id: "walk_past_turn", label: "เดินผ่านเฟรมแล้วหันกลับมามอง", family: "walking", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 10, maxSpeech: "none" },
-  { id: "open_door_enter", label: "เปิดประตู เดินเข้าฉาก แล้วหยุดที่จุดกำหนด", family: "walking", kinds: ["แอ็กชันนำเรื่อง", "แอ็กชันแล้วหยุดพูด"], minSeconds: 15, maxSpeech: "normal", requiresContext: /(ประตู|ห้อง|บ้าน|ออฟฟิศ|ร้าน|door)/i },
-  { id: "recline_sofa", label: "เอนตัวบนโซฟาแล้วหันมาสบกล้อง", family: "reclining", kinds: ["พูดเน้นหน้า"], minSeconds: 10, maxSpeech: "normal", requiresContext: /(โซฟา|ห้องนั่งเล่น|พักผ่อน|sofa)/i },
-  { id: "lie_exercise_mat", label: "นอนบนเสื่อออกกำลังกายแล้วลุกขึ้นนั่ง", family: "reclining", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 15, maxSpeech: "none", requiresContext: /(ออกกำลัง|ฟิตเนส|โยคะ|เสื่อ|เหนื่อย|workout)/i },
-  { id: "wake_sit", label: "เริ่มจากเอนพักแล้วลุกขึ้นนั่งอย่างเป็นธรรมชาติ", family: "reclining", kinds: ["แอ็กชันแล้วหยุดพูด"], minSeconds: 15, maxSpeech: "normal", requiresContext: /(ตื่น|พัก|ง่วง|นอน|เช้า|เหนื่อย)/i },
-  { id: "crouch_pick", label: "ย่อตัวหยิบของตกแล้วลุกขึ้น", family: "low_context", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 10, maxSpeech: "none", requiresContext: /(ตก|หยิบ|หา|เก็บ|ชั้นล่าง|รองเท้า)/i },
-  { id: "kneel_shoelace", label: "คุกเข่าผูกเชือกรองเท้าแล้วลุก", family: "low_context", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 15, maxSpeech: "none", requiresContext: /(รองเท้า|วิ่ง|ออกกำลัง|เดินทาง|เชือก)/i },
-  { id: "crawl_search", label: "คลานระยะสั้นเพื่อหาของใต้โต๊ะ แล้วหยุดเมื่อพบ", family: "low_context", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 15, maxSpeech: "none", requiresContext: /(หา.*ใต้โต๊ะ|ของหาย|ค้นหา|สัตว์เลี้ยง|ทำความสะอาด|ใต้โต๊ะ)/i, contextHint: "ใช้ได้เฉพาะเรื่องค้นหาของ เล่นกับสัตว์เลี้ยง หรือทำความสะอาด และใช้มุมกล้องระดับสายตาด้านหน้าเท่านั้น" },
-  { id: "fix_hair", label: "ทัดหรือจัดผมหนึ่งครั้งแล้วลดมือลง", family: "daily", kinds: ["แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal", requiresContext: /(ผม|กระจก|แต่งตัว|ลม|เตรียม|หน้า)/i },
-  { id: "open_notebook", label: "เปิดสมุด มองหนึ่งจังหวะ แล้วกลับมาสบกล้อง", family: "daily", kinds: ["แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal", requiresContext: /(สมุด|จด|งาน|เรียนรู้|วางแผน|โต๊ะ)/i },
-  { id: "curtain", label: "เปิดม่านหนึ่งครั้งแล้วหยุดมองแสงด้านนอก", family: "daily", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 10, maxSpeech: "none", requiresContext: /(ม่าน|หน้าต่าง|เช้า|แสง|ห้อง)/i },
-  { id: "startled_freeze", label: "สะดุ้งเล็กน้อย ถอยครึ่งก้าว แล้วหยุดนิ่ง", family: "comedy", kinds: ["แอ็กชันนำเรื่อง", "แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal" },
-  { id: "peek_door", label: "แอบมองจากขอบประตูแล้วเดินออกมา", family: "comedy", kinds: ["แอ็กชันนำเรื่อง"], minSeconds: 10, maxSpeech: "none", requiresContext: /(ประตู|ห้อง|แอบ|สงสัย|ดู|หา)/i },
-  { id: "double_take", label: "มองสิ่งหนึ่งแล้วหันกลับมามองซ้ำแบบตลก", family: "comedy", kinds: ["แอ็กชันนำเรื่อง", "แอ็กชันแล้วหยุดพูด"], minSeconds: 10, maxSpeech: "normal" },
-];
-
-const POSE_FAMILY_ALIASES: Record<PoseFamily, string[]> = {
-  standing: ["standing", "ยืน"],
-  sitting: ["sitting", "นั่ง"],
-  walking: ["walking", "เดิน"],
-  reclining: ["reclining", "เอน", "นอน"],
-  low_context: ["lowcontext", "ย่อ", "คุกเข่า", "คลาน"],
-  daily: ["daily", "ชีวิตประจำวัน"],
-  comedy: ["comedy", "ตลก"],
-};
-
-function normalizedPoseTerm(input: string) {
-  return input
-    .toLowerCase()
-    .replace(/(?:ไม่เอา|ไม่ใช้|ไม่ต้องการ|ห้าม|หลีกเลี่ยง)/g, "")
-    .replace(/^ท่า/g, "")
-    .replace(/[^a-z0-9ก-๙]+/g, "")
-    .trim();
-}
-
-function excludedPoseTerms(input: string) {
-  const phrases = input.split(/[,;\n/|]+/g);
-  const words = input.split(/\s+/g);
-  return [...new Set([...phrases, ...words].map(normalizedPoseTerm).filter((term) => term.length >= 2))];
-}
-
-function isPoseExcluded(pose: PoseDefinition, rawExclusions: string) {
-  const terms = excludedPoseTerms(rawExclusions);
-  if (!terms.length) return false;
-  const id = normalizedPoseTerm(pose.id);
-  const label = normalizedPoseTerm(pose.label);
-  const family = normalizedPoseTerm(pose.family);
-  const familyAliases = POSE_FAMILY_ALIASES[pose.family].map(normalizedPoseTerm);
-  return terms.some((term) => {
-    if (id.includes(term) || label.includes(term) || term === family) return true;
-    return familyAliases.some((alias) => term === alias);
-  });
-}
-
-function seededRandom(seed: string) {
-  let state = 1779033703 ^ seed.length;
-  for (let index = 0; index < seed.length; index += 1) {
-    state = Math.imul(state ^ seed.charCodeAt(index), 3432918353);
-    state = state << 13 | state >>> 19;
-  }
-  return () => {
-    state = Math.imul(state ^ state >>> 16, 2246822507);
-    state = Math.imul(state ^ state >>> 13, 3266489909);
-    return ((state ^= state >>> 16) >>> 0) / 4294967296;
-  };
-}
-
-function durationSeconds(value: string) {
-  return Number.parseInt(value, 10) === 15 ? 15 : Number.parseInt(value, 10) === 10 ? 10 : 8;
-}
-
-function actionEvery(value: string) {
-  if (value.startsWith("เน้นภาพ")) return 2;
-  if (value.startsWith("สมดุล")) return 3;
-  if (value.includes("ทุก 4")) return 4;
-  return 0;
-}
-
-export type ResolvedPose = {
-  scene: number;
-  kind: SceneKind;
-  poseId: string;
-  label: string;
-  family: PoseFamily;
-  dialogueRule: string;
-  contextHint?: string;
-};
-
-export function resolvePosePlan(data: StepThreeData, storyIndex = 1): ResolvedPose[] {
-  const sceneCount = Number.parseInt(data.sceneCount, 10) || 1;
-  const seconds = durationSeconds(data.sceneDuration);
-  const interval = actionEvery(data.poseBalance);
-  const context = `${data.topicBrief} ${data.channelConcept} ${data.contentPillars} ${data.settingPreferences} ${data.customPoseContext}`;
-  const random = seededRandom(`${data.poseSeed || "EP6"}|${storyIndex}|${sceneCount}|${data.sceneDuration}|${data.speechSpeed}`);
-  const selected: ResolvedPose[] = [];
-
-  for (let index = 0; index < sceneCount; index += 1) {
-    const actionSlot = interval > 0 && (index + 1) % interval === 0;
-    const desiredKinds: SceneKind[] = actionSlot
-      ? ["แอ็กชันนำเรื่อง"]
-      : (index > 0 && seconds >= 10 && data.speechSpeed !== "เร็ว — 30–35 คำ" && random() > 0.72
-        ? ["แอ็กชันแล้วหยุดพูด", "พูดเน้นหน้า"]
-        : ["พูดเน้นหน้า"]);
-    const isGenerallyCompatible = (pose: PoseDefinition) => {
-      if (!data.allowedPoseFamilies.includes(pose.family)) return false;
-      if (pose.minSeconds > seconds) return false;
-      if (pose.requiresContext && !pose.requiresContext.test(context)) return false;
-      if (isPoseExcluded(pose, data.excludedPoses)) return false;
-      return true;
-    };
-    const compatibleSelected = POSES.filter(isGenerallyCompatible);
-    const candidates = compatibleSelected.filter((pose) => {
-      if (!pose.kinds.some((kind) => desiredKinds.includes(kind))) return false;
-      if (data.speechSpeed === "เร็ว — 30–35 คำ" && !actionSlot && pose.maxSpeech !== "fast") return false;
-      return true;
-    });
-    const previous = selected[selected.length - 1];
-    const withoutRepeat = candidates.filter((pose) => pose.id !== previous?.poseId && pose.family !== previous?.family);
-    const pool = withoutRepeat.length ? withoutRepeat : candidates.filter((pose) => pose.id !== previous?.poseId);
-    const pose = pool.length ? pool[Math.floor(random() * pool.length)] : undefined;
-    if (!pose) {
-      const family = data.allowedPoseFamilies[0] || "standing";
-      selected.push({
-        scene: index + 1,
-        kind: desiredKinds[0],
-        poseId: `unresolved:${family}`,
-        label: `ยังไม่พบท่าปลอดภัยในกลุ่ม ${POSE_FAMILIES.find((item) => item.id === family)?.label || family} ที่เข้ากับเวลา บริบท และรายการห้าม`,
-        family,
-        dialogueRule: "ต้องแก้ตัวเลือกก่อนสร้าง Prompt",
-        contextHint: "เพิ่มบริบทที่รองรับ เลือกกลุ่มท่าอื่น เพิ่มเวลา หรือลดรายการท่าที่ห้าม",
-      });
-      continue;
-    }
-    const kind = pose.kinds.find((item) => desiredKinds.includes(item)) || pose.kinds[0];
-    selected.push({
-      scene: index + 1,
-      kind,
-      poseId: pose.id,
-      label: pose.label,
-      family: pose.family,
-      dialogueRule: kind === "แอ็กชันนำเรื่อง" ? "ไม่มีบทพูด" : "พูดสดจากตัวละครที่เห็นใน source take เดียวกัน",
-      contextHint: pose.contextHint,
-    });
-  }
-  return selected;
-}
-
-export function getPosePlanIssues(data: StepThreeData) {
-  const issues: string[] = [];
-  const stories = Number.parseInt(data.storyCount, 10) || 1;
-  for (let story = 1; story <= stories; story += 1) {
-    const unresolved = resolvePosePlan(data, story).filter((pose) => pose.poseId.startsWith("unresolved:"));
-    if (unresolved.length) {
-      issues.push(`เรื่อง ${story}: ไม่มีอิริยาบถที่ปลอดภัยและเข้ากันได้ ${unresolved.length} ฉาก`);
-    }
-  }
-  return issues;
-}
-
 function dialogueLimit(speed: string) {
   if (speed.startsWith("ช้า")) return "10–15 คำ";
   if (speed.startsWith("เร็ว")) return "30–35 คำ";
   return "20–25 คำ";
 }
 
-function poseSchedule(data: StepThreeData) {
-  const stories = Number.parseInt(data.storyCount, 10) || 1;
-  const rows: string[] = [];
-  for (let story = 1; story <= stories; story += 1) {
-    rows.push(`เรื่อง ${String(story).padStart(2, "0")}`);
-    for (const pose of resolvePosePlan(data, story)) {
-      rows.push(`- ฉาก ${String(pose.scene).padStart(2, "0")}: ${pose.kind} | ${pose.label} | ${pose.dialogueRule}${pose.contextHint ? ` | ${pose.contextHint}` : ""}`);
-    }
-  }
-  return rows.join("\n");
-}
-
 export function buildPresenterStoryPrompt(data: StepThreeData, stepOne: StepOneData) {
   const limit = dialogueLimit(data.speechSpeed);
-  const schedule = poseSchedule(data);
   const base = `สวมบทบาทเป็นผู้กำกับ นักเขียนบทไทย Prompt Engineer และ Continuity Supervisor สำหรับคลิปสร้างตัวตนแนวสาวสวยหรือหนุ่มหล่อ ให้ตัวละครมีเสน่ห์จากใบหน้า บุคลิก การแสดง และจังหวะเรื่อง โดยไม่มีสินค้าและไม่มีการขาย
 
 ข้อมูลงาน
 - ชื่อช่อง: ${value(data.channelName)}
-- แก่นช่อง: ${value(data.channelConcept)}
+- แก่นหลักของช่อง: ${value(data.channelConcept)}
 - กลุ่มเป้าหมาย: ${value(data.targetAudience)}
-- เสาหลักเนื้อหา: ${value(data.contentPillars)}
+- เสาหลักเนื้อหา 3–5 ข้อ: ${value(data.contentPillars)}
 - หัวข้อหรือโจทย์รอบนี้: ${value(data.topicBrief, "ให้ AI เลือกหัวข้อใหม่จากเสาหลักโดยไม่ซ้ำกัน")}
 - โครงสร้าง: ${data.framework}
 - จำนวน: ${data.storyCount} เรื่อง เรื่องละ ${data.sceneCount} ฉาก ฉากละ ${data.sceneDuration}
@@ -765,9 +533,11 @@ export function buildPresenterStoryPrompt(data: StepThreeData, stepOne: StepOneD
 - โทน: ${value(data.tone)}
 - สถานที่ที่ต้องการ: ${value(data.settingPreferences)}
 - สถานที่ที่ไม่ต้องการ: ${value(data.excludedSettings, "ไม่มี")}
-- ระดับการเคลื่อนไหว: ${data.movementLevel}
-- บริบทท่าที่ผู้ใช้เพิ่ม: ${value(data.customPoseContext, "ไม่มี")}
-- ท่าที่ห้าม: ${value(data.excludedPoses, "ไม่มี")}
+
+HARD EXCLUSIONS ที่สืบทอดจาก STEP 1
+- รายการ: ${value(stepOne.exclusions, "ผู้ใช้ไม่ได้ระบุข้อห้ามเพิ่มเติม")}
+- หากมีรายการ ให้ถือเป็นข้อห้ามบังคับกับแก่นเรื่อง หัวข้อ เหตุการณ์ สถานที่ พร็อพ อิริยาบถ บทพูด Image Prompt และ Video Prompt ทุกฉาก ห้ามใช้คำพ้อง ความหมายใกล้เคียง หรือกล่าวทวนในรูปตัวอย่างเชิงลบ
+- หากข้อห้ามขัดกับภารกิจจนหลีกเลี่ยงไม่ได้ ให้แจ้งว่าเงื่อนไขขัดกันและหยุด ห้ามเปลี่ยนชื่อหรือบิดความหมายเพื่อหลบข้อห้าม
 
 Presenter DNA
 ${presenterSummary(stepOne)}
@@ -779,22 +549,39 @@ ${value(data.characterDescription)}
 
 ${hardSafetyRules()}
 
-ตารางอิริยาบถที่ระบบจัดแบบ deterministic จาก seed “${value(data.poseSeed, "EP6")}”
-ต้องใช้ชนิดฉากและท่าตามตารางนี้ ห้ามสุ่มใหม่ ห้ามสลับท่า ห้ามเพิ่ม gesture ที่ไม่ได้ระบุ หากท่าขัดกับเรื่องให้เปลี่ยนรายละเอียดเรื่องโดยยังอยู่ในเสาหลัก แต่ห้ามทำให้ท่าดูเชิงเพศ
-${schedule}
+วิธีออกแบบฉากและอิริยาบถแบบอิสระ
+1. วางแก่นเรื่อง Hook ลำดับเหตุการณ์ บทพูด และความต่อเนื่องของแต่ละเรื่องให้เสร็จก่อน โดยยังไม่กำหนดท่าให้ฉาก
+2. หลังเรื่องและบทลงตัวแล้ว จึงเลือกชนิดฉากและปรับอิริยาบถที่เป็นธรรมชาติ ปลอดภัย ทำได้จริง และช่วยสื่อเหตุการณ์ของฉากนั้น ห้ามเขียนหรือบิดเรื่องใหม่เพียงเพื่อหาเหตุผลรองรับท่าที่อยากใช้
+3. หลังล็อกเรื่องแล้ว ให้ AI เลือกและปรับระดับการเคลื่อนไหวต่อฉากจากแนวทางต่อไปนี้ตามอารมณ์ บทพูด เหตุการณ์ พื้นที่ กล้อง และความสามารถในการทำจริง:
+   - ต่ำ: ท่ากลางผ่อนคลาย สีหน้า การหันศีรษะเล็กน้อย การหายใจ หรือถ่ายน้ำหนักเบา ๆ เหมาะเมื่อบทพูดและใบหน้าเป็นจุดสำคัญ
+   - กลาง: การกระทำชัดเจนหนึ่งอย่าง เช่น นั่งลง ลุกขึ้น เปิดประตู วางของ หรือเดินหนึ่งถึงสองก้าว แล้วจบที่ท่าต่อเนื่อง
+   - สูง: การเคลื่อนไหวเด่นแต่ปลอดภัย เช่น เดินเข้าฉากอย่างกระฉับกระเฉง ย่อตัวหยิบของ หรือถอยด้วยปฏิกิริยาตลก ใช้เมื่อ action เป็นสารของฉากและไม่ต้องพูดระหว่างการเคลื่อนไหวหนัก
+   ระดับทั้งสามเป็นคำแนะนำ ไม่ใช่ allowlist โควตา ลำดับ seed หรือ fixed mapping ห้ามกำหนดระดับตายตัวจากลำดับฉากหรือความยาวคลิป ให้ AI เลือก ผสม ลด หรือปรับได้ต่อฉากหลังจากวางเรื่องแล้ว
+4. ไม่มีโควตา ลำดับ หรือ seed สำหรับท่า ไม่จำเป็นต้องใช้ทุกกลุ่ม และไม่ต้องกระจายท่าให้ครบ หากฉากไม่ต้องเคลื่อนไหว ให้ใช้ท่ากลางที่ผ่อนคลายแทนการฝืนเพิ่ม action
+5. กลุ่มต่อไปนี้เป็นเพียงแนวทางและตัวอย่าง ไม่ใช่ allowlist และไม่มี POSE_ID บังคับ สามารถปรับหรือคิดท่าอื่นที่ปลอดภัยและเข้ากับเรื่องได้:
+   - ยืน: ยืนผ่อนคลาย ถ่ายน้ำหนัก พิงพื้นผิวที่มีอยู่จริง หันกลับมาสบกล้อง
+   - นั่ง: นั่งเก้าอี้ สตูล โซฟา ขั้นบันได หรือพื้น เมื่อสถานที่และเสื้อผ้ารองรับ
+   - เดินและเปลี่ยนตำแหน่ง: เดินเข้าฉาก เดินผ่าน หยุด หรือหันกลับ โดยเส้นทางและ end state ชัดเจน
+   - กิจวัตร: เปิดประตู เปิดม่าน เปิดสมุด จัดผม หยิบหรือวางของที่มีอยู่ในเรื่อง
+   - เอนหรือนอน: ใช้เฉพาะบริบทพักผ่อน ตื่นนอน ออกกำลังกาย หรือเหตุการณ์ที่ต้องใช้จริง
+   - ท่าใกล้ระดับพื้น: ย่อ คุกเข่า หรือคลานเฉพาะเมื่อค้นหาของ ผูกเชือกรองเท้า เล่นกับสัตว์เลี้ยง ทำความสะอาด หรือเหตุผลตรงในเรื่อง
+   - ปฏิกิริยาและตลก: ชะงัก สะดุ้ง ถอยครึ่งก้าว แอบมอง หรือมองซ้ำ เมื่อเป็นผลจากเหตุการณ์
+6. เลือกเพียงหนึ่งการกระทำหลักต่อฉาก ลดการเคลื่อนไหวเมื่อมีบทพูดยาว และอย่าเพิ่ม gesture สุ่มเพื่อทำให้ภาพดูมีชีวิต
+7. ใช้ความยาวฉากเป็นเพดานตรวจความเป็นไปได้ ไม่ใช่ตัวกำหนดระดับการเคลื่อนไหว: 8 วินาทีควรใช้ action ที่จบง่าย ส่วน 10–15 วินาทีมีพื้นที่ให้ลำดับเหตุและผลมากขึ้นเมื่อเรื่องต้องการ แต่ห้ามผูก ต่ำ/กลาง/สูง เข้ากับเวลาแบบตายตัว หากพูดเร็ว 30–35 คำ ให้ลดความซับซ้อนจนปากและบทพูดเป็นจุดสำคัญ
+8. หลีกเลี่ยงท่าเดิมติดกันเมื่อเปลี่ยนได้อย่างเป็นธรรมชาติ แต่ให้ความต่อเนื่องของเรื่องสำคัญกว่าการบังคับความหลากหลาย
 
 กฎเนื้อหา
 1. ทุกเรื่องเป็น Identity Content เท่านั้น ห้ามสินค้า ราคา ร้าน โปรโมชัน ลิงก์ ตะกร้า Affiliate บทขาย หรือ CTA ซื้อสินค้า
 2. เรื่องแต่ละเรื่องต้องต่างกัน มี Hook ชัด ให้คุณค่า อารมณ์ หรือมุมมองใหม่ และจบด้วย takeaway หรือคำชวนสนทนาได้หนึ่งอย่าง
 3. มุกและความหยอดต้องไม่เกินระดับที่ Presenter DNA กำหนด ห้ามทำให้คนอื่นเป็นวัตถุทางเพศ ห้ามคุกคาม และห้ามใช้เรือนร่างแทนแก่นเรื่อง
 4. หนึ่งฉากมีการกระทำหลักเพียงหนึ่งลำดับที่ทำได้จริงในเวลา ${data.sceneDuration} มือแตะวัตถุก่อนวัตถุขยับ และรักษาฟิสิกส์ ตำแหน่ง จำนวน สถานะวัตถุ ผังห้อง แสง เสื้อผ้า และตัวตนต่อเนื่อง
-5. ห้ามท่าเดิมติดกัน ห้าม family เดิมติดกันตามตาราง และห้ามเพิ่มการเดิน นั่ง นอน คลาน ทัดผม ชี้ โบก หรือถือของเองนอกตาราง
-6. ท่าเอน นอน คุกเข่า หรือคลานต้องมีเหตุผลในเรื่องตามคำอธิบาย ใช้มุมกล้องระดับสายตาหรือด้านหน้า เสื้อผ้าเหมาะสม และไม่มี framing เชิงเพศ
+5. อิริยาบถต้องเกิดจากเหตุการณ์และสิ่งแวดล้อมจริงในเรื่อง ห้ามเพิ่มการเดิน นั่ง นอน คลาน ทัดผม ชี้ โบก หรือถือของโดยไม่มีเหตุผล
+6. ท่าเอน นอน คุกเข่า หรือคลานต้องมีเหตุผลตรงในเรื่อง ใช้มุมกล้องระดับสายตาหรือด้านหน้า เสื้อผ้าเหมาะสม และไม่มี framing เชิงเพศ หากหาเหตุผลธรรมชาติไม่ได้ให้เลือกท่ากลางแทน ห้ามแก้เรื่องเพื่อรองรับท่า
 
 กฎสามชนิดฉาก
 - พูดเน้นหน้า: medium close-up หรือ medium shot ใบหน้าอย่างน้อย 25% ของเฟรม ปากไม่ถูกบัง กล้องนิ่งหรือ slow push-in เล็กน้อย การพูดเป็น action หลัก ใช้เพียงสีหน้าและการเคลื่อนศีรษะเล็กน้อย
 - แอ็กชันนำเรื่อง: medium full หรือ full body ไม่มีบทพูด ช่องบทพูดเขียนตรงตัวว่า “— ไม่มีบทพูด” และ Video Prompt ระบุ quiet natural ambience เท่านั้น
-- แอ็กชันแล้วหยุดพูด: ตัวละครทำหนึ่ง action ให้จบก่อน หยุดใน medium shot แล้วจึงพูด หากเวลาไม่พอให้ลดคำหรือเปลี่ยนเป็นฉากแอ็กชันล้วนตามตาราง ห้ามพูดระหว่างการเคลื่อนไหวหนัก
+- แอ็กชันแล้วหยุดพูด: ตัวละครทำหนึ่ง action ให้จบก่อน หยุดใน medium shot แล้วจึงพูด หากเวลาไม่พอให้ลดความซับซ้อนของ action หรือเลือกชนิดฉากใหม่ที่เข้ากับเรื่อง โดยไม่ตัดบทพูดต่ำกว่าช่วงที่กำหนด ห้ามพูดระหว่างการเคลื่อนไหวหนัก
 
 กฎเสียงพูดสด
 - ทุกคำต้องมาจากการสร้าง source video เดียวกับภาพตัวละครที่กำลังพูด เห็นปากชัดและ lip sync ภาษาไทยตรงคำ ห้าม TTS voiceover cloned voice dubbing post-sync เสียงจาก take อื่น หรือผู้บรรยายนอกจอ
@@ -814,14 +601,16 @@ ${schedule}
 - Hook หลัก
 - แก่นของเรื่อง
 - โครงสร้างและการแบ่งช่วงตามฉาก
-- Presenter และ Pose Direction
+- Presenter และแนวทางอิริยาบถ
 
 ตาราง 6 คอลัมน์ตรงตัว:
 ลำดับฉาก | ประเภทฉากและอิริยาบถ | คำอธิบายฉาก | Image Prompt | Video Prompt | บทพูดภาษาไทย
 
+- ในคอลัมน์ “ประเภทฉากและอิริยาบถ” ให้เขียนชนิดฉากและคำกำกับท่าทางเป็นภาษาไทยธรรมชาติที่เข้าใจได้ทันที ห้ามใช้ POSE_ID รหัสภายใน หรือชื่อค่าจากระบบ
+
 ตรวจ final transcription ของ source และฟังเสียงความเร็วจริงทุกฉากพูด หากคำหาย ออกเสียงผิด เสียงไม่ใช่ตัวละครเดิม หรือ lip sync ไม่ตรง ให้สร้าง source ฉากนั้นใหม่เท่านั้น ห้ามซ่อมเสียงภายหลัง
 
-ก่อนส่ง ให้ตรวจครบ ${data.storyCount} เรื่อง เรื่องละ ${data.sceneCount} ฉาก ตารางอิริยาบถตรงทุกแถว ไม่มีสินค้า ไม่มี CTA ขาย ไม่มีบทพูดในฉากแอ็กชันล้วน และทุกฉากพูดผ่านกฎ same-take native speech แล้ว แสดงเฉพาะฉบับสุดท้าย`;
+ก่อนส่ง ให้ตรวจครบ ${data.storyCount} เรื่อง เรื่องละ ${data.sceneCount} ฉาก อิริยาบถเป็นผลจากเรื่องและปลอดภัย ไม่มีสินค้า ไม่มี CTA ขาย ไม่มีบทพูดในฉากแอ็กชันล้วน และทุกฉากพูดผ่านกฎ same-take native speech แล้ว แสดงเฉพาะฉบับสุดท้าย`;
 
   if (!data.useAgent) return base;
 
@@ -831,7 +620,7 @@ ${schedule}
 ใช้ส่วนนี้เฉพาะเมื่อมีเครื่องมือ Google Sheets ที่เชื่อมบัญชีผู้ใช้จริง ห้ามแต่งลิงก์หรืออ้างว่าสร้างไฟล์เมื่อไม่มีสิทธิ์
 1. สร้าง Spreadsheet ใหม่ชื่อ “${value(data.channelName, "Presenter Identity")} — Presenter Identity Scripts” เท่านั้น
 2. ทำงานและบันทึกทีละเรื่องทันที ภายในไฟล์มี ${data.storyCount} แท็บพอดี ชื่อ “01 - ชื่อเรื่อง” ตามลำดับ และห้ามเหลือ Sheet1 ว่าง
-3. ในแต่ละแท็บ: A1 ชื่อเรื่อง, A2 Hook หลัก, A3 แก่นเรื่อง, A4 โครงสร้างและ Pose Direction, แถว 6 ใช้หัวคอลัมน์ตรงตัวว่า ลำดับฉาก | ประเภทฉากและอิริยาบถ | คำอธิบายฉาก | Image Prompt | Video Prompt | บทพูดภาษาไทย
+3. ในแต่ละแท็บ: A1 ชื่อเรื่อง, A2 Hook หลัก, A3 แก่นเรื่อง, A4 โครงสร้างและแนวทางอิริยาบถ, แถว 6 ใช้หัวคอลัมน์ตรงตัวว่า ลำดับฉาก | ประเภทฉากและอิริยาบถ | คำอธิบายฉาก | Image Prompt | Video Prompt | บทพูดภาษาไทย
 4. แถว 7 เป็นต้นไปหนึ่งฉากต่อหนึ่งแถว เก็บทุกค่าเป็นข้อความธรรมดา ห้ามสูตร ห้ามย่อ แปล หรือตัด Prompt
 5. เปิด Wrap text ตรึงแถว 1–6 ปรับความกว้างคอลัมน์ และตรวจแต่ละแท็บมี ${data.sceneCount} ฉากครบ
 6. ถ้าสำเร็จจริงจึงตอบชื่อไฟล์ จำนวนเรื่อง จำนวนฉากทั้งหมด และลิงก์ที่เปิดได้ ถ้าทำได้บางส่วนให้รายงานตามจริงและแสดงงานที่เหลือในแชท`;

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { buildSync } from "esbuild";
 
 const identityBuilderSource = readFileSync("gen3-src/presenter-identity-builder.tsx", "utf8");
+const identityDataSource = readFileSync("gen3-src/presenter-identity-data.ts", "utf8");
 const salesBuilderSource = readFileSync("gen3-src/presenter-sales-prompt-builder.tsx", "utf8");
 const identityAppSource = readFileSync("gen3-src/presenter-identity-app.tsx", "utf8");
 const salesAppSource = readFileSync("gen3-src/presenter-sales-app.tsx", "utf8");
@@ -44,23 +45,13 @@ const stepThree = {
   sceneCount: "6",
   storyCount: "2",
   topicBrief: "หาโทรศัพท์ที่หายใต้โต๊ะในห้องนั่งเล่น",
-  allowedPoseFamilies: ["standing", "sitting", "walking", "low_context", "daily", "comedy"],
-  poseSeed: "EP6-QA",
 };
-const planA = presenter.resolvePosePlan(stepThree, 1);
-const planB = presenter.resolvePosePlan(stepThree, 1);
-assert.deepEqual(planA, planB, "Same seed and inputs must yield the same pose plan");
-assert.equal(planA.length, 6, "Pose plan must match scene count");
-assert.ok(planA.every((item) => item.kind !== "แอ็กชันนำเรื่อง" || item.dialogueRule === "ไม่มีบทพูด"), "Action-only scenes must have no dialogue");
-assert.ok(planA.every((item, index) => index === 0 || item.poseId !== planA[index - 1].poseId), "Adjacent scenes must not repeat an exact pose");
-
-const noContextPlan = presenter.resolvePosePlan({
-  ...stepThree,
-  topicBrief: "ยืนเล่าเรื่องทั่วไปในสตูดิโอ",
-  customPoseContext: "",
-  sceneCount: "10",
-}, 1);
-assert.ok(noContextPlan.every((item) => item.poseId !== "crawl_search"), "Crawling must never appear without a supporting context");
+const removedPoseFields = ["poseBalance", "allowedPoseFamilies", "movementLevel", "motionLevel", "poseSeed", "customPoseContext", "excludedPoses"];
+for (const field of removedPoseFields) {
+  assert.equal(Object.hasOwn(presenter.initialStepThree, field), false, `${field} must not remain in Step 3 defaults`);
+}
+assert.doesNotMatch(identityBuilderSource, /PoseFamilyPicker|resolvePosePlan|getPosePlanIssues|ตัวอย่างแผนท่า|Seed สำหรับสุ่ม|ระบบอิริยาบถ/, "Removed pose controls must not remain in the UI");
+assert.doesNotMatch(identityDataSource, /POSE_FAMILIES|PoseDefinition|ResolvedPose|resolvePosePlan|getPosePlanIssues|seededRandom|poseSchedule/, "Deterministic pose-engine code must be removed");
 
 const one = presenter.initialStepOne;
 const two = { ...presenter.initialStepTwo, characterDescription: "ผู้หญิงสมมติ อายุ 31 ปี ลุคไทยร่วมสมัย ชุดคลีนคงที่" };
@@ -71,6 +62,11 @@ assert.ok(presenter.COUNTRY_STYLES.includes("ไทยร่วมสมัย")
 const ideaPrompt = presenter.buildPresenterIdeaPrompt(one);
 assert.match(ideaPrompt, /ยังไม่มีสินค้า ราคา โปรโมชั่น ลิงก์ซื้อ หรือ CTA ขาย/);
 assert.match(ideaPrompt, /อายุหนึ่งค่าอย่างน้อย 25 ปี/);
+assert.match(ideaPrompt, /2\. กลุ่มเป้าหมาย พร้อมปัญหา ความสนใจ และเหตุผลที่เขาจะติดตาม/);
+assert.match(ideaPrompt, /6\. แก่นหลักของช่องในหนึ่งประโยค/);
+assert.match(ideaPrompt, /7\. เสาหลักเนื้อหา 3–5 ข้อ/);
+assert.ok(ideaPrompt.indexOf("2. กลุ่มเป้าหมาย") < ideaPrompt.indexOf("6. แก่นหลักของช่อง") && ideaPrompt.indexOf("6. แก่นหลักของช่อง") < ideaPrompt.indexOf("7. เสาหลักเนื้อหา 3–5 ข้อ"), "Step 1 output labels must follow the approved order");
+assert.doesNotMatch(ideaPrompt, /Content Promise|กลุ่มผู้ชมและเหตุผลที่ติดตาม|เสาหลักเนื้อหา 5 ข้อ/, "Obsolete Presenter labels must not remain");
 const characterState = {
   ...two,
   characterName: "ตัวละครตรวจสอบแบบไดนามิก",
@@ -103,16 +99,55 @@ const userExampleHeight = ["18", "2"].join("");
 assert.equal(characterPrompt.includes(`อายุ ${userExampleAge} ปี`), false, "The user's example age must not leak into a neutral fixture");
 assert.equal(characterPrompt.includes(userExampleHeight), false, "The user's example height must not leak into a neutral fixture");
 const revision = presenter.computeIdentityRevision(one, two);
-const sanitized = presenter.sanitizePresenterIdentityState({
+const legacyStepThree = {
+  ...presenter.initialStepThree,
+  channelName: "ช่องเดิมที่ต้องรักษา",
+  channelConcept: "แก่นช่องเดิมที่ต้องรักษา",
+  targetAudience: "กลุ่มเดิมที่ต้องรักษา",
+  contentPillars: "เสาหลักเดิมที่ต้องรักษา",
+  characterDescription: two.characterDescription,
+  characterRevision: revision,
+  poseBalance: "สมดุล — แอ็กชันประมาณทุก 3 ฉาก",
+  allowedPoseFamilies: ["standing", "walking"],
+  movementLevel: "กลาง — หนึ่งการกระทำชัดเจนต่อฉาก",
+  motionLevel: "legacy alias",
+  poseSeed: "legacy-seed",
+  customPoseContext: "legacy context",
+  excludedPoses: "legacy exclusion",
+};
+const migrated = presenter.sanitizePresenterIdentityState({
   schemaVersion: 1,
+  mode: "presenter-identity",
+  activeStep: 3,
+  stepOne: one,
+  stepTwo: { ...two, hasCharacterReference: true, referenceRevision: revision },
+  stepThree: legacyStepThree,
+});
+assert.ok(migrated, "Schema 1 state must migrate to schema 2");
+assert.equal(migrated.schemaVersion, 2, "Migrated state must be written as schema 2");
+assert.equal(migrated.activeStep, 3);
+assert.equal(migrated.stepTwo.hasCharacterReference, true, "Migration must preserve a current Character Reference");
+assert.equal(migrated.stepThree.characterDescription, two.characterDescription, "Migration must preserve the current Character Lock");
+assert.equal(migrated.stepThree.channelName, "ช่องเดิมที่ต้องรักษา");
+assert.equal(migrated.stepThree.channelConcept, "แก่นช่องเดิมที่ต้องรักษา");
+for (const field of removedPoseFields) {
+  assert.equal(Object.hasOwn(migrated.stepThree, field), false, `Migration must drop legacy ${field}`);
+}
+assert.equal(presenter.sanitizePresenterIdentityState({ ...migrated, schemaVersion: 3 }), null, "Future schemas must be rejected");
+assert.equal(presenter.sanitizePresenterIdentityState({ ...migrated, schemaVersion: 0 }), null, "Unknown old schemas must be rejected");
+assert.equal(presenter.sanitizePresenterIdentityState({ ...migrated, mode: "wrong-mode" }), null, "Wrong modes must be rejected");
+
+const stale = presenter.sanitizePresenterIdentityState({
+  schemaVersion: 2,
   mode: "presenter-identity",
   activeStep: 3,
   stepOne: one,
   stepTwo: { ...two, hasCharacterReference: true, referenceRevision: "stale" },
   stepThree: { ...presenter.initialStepThree, characterDescription: two.characterDescription, characterRevision: revision },
 });
-assert.equal(sanitized.stepTwo.hasCharacterReference, false, "A stale character reference must be invalidated");
-assert.equal(sanitized.stepThree.characterDescription, "", "Downstream character data must be cleared when the reference is stale");
+assert.ok(stale);
+assert.equal(stale.stepTwo.hasCharacterReference, false, "A stale character reference must be invalidated");
+assert.equal(stale.stepThree.characterDescription, "", "Downstream character data must be cleared when the reference is stale");
 
 const safetyIssues = presenter.getPresenterSafetyIssues({ ...one, presenterType: "กำหนดเอง", presenterCustom: "นักเรียนอายุ 17 ปี" });
 assert.ok(safetyIssues.length > 0, "Minor or school-context input must be blocked");
@@ -123,41 +158,7 @@ assert.equal(safeExclusion.length, 0, "A safety concept named only as an explici
 const adultAudience = presenter.getPresenterSafetyIssues({ ...one, audiencePreference: "ผู้ใหญ่วัย 18–35 และพ่อแม่ที่ซื้อของให้เด็กเล็ก" });
 assert.equal(adultAudience.length, 0, "Audience ages and child-related audience context must not redefine the adult presenter");
 
-const crawlExcluded = presenter.resolvePosePlan({
-  ...stepThree,
-  topicBrief: "หาของหายใต้โต๊ะ",
-  customPoseContext: "คลานหาของใต้โต๊ะ",
-  excludedPoses: "คลาน",
-  sceneCount: "10",
-}, 1);
-assert.ok(crawlExcluded.every((item) => item.poseId !== "crawl_search"), "Literal Thai pose exclusions must block matching poses");
-
-const incompatibleSelection = {
-  ...stepThree,
-  allowedPoseFamilies: ["reclining"],
-  topicBrief: "ยืนเล่าเรื่องทั่วไปในสตูดิโอ",
-  customPoseContext: "",
-  sceneDuration: "8 วินาที",
-  sceneCount: "2",
-};
-const incompatiblePlan = presenter.resolvePosePlan(incompatibleSelection, 1);
-assert.ok(incompatiblePlan.every((item) => item.poseId.startsWith("unresolved:") || item.family === "reclining"), "Resolver must never inject an unselected pose family");
-assert.ok(presenter.getPosePlanIssues(incompatibleSelection).length > 0, "An impossible pose selection must block Prompt creation");
-
-const noActionKindFallback = {
-  ...presenter.initialStepThree,
-  sceneCount: "3",
-  sceneDuration: "15 วินาที",
-  poseBalance: "เน้นพูด — ไม่มีฉากแอ็กชันล้วน",
-  allowedPoseFamilies: ["low_context"],
-  topicBrief: "หาของใต้โต๊ะ",
-  customPoseContext: "หาของใต้โต๊ะ",
-  poseSeed: "x",
-};
-const noActionKindPlan = presenter.resolvePosePlan(noActionKindFallback, 1);
-assert.ok(noActionKindPlan.every((item) => item.kind !== "แอ็กชันนำเรื่อง"), "No-action pose balance must never fall back to action-only poses");
-assert.ok(presenter.getPosePlanIssues(noActionKindFallback).length > 0, "An incompatible scene kind must block Prompt creation");
-
+const storyStepOne = { ...one, exclusions: "ห้ามฉากบนเตียงและห้ามมุกล้อรูปร่าง" };
 const storyPrompt = presenter.buildPresenterStoryPrompt({
   ...stepThree,
   channelName: "ช่องทดสอบ",
@@ -166,13 +167,44 @@ const storyPrompt = presenter.buildPresenterStoryPrompt({
   contentPillars: "ชีวิตประจำวัน",
   characterDescription: two.characterDescription,
   characterRevision: revision,
-}, one);
+}, storyStepOne);
 assert.match(storyPrompt, /same take/i, "Story prompt must lock native same-take speech");
 assert.match(storyPrompt, /— ไม่มีบทพูด/, "Story prompt must define dialogue-free action scenes");
+assert.match(storyPrompt, /พูดเน้นหน้า:[^\n]+/);
+assert.match(storyPrompt, /แอ็กชันนำเรื่อง:[^\n]+/);
+assert.match(storyPrompt, /แอ็กชันแล้วหยุดพูด:[^\n]+/);
+assert.match(storyPrompt, /วางแก่นเรื่อง Hook ลำดับเหตุการณ์ บทพูด และความต่อเนื่อง[^\n]+ก่อน/,
+  "The story and script must be planned before poses");
+const storyPlanningIndex = storyPrompt.indexOf("วางแก่นเรื่อง Hook ลำดับเหตุการณ์ บทพูด และความต่อเนื่อง");
+const motionSelectionIndex = storyPrompt.indexOf("หลังล็อกเรื่องแล้ว ให้ AI เลือกและปรับระดับการเคลื่อนไหวต่อฉาก");
+assert.ok(storyPlanningIndex >= 0 && motionSelectionIndex > storyPlanningIndex,
+  "Story and script planning must precede per-scene motion-level selection");
+assert.match(storyPrompt, /- ต่ำ: ท่ากลางผ่อนคลาย/);
+assert.match(storyPrompt, /- กลาง: การกระทำชัดเจนหนึ่งอย่าง/);
+assert.match(storyPrompt, /- สูง: การเคลื่อนไหวเด่นแต่ปลอดภัย/);
+assert.match(storyPrompt, /ระดับทั้งสามเป็นคำแนะนำ ไม่ใช่ allowlist โควตา ลำดับ seed หรือ fixed mapping/,
+  "Motion levels must be advisory rather than a fixed control contract");
+assert.match(storyPrompt, /ให้ AI เลือก ผสม ลด หรือปรับได้ต่อฉากหลังจากวางเรื่องแล้ว/);
+assert.match(storyPrompt, /ใช้ความยาวฉากเป็นเพดานตรวจความเป็นไปได้ ไม่ใช่ตัวกำหนดระดับการเคลื่อนไหว/);
+assert.match(storyPrompt, /ห้ามผูก ต่ำ\/กลาง\/สูง เข้ากับเวลาแบบตายตัว/);
+assert.match(storyPrompt, /ไม่ใช่ allowlist และไม่มี POSE_ID บังคับ/,
+  "Pose examples must remain adaptable rather than becoming a rigid ID catalog");
+assert.match(storyPrompt, /ไม่มีโควตา ลำดับ หรือ seed สำหรับท่า/);
+assert.match(storyPrompt, /ไม่จำเป็นต้องใช้ทุกกลุ่ม/);
+assert.match(storyPrompt, /ห้ามเขียนหรือบิดเรื่องใหม่เพียงเพื่อหาเหตุผลรองรับท่า/);
+assert.match(storyPrompt, /หนึ่งการกระทำหลักต่อฉาก/);
+assert.match(storyPrompt, /HARD EXCLUSIONS ที่สืบทอดจาก STEP 1/);
+assert.match(storyPrompt, /ห้ามฉากบนเตียงและห้ามมุกล้อรูปร่าง/,
+  "Step 1 exclusions must flow into Step 3 without another form field");
+assert.doesNotMatch(storyPrompt, /ตารางอิริยาบถ|ตามตาราง|deterministic/, "No precomputed pose schedule may remain");
 assert.match(storyPrompt, /Character Reference ที่ผู้ใช้อัปโหลดเป็นแหล่งความจริงด้านตัวตนเพียงชุดเดียว/, "Scene workflow must preserve identity through the uploaded Character Reference");
 assert.match(storyPrompt, /โหมด reference หรือ image edit ของเครื่องมือปลายทาง/, "Scene workflow must remain tool-neutral while requiring reference mode");
 assert.doesNotMatch(storyPrompt, /Kie|gpt-image|task\s*ID|credits|manifest/i, "Step 3 must not leak internal image-tool workflow claims");
+assert.match(storyPrompt, /แก่นหลักของช่อง:/);
+assert.match(storyPrompt, /กลุ่มเป้าหมาย:/);
+assert.match(storyPrompt, /เสาหลักเนื้อหา 3–5 ข้อ:/);
 assert.match(storyPrompt, /ลำดับฉาก \| ประเภทฉากและอิริยาบถ \| คำอธิบายฉาก \| Image Prompt \| Video Prompt \| บทพูดภาษาไทย/);
+assert.match(storyPrompt, /ห้ามใช้ POSE_ID รหัสภายใน/);
 assert.match(storyPrompt, /ไม่มีสินค้าและไม่มีการขาย/);
 
 console.log("Presenter Identity QA passed");

@@ -90,6 +90,56 @@ test("identity importer understands the three-step Presenter Identity contract",
   assert.equal(context.presenterDescription, "locked adult character");
 });
 
+test("schemaVersion 2 simplified Presenter Identity imports the complete Sales handoff without production fields", () => {
+  const simplifiedIdentityV2 = {
+    schemaVersion: 2,
+    mode: "presenter-identity",
+    activeStep: 3,
+    stepOne: {
+      faceStyle: "หล่อเข้ม",
+      faceStyleSecondary: "อบอุ่น",
+      countryStyle: "ไทยร่วมสมัย",
+      bodyStyle: "นักกล้ามสมส่วน",
+      personalityStyle: "หนุ่มกวนใจดี",
+      tone: "ขี้เล่นเป็นธรรมชาติ",
+    },
+    stepTwo: {
+      characterName: "คิม",
+      characterDescription: "fictional Thai man, age 29, locked face, hair, body proportions, outfit and accessories",
+    },
+    stepThree: {
+      channelName: "คิมลองให้ดู",
+      channelConcept: "ทดลองของใช้ด้วยเหตุการณ์ใกล้ตัวและเล่าตามหลักฐาน",
+      targetAudience: "คนทำงานวัย 25–40 ปีที่ชอบรีวิวกระชับ",
+      contentPillars: "ทดลองของใช้\nเล่าเรื่องขำสั้น\nเตือนข้อจำกัดก่อนซื้อ",
+    },
+  };
+
+  const context = module.extractPresenterIdentityContext(simplifiedIdentityV2);
+  assert.ok(context);
+  assert.deepEqual(context, {
+    presenterName: "คิม",
+    channelName: "คิมลองให้ดู",
+    channelConcept: "ทดลองของใช้ด้วยเหตุการณ์ใกล้ตัวและเล่าตามหลักฐาน",
+    targetAudience: "คนทำงานวัย 25–40 ปีที่ชอบรีวิวกระชับ",
+    contentPillars: "ทดลองของใช้\nเล่าเรื่องขำสั้น\nเตือนข้อจำกัดก่อนซื้อ",
+    presenterDescription: "fictional Thai man, age 29, locked face, hair, body proportions, outfit and accessories",
+    faceStyle: "หล่อเข้ม + อบอุ่น",
+    countryStyle: "ไทยร่วมสมัย",
+    bodyStyle: "นักกล้ามสมส่วน",
+    personalityStyle: "หนุ่มกวนใจดี + ขี้เล่นเป็นธรรมชาติ",
+  });
+
+  const salesStepOne = {
+    ...module.initialPresenterSalesData,
+    ...context,
+    confirmsFictionalAdult: true,
+    confirmsReferenceRights: true,
+    willAttachCharacterReference: true,
+  };
+  assert.deepEqual(module.presenterSalesMissingFields(salesStepOne, 1), []);
+});
+
 test("missing-field validation covers all safety confirmations and manual product scenes", () => {
   const incomplete = validData({
     confirmsReferenceRights: false,

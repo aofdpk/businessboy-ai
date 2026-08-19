@@ -9,7 +9,6 @@ import {
   FACE_STYLES,
   FRAMEWORKS,
   PERSONALITY_STYLES,
-  POSE_FAMILIES,
   PRESENTER_IDENTITY_MODE,
   PRESENTER_IDENTITY_SCHEMA_VERSION,
   PRESENTER_IDENTITY_STORAGE_KEY,
@@ -20,15 +19,12 @@ import {
   buildPresenterIdeaPrompt,
   buildPresenterStoryPrompt,
   computeIdentityRevision,
-  getPosePlanIssues,
   getPresenterSafetyIssues,
   initialStepOne,
   initialStepThree,
   initialStepTwo,
   presenterSummary,
-  resolvePosePlan,
   sanitizePresenterIdentityState,
-  type PoseFamily,
   type PresenterIdentitySavedState,
   type StepId,
   type StepOneData,
@@ -53,7 +49,7 @@ const QUICK_PRESETS: Record<string, Partial<StepOneData>> = {
 const steps = [
   { id: 1 as const, title: "ออกแบบช่องและหน้าตา", short: "เลือกสาวสวย หนุ่มหล่อ ลุคประเทศ และ Presenter DNA" },
   { id: 2 as const, title: "สร้างตัวละคร", short: "ทำ Character Sheet 2×3 และล็อกตัวละครผู้ใหญ่" },
-  { id: 3 as const, title: "สร้างคลิปตัวตน", short: "จัดท่าแบบไม่ซ้ำและสร้าง Image + Video Prompt" },
+  { id: 3 as const, title: "สร้างคลิปตัวตน", short: "ให้ AI วางเรื่องและเลือกอิริยาบถธรรมชาติพร้อม Image + Video Prompt" },
 ];
 
 function defaultState(): PresenterIdentitySavedState {
@@ -73,11 +69,12 @@ function loadState() {
     const raw = sessionStorage.getItem(PRESENTER_IDENTITY_STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (parsed.schemaVersion !== PRESENTER_IDENTITY_SCHEMA_VERSION || parsed.mode !== PRESENTER_IDENTITY_MODE) {
+    const migrated = sanitizePresenterIdentityState(parsed);
+    if (!migrated) {
       try { sessionStorage.removeItem(PRESENTER_IDENTITY_STORAGE_KEY); } catch { /* Storage can be unavailable. */ }
       return defaultState();
     }
-    return sanitizePresenterIdentityState(parsed);
+    return migrated;
   } catch {
     try { sessionStorage.removeItem(PRESENTER_IDENTITY_STORAGE_KEY); } catch { /* Storage can be unavailable. */ }
     return defaultState();
@@ -275,32 +272,7 @@ function StepTwoForm({ data, patch, currentRevision }: { data: StepTwoData; patc
   );
 }
 
-function PoseFamilyPicker({ value, onChange }: { value: PoseFamily[]; onChange: (value: PoseFamily[]) => void }) {
-  function toggle(id: PoseFamily) {
-    if (value.includes(id)) {
-      if (value.length === 1) return;
-      onChange(value.filter((item) => item !== id));
-    } else {
-      onChange([...value, id]);
-    }
-  }
-  return (
-    <div className="product-scene-grid" role="group" aria-label="กลุ่มอิริยาบถที่อนุญาต">
-      {POSE_FAMILIES.map((family) => {
-        const active = value.includes(family.id);
-        return (
-          <label className={active ? "product-scene-chip active" : "product-scene-chip"} key={family.id}>
-            <input checked={active} onChange={() => toggle(family.id)} type="checkbox" />
-            <span className="product-scene-chip__check">{active ? "✓" : ""}</span>
-            {family.label}
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-function StepThreeForm({ data, patch, posePlan, referenceCurrent }: { data: StepThreeData; patch: <K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) => void; posePlan: ReturnType<typeof resolvePosePlan>; referenceCurrent: boolean }) {
+function StepThreeForm({ data, patch, referenceCurrent }: { data: StepThreeData; patch: <K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) => void; referenceCurrent: boolean }) {
   return (
     <div className="form-stack">
       <div className={referenceCurrent ? "info-box" : "info-box info-box--warning"} role="status">
@@ -324,21 +296,6 @@ function StepThreeForm({ data, patch, posePlan, referenceCurrent }: { data: Step
       </div>
       <Field label="ความเร็วในการพูด"><Select value={data.speechSpeed} onChange={(value) => patch("speechSpeed", value)}><option>ช้า — 10–15 คำ</option><option>ปกติ — 20–25 คำ</option><option>เร็ว — 30–35 คำ</option></Select></Field>
       {data.speechSpeed === "เร็ว — 30–35 คำ" && <div className="info-box info-box--warning"><b>โหมดเร็วจะลดการเคลื่อนไหวในฉากพูด</b><span>ทดสอบหนึ่งฉากก่อนผลิตจำนวนมาก และสร้าง source ใหม่หากคำหรือ lip sync ไม่ครบ</span></div>}
-      <div className="section-divider"><span>ระบบอิริยาบถ</span></div>
-      <Field label="สมดุลฉากพูดกับฉากแอ็กชัน"><Select value={data.poseBalance} onChange={(value) => patch("poseBalance", value)}><option>เน้นพูด — ไม่มีฉากแอ็กชันล้วน</option><option>เน้นพูด — แอ็กชันประมาณทุก 4 ฉาก</option><option>สมดุล — แอ็กชันประมาณทุก 3 ฉาก</option><option>เน้นภาพ — แอ็กชันประมาณทุก 2 ฉาก</option></Select></Field>
-      <Field label="กลุ่มอิริยาบถที่อนุญาต" hint="เลือกได้หลายกลุ่ม · ต้องเหลืออย่างน้อยหนึ่งกลุ่ม"><PoseFamilyPicker value={data.allowedPoseFamilies} onChange={(value) => patch("allowedPoseFamilies", value)} /></Field>
-      <div className="field-grid">
-        <Field label="ระดับการเคลื่อนไหว"><Select value={data.movementLevel} onChange={(value) => patch("movementLevel", value)}><option>ต่ำ — สีหน้าและท่าทางเล็กน้อย</option><option>กลาง — หนึ่งการกระทำชัดเจนต่อฉาก</option><option>สูง — แอ็กชันเด่นเฉพาะฉากที่ไม่มีบทพูด</option></Select></Field>
-        <Field label="Seed สำหรับสุ่มซ้ำได้"><TextInput value={data.poseSeed} onChange={(value) => patch("poseSeed", value)} placeholder="เช่น EP6-01" /></Field>
-      </div>
-      <div className="field-grid">
-        <Field label="บริบทสำหรับท่าพิเศษ" hint="คลานหรือนอนจะใช้เมื่อบริบทรองรับเท่านั้น"><TextArea value={data.customPoseContext} onChange={(value) => patch("customPoseContext", value)} placeholder="เช่น หาของใต้โต๊ะ เล่นกับแมว หรือออกกำลังกายบนเสื่อ" rows={3} /></Field>
-        <Field label="ท่าที่ไม่ต้องการ"><TextArea value={data.excludedPoses} onChange={(value) => patch("excludedPoses", value)} placeholder="เช่น ไม่เอาท่านอน ไม่ทัดผม ไม่พิงโต๊ะ" rows={3} /></Field>
-      </div>
-      <div className="info-box">
-        <b>ตัวอย่างแผนท่าเรื่องที่ 1 · Seed {data.poseSeed || "EP6"}</b>
-        <span>{posePlan.map((pose) => `${pose.scene}. ${pose.kind}: ${pose.label}`).join(" · ")}</span>
-      </div>
       <div className="section-divider"><span>โทนและสถานที่</span></div>
       <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(value) => patch("tone", value)} /></Field>
       <div className="field-grid">
@@ -365,7 +322,6 @@ export function PresenterIdentityBuilder() {
 
   const currentRevision = useMemo(() => computeIdentityRevision(stepOne, stepTwo), [stepOne, stepTwo]);
   const referenceCurrent = stepTwo.hasCharacterReference && stepTwo.referenceRevision === currentRevision && stepThree.characterRevision === currentRevision;
-  const posePlan = useMemo(() => resolvePosePlan(stepThree, 1), [stepThree]);
 
   useEffect(() => {
     const next: PresenterIdentitySavedState = {
@@ -432,9 +388,8 @@ export function PresenterIdentityBuilder() {
       if (!stepThree.channelName.trim()) items.push("ชื่อช่อง");
       if (!stepThree.channelConcept.trim()) items.push("แก่นหลักของช่อง");
       if (!stepThree.targetAudience.trim()) items.push("กลุ่มเป้าหมาย");
-      if (!stepThree.contentPillars.trim()) items.push("เสาหลักเนื้อหา");
+      if (!stepThree.contentPillars.trim()) items.push("เสาหลักเนื้อหา 3–5 ข้อ");
       if (!referenceCurrent) items.push("Character Reference ล่าสุด");
-      items.push(...getPosePlanIssues(stepThree));
     }
     return [...items, ...getPresenterSafetyIssues(stepOne, activeStep >= 2 ? stepTwo : undefined)];
   }, [activeStep, referenceCurrent, stepOne, stepTwo, stepThree]);
@@ -497,7 +452,7 @@ export function PresenterIdentityBuilder() {
           <div className="panel-heading"><div><span className="eyebrow">STEP 0{activeStep}</span><h1>{currentStep.title}</h1><p>{currentStep.short}</p></div><button className="reset-button" onClick={resetStep} type="button">ล้างข้อมูล</button></div>
           {activeStep === 1 && <StepOneForm data={stepOne} patch={patchStepOne} applyPreset={applyPreset} />}
           {activeStep === 2 && <StepTwoForm data={stepTwo} patch={patchStepTwo} currentRevision={currentRevision} />}
-          {activeStep === 3 && <StepThreeForm data={stepThree} patch={patchStepThree} posePlan={posePlan} referenceCurrent={referenceCurrent} />}
+          {activeStep === 3 && <StepThreeForm data={stepThree} patch={patchStepThree} referenceCurrent={referenceCurrent} />}
         </section>
         <aside className={previewOpen ? "preview-panel mobile-open" : "preview-panel"}>
           <div className="preview-heading"><div><span className="status-dot" /><b>Prompt พร้อมใช้งาน</b><small>{prompt.length.toLocaleString("th-TH")} ตัวอักษร</small></div><button aria-label="ปิดตัวอย่าง Prompt" onClick={() => setPreviewOpen(false)} type="button">×</button></div>
