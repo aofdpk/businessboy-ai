@@ -7,13 +7,15 @@ const require = createRequire(import.meta.url);
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [analytics, identityApp, identityBuilder, salesApp, salesBuilder, productsApp, packageJson] = await Promise.all([
+const [analytics, identityApp, identityBuilder, salesApp, salesBuilder, productsApp, presenterIdentityApp, presenterSalesApp, packageJson] = await Promise.all([
   read('gen3-src/analytics.tsx'),
   read('gen3-src/app.tsx'),
   read('gen3-src/prompt-builder.tsx'),
   read('gen3-src/sales-app.tsx'),
   read('gen3-src/sales-prompt-builder.tsx'),
   read('gen3-src/products-app.tsx'),
+  read('gen3-src/presenter-identity-app.tsx'),
+  read('gen3-src/presenter-sales-app.tsx'),
   read('package.json'),
 ]);
 
@@ -23,6 +25,9 @@ assert.match(packageData.dependencies?.['@vercel/analytics'] || '', /^\^2\./, 'V
 for (const [name, source] of [['identity', identityApp], ['sales', salesApp], ['products', productsApp]]) {
   assert.match(source, /import \{ Gen3Analytics(?:, trackGen3Event)? \} from "\.\/analytics";/, `${name} must import Gen3Analytics`);
   assert.equal((source.match(/<Gen3Analytics \/>/g) || []).length, 1, `${name} must mount Analytics exactly once`);
+}
+for (const [name, source] of [['presenter identity', presenterIdentityApp], ['presenter sales', presenterSalesApp]]) {
+  assert.doesNotMatch(source, /Gen3Analytics|trackGen3Event/, `${name} is intentionally excluded from analytics while access is restricted`);
 }
 
 assert.match(analytics, /const PRODUCTION_ORIGIN = "https:\/\/businessboy\.ai";/);
@@ -97,7 +102,13 @@ for (const call of eventCalls) {
   assert.doesNotMatch(call, /product\.|cleanName|productUrl|imageUrl|\bvalue\b|\bkey\b|\blabel\b/i, `Product-specific argument in analytics call: ${call}`);
 }
 
-const entries = ['gen3-src/app.tsx', 'gen3-src/sales-app.tsx', 'gen3-src/products-app.tsx'];
+const entries = [
+  'gen3-src/app.tsx',
+  'gen3-src/sales-app.tsx',
+  'gen3-src/products-app.tsx',
+  'gen3-src/presenter-identity-app.tsx',
+  'gen3-src/presenter-sales-app.tsx',
+];
 const outputs = await Promise.all(entries.map((entryPoint) => build({
   entryPoints: [entryPoint],
   bundle: true,
@@ -111,11 +122,11 @@ const outputs = await Promise.all(entries.map((entryPoint) => build({
 
 for (const [index, result] of outputs.entries()) {
   assert.equal(result.outputFiles.length, 1, `${entries[index]} must produce one bundle`);
-  assert.match(result.outputFiles[0].text, /businessboy\.ai/, `${entries[index]} is missing the production host guard`);
+  if (index < 3) assert.match(result.outputFiles[0].text, /businessboy\.ai/, `${entries[index]} is missing the production host guard`);
 }
 
 const generatedBundle = require('../api/_gen3-bundle.js');
-const generatedKeys = ['identity', 'sales', 'products'];
+const generatedKeys = ['identity', 'sales', 'products', 'presenterIdentity', 'presenterSales'];
 for (const [index, key] of generatedKeys.entries()) {
   assert.equal(
     generatedBundle[key],

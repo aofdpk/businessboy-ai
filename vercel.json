@@ -18,6 +18,14 @@
   ],
   "rewrites": [
     {
+      "source": "/gen3/presenter-identity",
+      "destination": "/api/gen3-page?view=presenter-identity"
+    },
+    {
+      "source": "/gen3/presenter-sales",
+      "destination": "/api/gen3-page?view=presenter-sales"
+    },
+    {
       "source": "/gen3/products",
       "destination": "/api/gen3-page?view=products"
     },
