@@ -294,8 +294,8 @@ function StepThreeForm({ data, patch, referenceCurrent }: { data: StepThreeData;
         <Field label="ฉากต่อเรื่อง"><Select value={data.sceneCount} onChange={(value) => patch("sceneCount", value)}>{Array.from({ length: 10 }, (_, index) => index + 1).map((number) => <option key={number}>{number}</option>)}</Select></Field>
         <Field label="เวลาต่อฉาก"><Select value={data.sceneDuration} onChange={(value) => patch("sceneDuration", value)}><option>8 วินาที</option><option>10 วินาที</option><option>15 วินาที</option></Select></Field>
       </div>
-      <Field label="ความเร็วในการพูด"><Select value={data.speechSpeed} onChange={(value) => patch("speechSpeed", value)}><option>ช้า — 10–15 คำ</option><option>ปกติ — 20–25 คำ</option><option>เร็ว — 30–35 คำ</option></Select></Field>
-      {data.speechSpeed === "เร็ว — 30–35 คำ" && <div className="info-box info-box--warning"><b>โหมดเร็วจะลดการเคลื่อนไหวในฉากพูด</b><span>ทดสอบหนึ่งฉากก่อนผลิตจำนวนมาก และสร้าง source ใหม่หากคำหรือ lip sync ไม่ครบ</span></div>}
+      <Field label="ความเร็วในการพูด" hint="ใช้กับทุกฉาก · ทุกฉากมีบทพูด ไม่มีฉากเงียบ"><Select value={data.speechSpeed} onChange={(value) => patch("speechSpeed", value)}><option>ช้า — 10–15 คำ</option><option>ปกติ — 20–25 คำ</option><option>เร็ว — 30–35 คำ</option></Select></Field>
+      {data.speechSpeed === "เร็ว — 30–35 คำ" && <div className="info-box info-box--warning"><b>โหมดเร็วต้องลดการเคลื่อนไหวทุกฉาก</b><span>ทุกฉากยังต้องพูดให้ครบ 30–35 คำ หาก action ทำให้คำหรือ lip sync ไม่ครบ ให้ลด action และสร้าง source ฉากนั้นใหม่</span></div>}
       <div className="section-divider"><span>โทนและสถานที่</span></div>
       <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(value) => patch("tone", value)} /></Field>
       <div className="field-grid">

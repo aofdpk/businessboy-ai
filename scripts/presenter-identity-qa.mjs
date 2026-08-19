@@ -46,6 +46,11 @@ const stepThree = {
   storyCount: "2",
   topicBrief: "หาโทรศัพท์ที่หายใต้โต๊ะในห้องนั่งเล่น",
 };
+assert.equal(presenter.initialStepThree.sceneDuration, "8 วินาที", "Fresh and reset Step 3 state must default to 8 seconds");
+assert.equal(presenter.sanitizeStepThree({}).sceneDuration, "8 วินาที", "Missing duration must sanitize to the 8-second default");
+assert.equal(presenter.sanitizeStepThree({ sceneDuration: "invalid" }).sceneDuration, "8 วินาที", "Invalid duration must sanitize to the 8-second default");
+assert.equal(presenter.sanitizeStepThree({ sceneDuration: "10 วินาที" }).sceneDuration, "10 วินาที", "An explicit saved 10-second choice must survive sanitization");
+assert.equal(presenter.sanitizeStepThree({ sceneDuration: "15 วินาที" }).sceneDuration, "15 วินาที", "An explicit saved 15-second choice must survive sanitization");
 const removedPoseFields = ["poseBalance", "allowedPoseFamilies", "movementLevel", "motionLevel", "poseSeed", "customPoseContext", "excludedPoses"];
 for (const field of removedPoseFields) {
   assert.equal(Object.hasOwn(presenter.initialStepThree, field), false, `${field} must not remain in Step 3 defaults`);
@@ -82,15 +87,16 @@ const characterStepOne = {
 };
 const characterPrompt = presenter.buildPresenterCharacterPrompt(characterState, characterStepOne);
 assert.match(characterPrompt, /2 คอลัมน์ × 3 แถว รวม 6 ช่อง/);
+assert.match(characterPrompt, /^สวมบทบาทเป็น Character Director และผู้กำกับภาพสำหรับมนุษย์สมจริง ให้สร้างภาพ Character Sheet/,
+  "Step 2 must directly request image creation");
 assert.match(characterPrompt, /ตัวละครตรวจสอบแบบไดนามิก/, "Step 2 must use the current character name");
 assert.match(characterPrompt, /หนุ่มหล่อ · หล่อเข้ม/, "Step 2 must use the current Step 1 Presenter DNA");
 assert.match(characterPrompt, /ล็อกทรงผมและการดูแลใบหน้าตามสถานะทดสอบ/, "Step 2 must use the current grooming lock");
 assert.match(characterPrompt, /ล็อกชุดสีน้ำเงินหนึ่งชุดตามสถานะทดสอบ/, "Step 2 must use the current wardrobe lock");
-assert.match(characterPrompt, /FINAL IDENTITY_LOCK/);
-assert.match(characterPrompt, /MASTER IMAGE PROMPT/);
-assert.match(characterPrompt, /NEGATIVE CONSTRAINTS/);
-assert.match(characterPrompt, /QC CHECKLIST 10 ข้อ/);
-assert.match(characterPrompt, /อย่าสร้างภาพในคำตอบนี้ ให้ส่งเฉพาะ Prompt พร้อมใช้/);
+assert.match(characterPrompt, /สร้างภาพ Character Sheet แนวตั้ง 9:16 แบบ 2 คอลัมน์ × 3 แถว จำนวน 1 ภาพตามข้อกำหนดทั้งหมดข้างต้นทันที และแสดงผลลัพธ์เป็นภาพเดียว$/,
+  "Step 2 must end with an affirmative one-image instruction");
+assert.doesNotMatch(characterPrompt, /สร้างคำสั่งผลิต|แสดงผลลัพธ์เป็น\s*\n\s*1\.|FINAL IDENTITY_LOCK|MASTER IMAGE PROMPT|NEGATIVE CONSTRAINTS|QC CHECKLIST|อย่าสร้างภาพ/,
+  "Step 2 must not fall back to a prose prompt package or a no-image instruction");
 assert.doesNotMatch(characterPrompt, /Kie|gpt-image|task\s*ID|credits|manifest/i, "Step 2 must be tool-neutral");
 const userExampleName = ["พี่", "เบิ้ม"].join("");
 assert.equal(characterPrompt.includes(userExampleName), false, "The user's example character must never become a default or output fixture");
@@ -105,6 +111,7 @@ const legacyStepThree = {
   channelConcept: "แก่นช่องเดิมที่ต้องรักษา",
   targetAudience: "กลุ่มเดิมที่ต้องรักษา",
   contentPillars: "เสาหลักเดิมที่ต้องรักษา",
+  sceneDuration: "10 วินาที",
   characterDescription: two.characterDescription,
   characterRevision: revision,
   poseBalance: "สมดุล — แอ็กชันประมาณทุก 3 ฉาก",
@@ -130,12 +137,20 @@ assert.equal(migrated.stepTwo.hasCharacterReference, true, "Migration must prese
 assert.equal(migrated.stepThree.characterDescription, two.characterDescription, "Migration must preserve the current Character Lock");
 assert.equal(migrated.stepThree.channelName, "ช่องเดิมที่ต้องรักษา");
 assert.equal(migrated.stepThree.channelConcept, "แก่นช่องเดิมที่ต้องรักษา");
+assert.equal(migrated.stepThree.sceneDuration, "10 วินาที", "Schema 1 migration must preserve an explicit 10-second choice");
 for (const field of removedPoseFields) {
   assert.equal(Object.hasOwn(migrated.stepThree, field), false, `Migration must drop legacy ${field}`);
 }
 assert.equal(presenter.sanitizePresenterIdentityState({ ...migrated, schemaVersion: 3 }), null, "Future schemas must be rejected");
 assert.equal(presenter.sanitizePresenterIdentityState({ ...migrated, schemaVersion: 0 }), null, "Unknown old schemas must be rejected");
 assert.equal(presenter.sanitizePresenterIdentityState({ ...migrated, mode: "wrong-mode" }), null, "Wrong modes must be rejected");
+const migratedFifteen = presenter.sanitizePresenterIdentityState({
+  ...migrated,
+  schemaVersion: 2,
+  stepThree: { ...migrated.stepThree, sceneDuration: "15 วินาที" },
+});
+assert.ok(migratedFifteen);
+assert.equal(migratedFifteen.stepThree.sceneDuration, "15 วินาที", "Schema 2 migration must preserve an explicit 15-second choice");
 
 const stale = presenter.sanitizePresenterIdentityState({
   schemaVersion: 2,
@@ -157,6 +172,10 @@ const safeExclusion = presenter.getPresenterSafetyIssues({ ...one, exclusions: "
 assert.equal(safeExclusion.length, 0, "A safety concept named only as an explicit exclusion must not become a false positive");
 const adultAudience = presenter.getPresenterSafetyIssues({ ...one, audiencePreference: "ผู้ใหญ่วัย 18–35 และพ่อแม่ที่ซื้อของให้เด็กเล็ก" });
 assert.equal(adultAudience.length, 0, "Audience ages and child-related audience context must not redefine the adult presenter");
+assert.match(identityBuilderSource, /hint="ใช้กับทุกฉาก · ทุกฉากมีบทพูด ไม่มีฉากเงียบ"/,
+  "The speech-speed UI must explain that every scene speaks");
+assert.match(identityBuilderSource, /โหมดเร็วต้องลดการเคลื่อนไหวทุกฉาก/,
+  "The fast-speech warning must apply to every scene");
 
 const storyStepOne = { ...one, exclusions: "ห้ามฉากบนเตียงและห้ามมุกล้อรูปร่าง" };
 const storyPrompt = presenter.buildPresenterStoryPrompt({
@@ -169,10 +188,19 @@ const storyPrompt = presenter.buildPresenterStoryPrompt({
   characterRevision: revision,
 }, storyStepOne);
 assert.match(storyPrompt, /same take/i, "Story prompt must lock native same-take speech");
-assert.match(storyPrompt, /— ไม่มีบทพูด/, "Story prompt must define dialogue-free action scenes");
 assert.match(storyPrompt, /พูดเน้นหน้า:[^\n]+/);
-assert.match(storyPrompt, /แอ็กชันนำเรื่อง:[^\n]+/);
-assert.match(storyPrompt, /แอ็กชันแล้วหยุดพูด:[^\n]+/);
+assert.match(storyPrompt, /พูดพร้อมแอ็กชันเบา:[^\n]+/);
+assert.match(storyPrompt, /ทำแอ็กชันให้จบ แล้วหยุดนิ่งเพื่อพูด:[^\n]+/);
+assert.match(storyPrompt, /ทุกฉากต้องเลือกหนึ่งในสามชนิดนี้และทุกชนิดต้องมีบทพูด/);
+assert.match(storyPrompt, /ทุกฉากต้องมีบทพูดภาษาไทยที่ไม่ว่าง/);
+assert.match(storyPrompt, /ความเร็วและจำนวนคำของทุกฉาก: ปกติ — 20–25 คำ/);
+assert.doesNotMatch(storyPrompt, /ความเร็วและจำนวนคำของฉากพูด/,
+  "The job summary must not imply that any scene can be non-speaking");
+assert.match(storyPrompt, /Video Prompt ของทุกฉากต้องใส่บทไทยจากคอลัมน์ “บทพูดภาษาไทย” แบบคำต่อคำหนึ่งครั้งในรูปแบบ Speech: The visible character says exactly once in natural Thai/);
+assert.match(storyPrompt, /บทพูดทุกฉากมี 20–25 คำ เท่านั้น/);
+assert.match(storyPrompt, /ทุกแถวมีบทพูดภาษาไทย 20–25 คำ และ Video Prompt มี Speech เดียวกันแบบคำต่อคำ/);
+assert.doesNotMatch(storyPrompt, /— ไม่มีบทพูด|แอ็กชันล้วน|quiet natural ambience เท่านั้น|แอ็กชันนำเรื่อง:/,
+  "No action-only or dialogue-free exception may remain");
 assert.match(storyPrompt, /วางแก่นเรื่อง Hook ลำดับเหตุการณ์ บทพูด และความต่อเนื่อง[^\n]+ก่อน/,
   "The story and script must be planned before poses");
 const storyPlanningIndex = storyPrompt.indexOf("วางแก่นเรื่อง Hook ลำดับเหตุการณ์ บทพูด และความต่อเนื่อง");
@@ -182,6 +210,8 @@ assert.ok(storyPlanningIndex >= 0 && motionSelectionIndex > storyPlanningIndex,
 assert.match(storyPrompt, /- ต่ำ: ท่ากลางผ่อนคลาย/);
 assert.match(storyPrompt, /- กลาง: การกระทำชัดเจนหนึ่งอย่าง/);
 assert.match(storyPrompt, /- สูง: การเคลื่อนไหวเด่นแต่ปลอดภัย/);
+assert.match(storyPrompt, /ทำ action ให้จบ หยุดนิ่งในระยะที่เห็นปากชัด แล้วพูดบทของฉากให้ครบ/,
+  "High motion must settle before the required dialogue or be reduced");
 assert.match(storyPrompt, /ระดับทั้งสามเป็นคำแนะนำ ไม่ใช่ allowlist โควตา ลำดับ seed หรือ fixed mapping/,
   "Motion levels must be advisory rather than a fixed control contract");
 assert.match(storyPrompt, /ให้ AI เลือก ผสม ลด หรือปรับได้ต่อฉากหลังจากวางเรื่องแล้ว/);
@@ -206,5 +236,23 @@ assert.match(storyPrompt, /เสาหลักเนื้อหา 3–5 ข�
 assert.match(storyPrompt, /ลำดับฉาก \| ประเภทฉากและอิริยาบถ \| คำอธิบายฉาก \| Image Prompt \| Video Prompt \| บทพูดภาษาไทย/);
 assert.match(storyPrompt, /ห้ามใช้ POSE_ID รหัสภายใน/);
 assert.match(storyPrompt, /ไม่มีสินค้าและไม่มีการขาย/);
+
+const fastEightSecondPrompt = presenter.buildPresenterStoryPrompt({
+  ...stepThree,
+  channelName: "ช่องทดสอบโหมดเร็ว",
+  channelConcept: "เล่าเรื่องกระชับด้วยเหตุการณ์ใกล้ตัว",
+  targetAudience: "ผู้ใหญ่ไทย",
+  contentPillars: "ชีวิตประจำวัน",
+  characterDescription: two.characterDescription,
+  characterRevision: revision,
+  sceneDuration: "8 วินาที",
+  speechSpeed: "เร็ว — 30–35 คำ",
+}, storyStepOne);
+assert.match(fastEightSecondPrompt, /บทพูดทุกฉากมี 30–35 คำ เท่านั้น[^\n]+พูดจบใน 8 วินาที/,
+  "The 8-second fast fixture must keep the selected dialogue range mandatory in every scene");
+assert.match(fastEightSecondPrompt, /หากเวลาไม่พอให้ลดระดับหรือความซับซ้อนของ action/,
+  "The 8-second fast fixture must reduce motion instead of removing dialogue");
+assert.doesNotMatch(fastEightSecondPrompt, /— ไม่มีบทพูด|แอ็กชันล้วน|quiet natural ambience เท่านั้น|แอ็กชันนำเรื่อง:/,
+  "The 8-second fast fixture must not regain a silent-scene escape hatch");
 
 console.log("Presenter Identity QA passed");
