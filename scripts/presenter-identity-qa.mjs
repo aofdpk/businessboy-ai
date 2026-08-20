@@ -228,6 +228,47 @@ assert.ok(stale);
 assert.equal(stale.stepTwo.hasCharacterReference, false, "A stale character reference must be invalidated");
 assert.equal(stale.stepThree.characterDescription, "", "Downstream character data must be cleared when the reference is stale");
 
+const pastedCharacterLock = "ผู้หญิงสมมติอายุ 31 ปี\nใบหน้า ผม ชุด และจุดจำล็อกเป็นค่าเดียว";
+const pastedDraft = presenter.updatePresenterCharacterLockDraft(
+  { ...two, hasCharacterReference: true, referenceRevision: revision },
+  { ...presenter.initialStepThree, characterDescription: two.characterDescription, characterRevision: revision },
+  pastedCharacterLock,
+);
+assert.equal(pastedDraft.stepTwo.characterDescription, pastedCharacterLock, "Pasted multiline Character Lock must update Step 2 state without losing line breaks");
+assert.equal(pastedDraft.stepThree.characterDescription, pastedCharacterLock, "Pasted multiline Character Lock must remain visible in Step 3 state");
+assert.equal(pastedDraft.stepTwo.hasCharacterReference, false, "Changing the pasted Character Lock must invalidate the previous reference confirmation");
+assert.equal(pastedDraft.stepTwo.referenceRevision, "");
+assert.equal(pastedDraft.stepThree.characterRevision, "");
+const persistedPastedDraft = presenter.sanitizePresenterIdentityState({
+  schemaVersion: 3,
+  mode: "presenter-identity",
+  activeStep: 3,
+  stepOne: one,
+  stepTwo: pastedDraft.stepTwo,
+  stepThree: pastedDraft.stepThree,
+});
+assert.ok(persistedPastedDraft);
+assert.equal(persistedPastedDraft.stepTwo.characterDescription, pastedCharacterLock, "Session sanitization must preserve a pasted Step 2 draft");
+assert.equal(persistedPastedDraft.stepThree.characterDescription, pastedCharacterLock, "Session sanitization must preserve the matching editable Step 3 draft");
+assert.equal(persistedPastedDraft.stepTwo.hasCharacterReference, false, "Sanitization must not auto-confirm a pasted draft");
+const longCharacterPaste = "ก".repeat(8100);
+const truncatedPastedDraft = presenter.updatePresenterCharacterLockDraft(presenter.initialStepTwo, presenter.initialStepThree, longCharacterPaste);
+assert.equal(truncatedPastedDraft.stepTwo.characterDescription.length, 8000, "Character Lock paste must respect the persisted 8,000-character limit");
+assert.equal(truncatedPastedDraft.stepThree.characterDescription.length, 8000);
+const confirmedSameLock = presenter.updatePresenterCharacterLockDraft(
+  { ...two, hasCharacterReference: true, referenceRevision: revision },
+  presenter.initialStepThree,
+  two.characterDescription,
+);
+assert.equal(confirmedSameLock.stepTwo.hasCharacterReference, true, "Pasting the identical confirmed lock must not invalidate its reference");
+assert.equal(confirmedSameLock.stepThree.characterRevision, revision, "An identical confirmed lock may restore the existing handoff revision");
+assert.doesNotMatch(identityBuilderSource, /<TextArea\s+disabled\s+value=\{data\.characterDescription\}\s+onChange=\{\(\) => undefined\}/, "The Step 3 Character Lock must not remain a disabled no-op textarea");
+assert.doesNotMatch(identityBuilderSource, /onChange=\{\(\) => undefined\}/, "Presenter Identity text controls must not discard typing or paste events");
+assert.match(identityBuilderSource, /<TextArea maxLength=\{8000\} value=\{data\.characterDescription\} onChange=\{onCharacterDescriptionChange\}/, "The Step 3 Character Lock must accept controlled typing and paste updates");
+assert.match(identityBuilderSource, /<TextArea maxLength=\{8000\} value=\{data\.characterDescription\} onChange=\{\(value\) => patch\("characterDescription", value\)\}/, "The canonical Step 2 Character Lock must use the same paste limit");
+assert.doesNotMatch(identityBuilderSource, /onPaste|preventDefault\(/, "Presenter Identity text controls must not block normal paste events");
+assert.match(identityBuilderSource, /พิมพ์หรือวางได้/, "The editable handoff behavior must be explained in the UI");
+
 const safetyIssues = presenter.getPresenterSafetyIssues({ ...one, presenterType: "กำหนดเอง", presenterCustom: "นักเรียนอายุ 17 ปี" });
 assert.ok(safetyIssues.length > 0, "Minor or school-context input must be blocked");
 const nicheSafetyIssues = presenter.getPresenterSafetyIssues({ ...one, channelNiche: "กำหนดเอง", channelNicheCustom: "สาววัย 18 ทำคลิปชีวิตประจำวัน" });

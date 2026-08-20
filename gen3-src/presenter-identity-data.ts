@@ -322,6 +322,33 @@ export function sanitizeStepThree(input: unknown): StepThreeData {
   };
 }
 
+export function updatePresenterCharacterLockDraft(stepTwo: StepTwoData, stepThree: StepThreeData, input: string) {
+  const characterDescription = cleanText(input, "", 8000);
+  if (characterDescription === stepTwo.characterDescription) {
+    return {
+      stepTwo,
+      stepThree: {
+        ...stepThree,
+        characterDescription,
+        characterRevision: stepTwo.hasCharacterReference ? stepTwo.referenceRevision : "",
+      },
+    };
+  }
+  return {
+    stepTwo: {
+      ...stepTwo,
+      characterDescription,
+      hasCharacterReference: false,
+      referenceRevision: "",
+    },
+    stepThree: {
+      ...stepThree,
+      characterDescription,
+      characterRevision: "",
+    },
+  };
+}
+
 export function computeIdentityRevision(stepOne: StepOneData, stepTwo: StepTwoData) {
   const source = JSON.stringify({
     presenterType: stepOne.presenterType,
@@ -366,9 +393,12 @@ export function sanitizePresenterIdentityState(input: unknown): PresenterIdentit
     ? rawStepTwo
     : { ...rawStepTwo, hasCharacterReference: false, referenceRevision: "" };
   const rawStepThree = sanitizeStepThree(source.stepThree);
+  const hasUnconfirmedMatchingDraft = rawStepThree.characterRevision === ""
+    && rawStepThree.characterDescription !== ""
+    && rawStepThree.characterDescription === rawStepTwo.characterDescription;
   const stepThree = rawStepThree.characterRevision === revision && referenceIsCurrent
     ? rawStepThree
-    : { ...rawStepThree, characterDescription: "", characterRevision: "" };
+    : { ...rawStepThree, characterDescription: hasUnconfirmedMatchingDraft ? rawStepThree.characterDescription : "", characterRevision: "" };
   return {
     schemaVersion: PRESENTER_IDENTITY_SCHEMA_VERSION,
     mode: PRESENTER_IDENTITY_MODE,

@@ -250,6 +250,23 @@ test("changing or importing Presenter identity invalidates all character confirm
   for (const key of confirmationKeys) assert.equal(unrelatedCreativeChange[key], true, `${key} must survive unrelated Sales changes`);
 });
 
+test("manual identity and Sales drafts preserve pasted multiline text without altering characters", () => {
+  const identityPaste = "fictional Thai adult woman อายุ 29 ปี\nผมดำยาว · เสื้อเชิ้ตสีครีม\nCharacter Lock: ใบหน้าเดิมทุกฉาก";
+  const manual = validData({ presenterSource: "manual" });
+  const identityUpdated = module.updatePresenterSalesIdentityField(manual, "presenterDescription", identityPaste);
+  assert.equal(identityUpdated.presenterDescription, identityPaste);
+
+  const productPaste = "รุ่น: Storage Box 24L\nสี: ครีม\nจำนวน: 1 ชิ้น\nคำเตือน: ใช้ตามฉลาก";
+  const hookPaste = "พี่คิดถึงหนูไหม\nเรื่องนั้นไม่เกี่ยวกับสินค้านี้นะ";
+  const normalized = module.normalizePresenterSalesData({
+    ...manual,
+    productDetails: productPaste,
+    adultHookCustom: hookPaste,
+  });
+  assert.equal(normalized.productDetails, productPaste);
+  assert.equal(normalized.adultHookCustom, hookPaste);
+});
+
 test("missing-field validation covers all safety confirmations and manual product scenes", () => {
   const incomplete = validData({
     confirmsReferenceRights: false,
@@ -626,6 +643,23 @@ test("Jangrai UI suppresses the legacy charm warning and retains its bridge-firs
   const builderSource = await readFile(new URL("./presenter-sales-prompt-builder.tsx", import.meta.url), "utf8");
   assert.match(builderSource, /data\.charmLevel === CHARM_LEVELS\[2\] && !jangraiMode/);
   assert.match(builderSource, /มุกอยู่เฉพาะ 0–2 วินาทีแรก จากนั้นตัดความเชื่อมโยง/);
+});
+
+test("Sales form typing and paste handlers stay writable outside intentional imported Identity locks", async () => {
+  const builderSource = await readFile(new URL("./presenter-sales-prompt-builder.tsx", import.meta.url), "utf8");
+  assert.match(builderSource, /function TextInput[\s\S]*?<input onChange=\{\(event\) => onChange\(event\.target\.value\)\}/);
+  assert.match(builderSource, /function TextArea[\s\S]*?<textarea[\s\S]*?onChange=\{\(event\) => onChange\(event\.target\.value\)\}/);
+  assert.doesNotMatch(builderSource, /onPaste|preventDefault\(/);
+  assert.match(builderSource, /const imported = data\.presenterSource === "identity"/);
+  assert.match(builderSource, /<option value="manual">กรอกข้อมูล Character Lock เอง<\/option>/);
+  assert.match(builderSource, /ช่องด้านล่างล็อกตามข้อมูลที่นำเข้า/);
+  assert.equal((builderSource.match(/readOnly=\{imported\}/g) || []).length, 10, "only imported Identity/Channel controls should be intentionally locked");
+
+  const stepTwoSource = builderSource.slice(builderSource.indexOf("function StepTwoForm"), builderSource.indexOf("function StepThreeForm"));
+  assert.match(stepTwoSource, /patch\("productName", value\)/);
+  assert.match(stepTwoSource, /patch\("productDetails", value\)/);
+  assert.match(stepTwoSource, /patch\("adultHookCustom", value\)/);
+  assert.doesNotMatch(stepTwoSource, /readOnly=/, "product facts and custom Hook must remain typeable and pasteable");
 });
 
 test("Jangrai category firewalls explicitly block supplement, beauty, automotive, electrical, and food outcomes", () => {

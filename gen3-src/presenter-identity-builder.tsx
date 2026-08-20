@@ -27,6 +27,7 @@ import {
   initialStepTwo,
   presenterSummary,
   sanitizePresenterIdentityState,
+  updatePresenterCharacterLockDraft,
   type PresenterIdentitySavedState,
   type StepId,
   type StepOneData,
@@ -107,9 +108,9 @@ function TextInput({ value, onChange, placeholder = "", disabled = false }: { va
   return <input aria-label={fieldLabel || undefined} disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />;
 }
 
-function TextArea({ value, onChange, placeholder = "", rows = 4, disabled = false }: { value: string; onChange: (value: string) => void; placeholder?: string; rows?: number; disabled?: boolean }) {
+function TextArea({ value, onChange, placeholder = "", rows = 4, disabled = false, maxLength }: { value: string; onChange: (value: string) => void; placeholder?: string; rows?: number; disabled?: boolean; maxLength?: number }) {
   const fieldLabel = React.useContext(FieldLabelContext);
-  return <textarea aria-label={fieldLabel || undefined} disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} rows={rows} />;
+  return <textarea aria-label={fieldLabel || undefined} disabled={disabled} maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} rows={rows} />;
 }
 
 async function copyToClipboard(value: string) {
@@ -264,7 +265,7 @@ function StepTwoForm({ data, patch, currentRevision }: { data: StepTwoData; patc
       <div className="info-box"><b>ทำ STEP 1 และเลือกแนวทางก่อน</b><span>วาง IDENTITY_LOCK ที่เลือก แล้วคัดลอก Prompt นี้ไปสร้าง Character Sheet 2×3 รวม 6 ช่อง</span></div>
       <Field label="ชื่อตัวละคร"><TextInput value={data.characterName} onChange={(value) => patch("characterName", value)} placeholder="เช่น มีนา หรือ คิม" /></Field>
       <Field label="IDENTITY_LOCK จาก STEP 1" hint="ต้องเป็นรายละเอียดหนึ่งชุด ไม่มีตัวเลือกหรือช่วงค่า" required>
-        <TextArea value={data.characterDescription} onChange={(value) => patch("characterDescription", value)} placeholder="วางอายุ 25+ ใบหน้า ผิว ผม รูปร่าง ชุด รองเท้า เครื่องประดับ บุคลิก และจุดจำ" rows={9} />
+        <TextArea maxLength={8000} value={data.characterDescription} onChange={(value) => patch("characterDescription", value)} placeholder="วางอายุ 25+ ใบหน้า ผิว ผม รูปร่าง ชุด รองเท้า เครื่องประดับ บุคลิก และจุดจำ" rows={9} />
       </Field>
       <div className="field-grid">
         <Field label="Grooming Lock"><TextArea value={data.groomingLock} onChange={(value) => patch("groomingLock", value)} rows={3} /></Field>
@@ -290,7 +291,7 @@ function StepTwoForm({ data, patch, currentRevision }: { data: StepTwoData; patc
   );
 }
 
-function StepThreeForm({ data, patch, referenceCurrent, creativeMode }: { data: StepThreeData; patch: <K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) => void; referenceCurrent: boolean; creativeMode: StepOneData["creativeMode"] }) {
+function StepThreeForm({ data, patch, referenceCurrent, creativeMode, onCharacterDescriptionChange }: { data: StepThreeData; patch: <K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) => void; referenceCurrent: boolean; creativeMode: StepOneData["creativeMode"]; onCharacterDescriptionChange: (value: string) => void }) {
   return (
     <div className="form-stack">
       <div className={referenceCurrent ? "info-box" : "info-box info-box--warning"} role="status">
@@ -306,7 +307,9 @@ function StepThreeForm({ data, patch, referenceCurrent, creativeMode }: { data: 
         <Field label="กลุ่มเป้าหมาย" required><TextArea value={data.targetAudience} onChange={(value) => patch("targetAudience", value)} /></Field>
         <Field label="เสาหลักเนื้อหา 3–5 ข้อ" required><TextArea value={data.contentPillars} onChange={(value) => patch("contentPillars", value)} placeholder="เขียนแยกบรรทัด" /></Field>
       </div>
-      <Field label="ตัวละครที่ล็อกจาก STEP 2"><TextArea disabled value={data.characterDescription} onChange={() => undefined} rows={5} /></Field>
+      <Field label="ตัวละครที่ล็อกจาก STEP 2" hint="พิมพ์หรือวางได้ · หากแก้จากค่าที่เคยยืนยัน ระบบจะยกเลิก Character Reference และให้กลับ STEP 2 ยืนยันใหม่">
+        <TextArea maxLength={8000} value={data.characterDescription} onChange={onCharacterDescriptionChange} placeholder="วาง Character / Identity Lock จาก STEP 2" rows={5} />
+      </Field>
       <div className="section-divider"><span>เนื้อหาที่จะผลิตรอบนี้</span></div>
       <Field label="หัวข้อหรือโจทย์รอบนี้" hint="เว้นไว้ให้ AI เลือกจากเสาหลักได้"><TextArea value={data.topicBrief} onChange={(value) => patch("topicBrief", value)} placeholder="เช่น เรื่องตลกตอนเตรียมตัวไปทำงาน หรือ เล่นกับสัตว์เลี้ยงในห้องนั่งเล่น" /></Field>
       <Field label="โครงสร้าง"><Select value={data.framework} onChange={(value) => patch("framework", value)}>{FRAMEWORKS.map((option) => <option key={option}>{option}</option>)}</Select></Field>
@@ -395,6 +398,12 @@ export function PresenterIdentityBuilder() {
 
   function patchStepThree<K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) {
     setStepThree((current) => ({ ...current, [key]: value }));
+  }
+
+  function patchStepThreeCharacterDescription(value: string) {
+    const next = updatePresenterCharacterLockDraft(stepTwo, stepThree, value);
+    setStepTwo(next.stepTwo);
+    setStepThree(next.stepThree);
   }
 
   const prompt = useMemo(() => {
@@ -488,7 +497,7 @@ export function PresenterIdentityBuilder() {
           <div className="panel-heading"><div><span className="eyebrow">STEP 0{activeStep}</span><h1>{currentStep.title}</h1><p>{currentStep.short}</p></div><button className="reset-button" onClick={resetStep} type="button">ล้างข้อมูล</button></div>
           {activeStep === 1 && <StepOneForm data={stepOne} patch={patchStepOne} applyPreset={applyPreset} />}
           {activeStep === 2 && <StepTwoForm data={stepTwo} patch={patchStepTwo} currentRevision={currentRevision} />}
-          {activeStep === 3 && <StepThreeForm creativeMode={stepOne.creativeMode} data={stepThree} patch={patchStepThree} referenceCurrent={referenceCurrent} />}
+          {activeStep === 3 && <StepThreeForm creativeMode={stepOne.creativeMode} data={stepThree} onCharacterDescriptionChange={patchStepThreeCharacterDescription} patch={patchStepThree} referenceCurrent={referenceCurrent} />}
         </section>
         <aside className={previewOpen ? "preview-panel mobile-open" : "preview-panel"}>
           <div className="preview-heading"><div><span className="status-dot" /><b>Prompt พร้อมใช้งาน</b><small>{prompt.length.toLocaleString("th-TH")} ตัวอักษร</small></div><button aria-label="ปิดตัวอย่าง Prompt" onClick={() => setPreviewOpen(false)} type="button">×</button></div>
