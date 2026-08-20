@@ -2,12 +2,17 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ADULT_ADDRESSES,
+  ADULT_HOOK_ARCHETYPES,
+  applyPresenterIdentityContext,
   buildPresenterSalesPrompt,
   CHARM_LEVELS,
   CHARM_STYLES,
   extractPresenterIdentityContext,
   initialPresenterSalesData,
+  JANGRAI_FRAMEWORK,
   migratePresenterSalesState,
+  DIRECT_SALES_CTAS,
   POSE_ENERGIES,
   PRESENTER_IDENTITY_STORAGE_KEY,
   PRESENTER_SALES_STORAGE_KEY,
@@ -15,12 +20,16 @@ import {
   PRODUCT_INTERACTIONS,
   presenterSalesMissingFields,
   presenterSalesSafetyIssues,
+  resetPresenterSalesStepTwo,
   SALES_CTAS,
   SALES_FRAMEWORKS,
   SCENE_COUNTS,
   SCENE_DURATIONS,
   SELLING_ANGLES,
   STORY_COUNTS,
+  setPresenterSalesCreativeMode,
+  updatePresenterSalesIdentityField,
+  type PresenterIdentityConfirmationField,
   type PresenterSalesData,
   type PresenterSalesProductSceneMode,
   type PresenterSalesSavedState,
@@ -41,7 +50,7 @@ const STEPS: Array<{ id: PresenterSalesStepId; title: string; short: string }> =
 ];
 
 function loadSavedState(): PresenterSalesSavedState {
-  const fallback: PresenterSalesSavedState = { schemaVersion: 1, activeStep: 1, data: initialPresenterSalesData };
+  const fallback: PresenterSalesSavedState = { schemaVersion: 2, activeStep: 1, data: initialPresenterSalesData };
   if (typeof window === "undefined") return fallback;
   try {
     const raw = sessionStorage.getItem(PRESENTER_SALES_STORAGE_KEY);
@@ -76,12 +85,12 @@ function TextInput({ onChange, placeholder, readOnly = false, required = false, 
   return <input onChange={(event) => onChange(event.target.value)} placeholder={placeholder} readOnly={readOnly} required={required} type="text" value={value} />;
 }
 
-function TextArea({ onChange, placeholder, readOnly = false, required = false, rows = 4, value }: { onChange: (value: string) => void; placeholder?: string; readOnly?: boolean; required?: boolean; rows?: number; value: string }) {
-  return <textarea onChange={(event) => onChange(event.target.value)} placeholder={placeholder} readOnly={readOnly} required={required} rows={rows} value={value} />;
+function TextArea({ maxLength, onChange, placeholder, readOnly = false, required = false, rows = 4, value }: { maxLength?: number; onChange: (value: string) => void; placeholder?: string; readOnly?: boolean; required?: boolean; rows?: number; value: string }) {
+  return <textarea maxLength={maxLength} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} readOnly={readOnly} required={required} rows={rows} value={value} />;
 }
 
-function Select({ children, onChange, value }: { children: React.ReactNode; onChange: (value: string) => void; value: string }) {
-  return <select onChange={(event) => onChange(event.target.value)} value={value}>{children}</select>;
+function Select({ children, disabled = false, onChange, value }: { children: React.ReactNode; disabled?: boolean; onChange: (value: string) => void; value: string }) {
+  return <select disabled={disabled} onChange={(event) => onChange(event.target.value)} value={value}>{children}</select>;
 }
 
 function Confirmation({ checked, hint, id, label, onChange }: { checked: boolean; hint: string; id: string; label: string; onChange: (checked: boolean) => void }) {
@@ -90,15 +99,16 @@ function Confirmation({ checked, hint, id, label, onChange }: { checked: boolean
 
 function StepOneForm({ data, importStatus, onImport, setData }: { data: PresenterSalesData; importStatus: string; onImport: () => void; setData: React.Dispatch<React.SetStateAction<PresenterSalesData>> }) {
   const patch = <K extends keyof PresenterSalesData>(key: K, value: PresenterSalesData[K]) => setData((current) => ({ ...current, [key]: value }));
+  const patchIdentity = <K extends PresenterIdentityConfirmationField>(key: K, value: PresenterSalesData[K]) => setData((current) => updatePresenterSalesIdentityField(current, key, value));
   const imported = data.presenterSource === "identity";
   const safetyIssues = presenterSalesSafetyIssues(data);
   return <div className="form-stack">
     <div className="info-box info-box--sales"><b>ใช้ตัวละครเดิมเป็น Presenter Lock</b><span>Character Reference เป็นแหล่งจริงสูงสุด ระบบจะไม่เปลี่ยนหน้า อายุ รูปร่าง ผม เสื้อผ้า หรือลุคประเทศเพื่อให้เข้ากับสินค้า</span></div>
-    <Field label="แหล่งข้อมูลพรีเซนเตอร์" required><Select onChange={(value) => patch("presenterSource", value === "manual" ? "manual" : "identity")} value={data.presenterSource}><option value="identity">ดึงจากโหมดสร้างตัวตนสาวสวย/หนุ่มหล่อ</option><option value="manual">กรอกข้อมูล Character Lock เอง</option></Select></Field>
+    <Field label="แหล่งข้อมูลพรีเซนเตอร์" required><Select onChange={(value) => patchIdentity("presenterSource", value === "manual" ? "manual" : "identity")} value={data.presenterSource}><option value="identity">ดึงจากโหมดสร้างตัวตนสาวสวย/หนุ่มหล่อ</option><option value="manual">กรอกข้อมูล Character Lock เอง</option></Select></Field>
     {imported && <div className="field field-with-action"><span className="field-heading"><span>ข้อมูลตัวตนบนเครื่องนี้</span><button className="import-identity-button" onClick={onImport} type="button">ดึงข้อมูล Presenter Identity</button></span>{importStatus && <small className="field-feedback" role="status">{importStatus}</small>}</div>}
     {imported && <div className="info-box"><b>ช่องด้านล่างล็อกตามข้อมูลที่นำเข้า</b><span>หากต้องสร้างคนใหม่ ให้กลับไปโหมดสร้างตัวตนและทำ Character Sheet ใหม่ หรือเปลี่ยนเป็น “กรอกเอง” เมื่อมี Character Lock จากภายนอก</span></div>}
     <div className="field-grid">
-      <Field label="ชื่อตัวละคร"><TextInput onChange={(value) => patch("presenterName", value)} placeholder="เช่น มีลิน" readOnly={imported} value={data.presenterName} /></Field>
+      <Field label="ชื่อตัวละคร"><TextInput onChange={(value) => patchIdentity("presenterName", value)} placeholder="เช่น มีลิน" readOnly={imported} value={data.presenterName} /></Field>
       <Field label="ชื่อช่อง" required><TextInput onChange={(value) => patch("channelName", value)} placeholder="เช่น มีลินลองให้แล้ว" readOnly={imported} required value={data.channelName} /></Field>
     </div>
     <Field label="แก่นหลักของช่อง" required><TextArea onChange={(value) => patch("channelConcept", value)} placeholder="ช่องนี้ช่วยคนดูเรื่องอะไร และต่างจากช่องอื่นอย่างไร" readOnly={imported} required value={data.channelConcept} /></Field>
@@ -106,14 +116,14 @@ function StepOneForm({ data, importStatus, onImport, setData }: { data: Presente
       <Field label="กลุ่มเป้าหมายและปัญหาหลัก" required><TextArea onChange={(value) => patch("targetAudience", value)} readOnly={imported} required rows={5} value={data.targetAudience} /></Field>
       <Field label="เสาหลักเนื้อหา 3–5 ข้อ" required><TextArea onChange={(value) => patch("contentPillars", value)} placeholder="เขียนแยกบรรทัด" readOnly={imported} required rows={5} value={data.contentPillars} /></Field>
     </div>
-    <Field label="Character / Identity Lock" hint="ใบหน้า อายุ ผิว ผม รูปร่าง ชุด เครื่องประดับ และจุดจำ" required><TextArea onChange={(value) => patch("presenterDescription", value)} placeholder="วางรายละเอียดตัวละครจาก Character Sheet" readOnly={imported} required rows={8} value={data.presenterDescription} /></Field>
+    <Field label="Character / Identity Lock" hint="ใบหน้า อายุ ผิว ผม รูปร่าง ชุด เครื่องประดับ และจุดจำ" required><TextArea onChange={(value) => patchIdentity("presenterDescription", value)} placeholder="วางรายละเอียดตัวละครจาก Character Sheet" readOnly={imported} required rows={8} value={data.presenterDescription} /></Field>
     <div className="field-grid">
-      <Field label="สไตล์ใบหน้า"><TextInput onChange={(value) => patch("faceStyle", value)} placeholder="เช่น หล่อเข้ม / สวยน่ารัก" readOnly={imported} value={data.faceStyle} /></Field>
-      <Field label="ลุคประเทศ/วัฒนธรรมภาพ"><TextInput onChange={(value) => patch("countryStyle", value)} placeholder="เช่น ไทยร่วมสมัย / เกาหลีร่วมสมัย" readOnly={imported} value={data.countryStyle} /></Field>
+      <Field label="สไตล์ใบหน้า"><TextInput onChange={(value) => patchIdentity("faceStyle", value)} placeholder="เช่น หล่อเข้ม / สวยน่ารัก" readOnly={imported} value={data.faceStyle} /></Field>
+      <Field label="ลุคประเทศ/วัฒนธรรมภาพ"><TextInput onChange={(value) => patchIdentity("countryStyle", value)} placeholder="เช่น ไทยร่วมสมัย / เกาหลีร่วมสมัย" readOnly={imported} value={data.countryStyle} /></Field>
     </div>
     <div className="field-grid">
-      <Field label="รูปร่าง"><TextInput onChange={(value) => patch("bodyStyle", value)} placeholder="เช่น สมส่วน / นักกล้าม / อวบมั่นใจ" readOnly={imported} value={data.bodyStyle} /></Field>
-      <Field label="บุคลิก"><TextInput onChange={(value) => patch("personalityStyle", value)} placeholder="เช่น อบอุ่น ขี้เล่น มีไหวพริบ" readOnly={imported} value={data.personalityStyle} /></Field>
+      <Field label="รูปร่าง"><TextInput onChange={(value) => patchIdentity("bodyStyle", value)} placeholder="เช่น สมส่วน / นักกล้าม / อวบมั่นใจ" readOnly={imported} value={data.bodyStyle} /></Field>
+      <Field label="บุคลิก"><TextInput onChange={(value) => patchIdentity("personalityStyle", value)} placeholder="เช่น อบอุ่น ขี้เล่น มีไหวพริบ" readOnly={imported} value={data.personalityStyle} /></Field>
     </div>
     <div className="section-divider"><span>ยืนยันก่อนใช้ตัวละคร</span></div>
     <Confirmation checked={data.confirmsFictionalAdult} hint="ไม่ใช่ผู้เยาว์ ไม่ใช้ชุดหรือบริบทนักเรียน และไม่ทำให้ดูอายุต่ำกว่าเกณฑ์" id="presenter-adult" label="ตัวละครเป็นบุคคลสมมติที่เห็นชัดว่าอายุ 25 ปีขึ้นไป" onChange={(checked) => patch("confirmsFictionalAdult", checked)} />
@@ -123,8 +133,27 @@ function StepOneForm({ data, importStatus, onImport, setData }: { data: Presente
   </div>;
 }
 
+function jangraiFirewallSummary(category: string) {
+  if (category === "สินค้าเด็ก") return "ปิดใช้งาน: จังไรโหมดไม่รองรับสินค้าเด็ก";
+  if (category === "สินค้าสัตว์เลี้ยง") return "ปิดใช้งานในรุ่นนี้: ยังไม่รองรับสินค้าสัตว์เลี้ยง";
+  if (category === "อาหารเสริม" || category === "สุขภาพหรืออุปกรณ์การแพทย์") return "ห้ามโยงกับสมรรถภาพ ความต้องการ ฮอร์โมน fertility จำนวนรอบ หรือผลรักษาโรค";
+  if (category === "สกินแคร์หรือเครื่องสำอาง" || category === "สินค้าใช้กับร่างกาย") return "ห้ามโยงกับความน่าดึงดูด ความขาว ผอม อ่อนวัย การเปลี่ยนรูปร่าง หรือการดึงดูดคู่";
+  if (category === "รถยนต์/มอเตอร์ไซค์/อุปกรณ์ยานยนต์") return "ห้ามเคลมความเร็ว แรงม้า เบรก ประหยัดน้ำมัน ความปลอดภัย หรือความน่าเชื่อถือ";
+  if (category === "อุปกรณ์ไฟฟ้า") return "ห้ามเคลมความปลอดภัย ประหยัดไฟ กำลัง กันน้ำ กันไฟ หรือสาธิตไฟจริงโดยไม่มีหลักฐาน";
+  if (category === "อาหารหรือเครื่องดื่ม") return "ห้ามสื่อว่าเป็นยาเพิ่มความต้องการหรือพลังทางเพศ และห้ามแต่งผลสุขภาพ";
+  if (category === PRODUCT_CATEGORIES[0]) return "AI ต้องจำแนกหมวดก่อน หากเป็นหมวดปิดหรือควบคุมให้ใช้กฎที่เข้มกว่าทันที";
+  return "มุกพูดถึงผู้ชมเท่านั้น ห้ามทำให้เข้าใจว่าสินค้าให้ผลทางเพศ ความสัมพันธ์ หรือเปลี่ยนร่างกาย";
+}
+
 function StepTwoForm({ data, setData }: { data: PresenterSalesData; setData: React.Dispatch<React.SetStateAction<PresenterSalesData>> }) {
   const patch = <K extends keyof PresenterSalesData>(key: K, value: PresenterSalesData[K]) => setData((current) => ({ ...current, [key]: value }));
+  const jangraiMode = data.creativeMode === "jangrai-safe";
+  const safetyIssues = presenterSalesSafetyIssues(data);
+
+  function toggleJangraiMode(enabled: boolean) {
+    setData((current) => setPresenterSalesCreativeMode(current, enabled ? "jangrai-safe" : "standard"));
+  }
+
   return <div className="form-stack">
     <div className="info-box info-box--sales"><b>เสน่ห์ใช้หยุดสายตา สินค้าและหลักฐานใช้ปิดการขาย</b><span>ระบบไม่ใช้หน้าตาหรือรูปร่างของพรีเซนเตอร์เป็นหลักฐานว่าสินค้าทำให้สวย หล่อ ขาว ผอม อ่อนวัย หรือเปลี่ยนร่างกาย</span></div>
     <div className="section-divider"><span>ข้อมูลสินค้าและรูปอ้างอิง</span></div>
@@ -135,21 +164,36 @@ function StepTwoForm({ data, setData }: { data: PresenterSalesData; setData: Rea
       <Field label="หมวดความเสี่ยงของสินค้า" hint="ช่วยให้ Evidence Gate เลือกกฎควบคุมได้ตรง"><Select onChange={(value) => patch("productCategory", value)} value={data.productCategory}>{PRODUCT_CATEGORIES.map((item) => <option key={item}>{item}</option>)}</Select></Field>
       <Field label="ระดับตรวจหลักฐาน"><Select onChange={(value) => patch("evidenceStrictness", value === "extra-strict" ? "extra-strict" : "strict")} value={data.evidenceStrictness}><option value="strict">เข้มงวดตาม PASS / LIMITED / STOP</option><option value="extra-strict">เข้มงวดพิเศษ — ไม่ชัดให้ STOP</option></Select></Field>
     </div>
-    {(data.productCategory === "อาหารเสริม" || data.productCategory === "สกินแคร์หรือเครื่องสำอาง" || data.productCategory === "สินค้าใช้กับร่างกาย") && <div className="info-box info-box--warning" role="status"><b>สินค้ากลุ่มนี้ต้องระวังคำกล่าวอ้างและการสาธิต</b><span>ถ้ารูปหรือข้อมูลไม่รองรับ ระบบจะใช้เพียงการโชว์สิ่งที่เห็นจริงแบบ LIMITED หรือ STOP แทนการแต่งผลลัพธ์</span></div>}
+    {(data.productCategory === "อาหารเสริม" || data.productCategory === "สุขภาพหรืออุปกรณ์การแพทย์" || data.productCategory === "สกินแคร์หรือเครื่องสำอาง" || data.productCategory === "สินค้าใช้กับร่างกาย" || data.productCategory === "รถยนต์/มอเตอร์ไซค์/อุปกรณ์ยานยนต์") && <div className="info-box info-box--warning" role="status"><b>สินค้ากลุ่มนี้ต้องระวังคำกล่าวอ้างและการสาธิต</b><span>ถ้ารูปหรือข้อมูลไม่รองรับ ระบบจะใช้เพียงการโชว์สิ่งที่เห็นจริงแบบ LIMITED หรือ STOP แทนการแต่งผลลัพธ์</span></div>}
     <div className="section-divider"><span>มุมขายและบุคลิกบนกล้อง</span></div>
     <Field label="รูปแบบการขาย"><Select onChange={(value) => patch("sellingAngle", value)} value={data.sellingAngle}>{SELLING_ANGLES.map((item) => <option key={item}>{item}</option>)}</Select></Field>
     <div className="field-grid">
       <Field label="เสน่ห์หลักของพรีเซนเตอร์"><Select onChange={(value) => patch("charmStyle", value)} value={data.charmStyle}>{CHARM_STYLES.map((item) => <option key={item}>{item}</option>)}</Select></Field>
-      <Field label="ระดับการหยอด"><Select onChange={(value) => patch("charmLevel", value)} value={data.charmLevel}>{CHARM_LEVELS.map((item) => <option key={item}>{item}</option>)}</Select></Field>
+      <Field label="ระดับการหยอด"><Select disabled={jangraiMode} onChange={(value) => patch("charmLevel", value)} value={data.charmLevel}>{CHARM_LEVELS.map((item) => <option key={item}>{item}</option>)}</Select></Field>
     </div>
-    {data.charmLevel === CHARM_LEVELS[2] && <div className="info-box info-box--warning" role="status"><b>มุกผู้ใหญ่ต้องเป็นการเล่นคำแบบสะอาด</b><span>ห้ามอวัยวะหรือกิจกรรมทางเพศ ห้ามมุมกล้องเชิงเพศ และต้องเฉลยกลับเข้าสินค้า หากทำไม่ได้ Prompt จะลดเป็นขี้เล่นอัตโนมัติ</span></div>}
+    {data.charmLevel === CHARM_LEVELS[2] && !jangraiMode && <div className="info-box info-box--warning" role="status"><b>มุกผู้ใหญ่ต้องเป็นการเล่นคำแบบสะอาด</b><span>ห้ามอวัยวะหรือกิจกรรมทางเพศ ห้ามมุมกล้องเชิงเพศ และต้องเฉลยกลับเข้าสินค้า หากทำไม่ได้ Prompt จะลดเป็นขี้เล่นอัตโนมัติ</span></div>}
+    <div className="section-divider"><span>โหมด Hook ผู้ใหญ่แบบตรงแต่ไม่โจ่งแจ้ง</span></div>
+    <label className="switch-row"><span className="switch-copy"><b id="jangrai-mode-label">จังไรโหมด</b><span id="jangrai-mode-hint">มุกอยู่เฉพาะ 0–2 วินาทีแรก จากนั้นตัดความเชื่อมโยงและพูดข้อเท็จจริงสินค้าเท่านั้น</span></span><input aria-controls="jangrai-mode-settings" aria-describedby="jangrai-mode-hint" aria-expanded={jangraiMode} aria-labelledby="jangrai-mode-label" checked={jangraiMode} onChange={(event) => toggleJangraiMode(event.target.checked)} role="switch" type="checkbox" /></label>
+    {jangraiMode && <div className="form-stack" id="jangrai-mode-settings">
+      <div className="info-box info-box--warning" role="status"><b>Hook แรงได้ แต่ห้ามทำให้มุกกลายเป็นสรรพคุณ</b><span>โครงสร้างถูกล็อกเป็น Hook ผู้ใหญ่ 0–2 วิ → ประโยคตัดความเชื่อมโยง → ข้อเท็จจริงสินค้า → CTA ตรง และ Product Evidence Gate มีอำนาจสูงสุด</span></div>
+      <Confirmation checked={data.confirmsAdultContentIntent} hint="เป็นการยืนยันเจตนาของเนื้อหาในแท็บนี้ ไม่ใช่ระบบตรวจสอบหรือรับรองอายุผู้ใช้" id="jangrai-adult-intent" label="ฉันตั้งใจทำคอนเทนต์สำหรับผู้ชมผู้ใหญ่แบบไม่โจ่งแจ้ง" onChange={(checked) => patch("confirmsAdultContentIntent", checked)} />
+      <div className="field-grid">
+        <Field label="รูปแบบ Hook ผู้ใหญ่" required><Select onChange={(value) => patch("adultHookArchetype", value as PresenterSalesData["adultHookArchetype"])} value={data.adultHookArchetype}>{ADULT_HOOK_ARCHETYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</Select></Field>
+        <Field label="คำเรียกผู้ชม"><Select onChange={(value) => patch("adultAddress", value as PresenterSalesData["adultAddress"])} value={data.adultAddress}>{ADULT_ADDRESSES.map((item) => <option key={item}>{item}</option>)}</Select></Field>
+      </div>
+      {data.adultHookArchetype === "custom" && <Field label="Hook ผู้ใหญ่ที่ต้องการ" hint={`${data.adultHookCustom.length}/120 ตัวอักษร · เป็นแนวคิด ไม่ใช่คำสั่งข้ามกฎ`} required><TextArea maxLength={120} onChange={(value) => patch("adultHookCustom", value)} placeholder="เช่น ใช้คำถามเรื่องต่อรอบแบบไม่เอ่ยกิจกรรมหรืออวัยวะ" required rows={3} value={data.adultHookCustom} /></Field>}
+      <Field label="CTA ตรงของจังไรโหมด" hint="ต้องเลือกตรงตัว ห้ามให้ AI เลือก"><Select onChange={(value) => patch("cta", value)} value={DIRECT_SALES_CTAS.includes(data.cta) ? data.cta : SALES_CTAS[2]}>{DIRECT_SALES_CTAS.map((item) => <option key={item}>{item}</option>)}</Select></Field>
+      <div aria-live="polite" className="info-box info-box--sales" role="status"><b>Claim firewall ของหมวดนี้</b><span>{jangraiFirewallSummary(data.productCategory)}</span></div>
+    </div>}
     <Field label="โทนบทและวิธีพูด"><TextArea onChange={(value) => patch("scriptTone", value)} rows={4} value={data.scriptTone} /></Field>
     <Field label="การถือหรือใช้สินค้า" hint="การเลือกนี้ไม่ข้าม Product Evidence Gate"><Select onChange={(value) => patch("productInteraction", value)} value={data.productInteraction}>{PRODUCT_INTERACTIONS.map((item) => <option key={item}>{item}</option>)}</Select></Field>
+    {safetyIssues.length > 0 && <div className="info-box info-box--warning" role="alert"><b>ยังไปขั้นต่อไปไม่ได้</b><span>{safetyIssues.join(" · ")}</span></div>}
   </div>;
 }
 
 function StepThreeForm({ data, setData }: { data: PresenterSalesData; setData: React.Dispatch<React.SetStateAction<PresenterSalesData>> }) {
   const patch = <K extends keyof PresenterSalesData>(key: K, value: PresenterSalesData[K]) => setData((current) => ({ ...current, [key]: value }));
+  const jangraiMode = data.creativeMode === "jangrai-safe";
   const sceneTotal = Number.parseInt(data.sceneCount, 10);
   const availableScenes = Array.from({ length: Number.isInteger(sceneTotal) ? sceneTotal : 0 }, (_, index) => index + 1);
   const selectedSceneLabel = data.productSceneNumbers.map((scene) => String(scene).padStart(2, "0")).join(", ");
@@ -171,8 +215,10 @@ function StepThreeForm({ data, setData }: { data: PresenterSalesData; setData: R
   return <div className="form-stack">
     <div className="sales-product-summary"><span>กำลังสร้างให้สินค้า</span><b>{data.productName || "ยังไม่ได้ระบุชื่อสินค้า"}</b></div>
     <div className="info-box info-box--sales"><b>Reference routing เดิมยังอยู่ครบ</b><span>ฉากมีสินค้าใช้ Character Reference + Original Product Reference ส่วนฉากไม่มีสินค้าใช้ Character Reference เท่านั้น พร้อม PASS / LIMITED / STOP และ U1 continuity</span></div>
-    <div className="field-grid"><Field label="โครงสร้าง"><Select onChange={(value) => patch("framework", value)} value={data.framework}>{SALES_FRAMEWORKS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ตอนจบอยากให้คนทำอะไร"><Select onChange={(value) => patch("cta", value)} value={data.cta}>{SALES_CTAS.map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
+    <div className="field-grid"><Field label="โครงสร้าง"><Select disabled={jangraiMode} onChange={(value) => patch("framework", value)} value={data.framework}>{jangraiMode ? <option value={JANGRAI_FRAMEWORK}>{JANGRAI_FRAMEWORK}</option> : SALES_FRAMEWORKS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ตอนจบอยากให้คนทำอะไร"><Select onChange={(value) => patch("cta", value)} value={data.cta}>{(jangraiMode ? DIRECT_SALES_CTAS : SALES_CTAS).map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
     <div className="field-grid"><Field label="จำนวนเรื่อง"><Select onChange={(value) => patch("storyCount", value)} value={data.storyCount}>{STORY_COUNTS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ฉากต่อเรื่อง"><Select onChange={changeSceneCount} value={data.sceneCount}>{SCENE_COUNTS.map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
+    {jangraiMode && data.sceneCount === "1" && <div className="info-box info-box--warning" role="status"><b>หนึ่งฉากทำได้ แต่พื้นที่เล่าน้อย</b><span>ต้องพูด Hook ประโยคตัด ข้อเท็จจริงหนึ่งข้อ และ CTA ให้จบด้วย action เดียว หากแน่นเกินไป Prompt จะ STOP และแนะนำอย่างน้อย 2 ฉาก</span></div>}
+    {jangraiMode && Number.parseInt(data.sceneCount, 10) >= 2 && <div className="info-box info-box--sales" role="status"><b>โครงสร้างจังไรโหมดพร้อมใช้</b><span>ฉากแรกมีมุกผู้ใหญ่เพียงครั้งเดียว ฉากกลางพูดข้อเท็จจริง และฉากสุดท้ายใช้ CTA ตรง</span></div>}
     <Field label="ให้สินค้าโผล่ฉากไหน" hint="ค่าเริ่มต้นให้ AI เลือกตามเรื่องและระดับหลักฐาน"><Select onChange={(value) => patch("productSceneMode", value as PresenterSalesProductSceneMode)} value={data.productSceneMode}><option value="auto">ให้ AI เลือกให้ (แนะนำ)</option><option value="manual">ฉันเลือกฉากเอง</option></Select></Field>
     {data.productSceneMode === "manual" && <fieldset aria-describedby="presenter-product-scenes-hint presenter-product-scenes-summary" aria-invalid={data.productSceneNumbers.length === 0} className="product-scene-picker">
       <legend>เลือกฉากที่สินค้าโผล่ <b className="required">*</b></legend>
@@ -202,20 +248,13 @@ function resetFieldsForStep(step: PresenterSalesStepId, current: PresenterSalesD
     faceStyle: "", countryStyle: "", bodyStyle: "", personalityStyle: "",
     confirmsFictionalAdult: false, confirmsReferenceRights: false, willAttachCharacterReference: false,
   };
-  if (step === 2) return {
-    ...current,
-    productName: "", productDetails: "", willAttachProductReference: false,
-    productCategory: initialPresenterSalesData.productCategory, evidenceStrictness: initialPresenterSalesData.evidenceStrictness,
-    sellingAngle: initialPresenterSalesData.sellingAngle, charmStyle: initialPresenterSalesData.charmStyle,
-    charmLevel: initialPresenterSalesData.charmLevel, scriptTone: initialPresenterSalesData.scriptTone,
-    productInteraction: initialPresenterSalesData.productInteraction,
-  };
+  if (step === 2) return resetPresenterSalesStepTwo(current);
   return {
     ...current,
-    framework: initialPresenterSalesData.framework, storyCount: initialPresenterSalesData.storyCount,
+    framework: current.creativeMode === "jangrai-safe" ? JANGRAI_FRAMEWORK : initialPresenterSalesData.framework, storyCount: initialPresenterSalesData.storyCount,
     sceneCount: initialPresenterSalesData.sceneCount, productSceneMode: initialPresenterSalesData.productSceneMode,
     productSceneNumbers: [], sceneDuration: initialPresenterSalesData.sceneDuration, speechSpeed: initialPresenterSalesData.speechSpeed,
-    cta: initialPresenterSalesData.cta, poseEnergy: initialPresenterSalesData.poseEnergy,
+    cta: current.creativeMode === "jangrai-safe" ? SALES_CTAS[2] : initialPresenterSalesData.cta, poseEnergy: initialPresenterSalesData.poseEnergy,
     nonProductPosePlan: initialPresenterSalesData.nonProductPosePlan, productPosePlan: initialPresenterSalesData.productPosePlan,
     hookBalance: initialPresenterSalesData.hookBalance, settingPreferences: initialPresenterSalesData.settingPreferences,
     excludedSettings: initialPresenterSalesData.excludedSettings, useAgent: false,
@@ -232,7 +271,7 @@ export function PresenterSalesPromptBuilder() {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
-    try { sessionStorage.setItem(PRESENTER_SALES_STORAGE_KEY, JSON.stringify({ schemaVersion: 1, activeStep, data })); } catch { /* Storage can be unavailable. */ }
+    try { sessionStorage.setItem(PRESENTER_SALES_STORAGE_KEY, JSON.stringify({ schemaVersion: 2, activeStep, data })); } catch { /* Storage can be unavailable. */ }
   }, [activeStep, data]);
 
   const prompt = useMemo(() => buildPresenterSalesPrompt(data), [data]);
@@ -272,7 +311,7 @@ export function PresenterSalesPromptBuilder() {
         setImportStatus("ยังไม่พบ Presenter Identity บนเครื่องนี้ ให้สร้างตัวตนก่อนหรือเลือกกรอกเอง");
         return;
       }
-      setData((current) => ({ ...current, ...context, presenterSource: "identity" }));
+      setData((current) => applyPresenterIdentityContext(current, context));
       setImportStatus("นำเข้าตัวตนแล้ว กรุณาตรวจ Character Lock และยืนยันรูปอ้างอิงด้านล่าง");
     } catch {
       setImportStatus("อ่านข้อมูล Presenter Identity ไม่สำเร็จ ลองกลับไปบันทึกโหมดสร้างตัวตนอีกครั้ง");

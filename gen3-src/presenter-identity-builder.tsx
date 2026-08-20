@@ -8,6 +8,7 @@ import {
   COUNTRY_STYLES,
   FACE_STYLES,
   FRAMEWORKS,
+  JANGRAI_SAFE_SPICE_LEVEL,
   PERSONALITY_STYLES,
   PRESENTER_IDENTITY_MODE,
   PRESENTER_IDENTITY_SCHEMA_VERSION,
@@ -20,6 +21,7 @@ import {
   buildPresenterStoryPrompt,
   computeIdentityRevision,
   getPresenterSafetyIssues,
+  getPresenterJangraiIssues,
   initialStepOne,
   initialStepThree,
   initialStepTwo,
@@ -95,9 +97,9 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
   );
 }
 
-function Select({ value, onChange, children, ariaLabel }: { value: string; onChange: (value: string) => void; children: React.ReactNode; ariaLabel?: string }) {
+function Select({ value, onChange, children, ariaLabel, disabled = false }: { value: string; onChange: (value: string) => void; children: React.ReactNode; ariaLabel?: string; disabled?: boolean }) {
   const fieldLabel = React.useContext(FieldLabelContext);
-  return <select aria-label={ariaLabel || fieldLabel || undefined} value={value} onChange={(event) => onChange(event.target.value)}>{children}</select>;
+  return <select aria-label={ariaLabel || fieldLabel || undefined} disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}>{children}</select>;
 }
 
 function TextInput({ value, onChange, placeholder = "", disabled = false }: { value: string; onChange: (value: string) => void; placeholder?: string; disabled?: boolean }) {
@@ -140,7 +142,7 @@ function faceOptions(presenterType: string) {
 
 function StepOneForm({ data, patch, applyPreset }: { data: StepOneData; patch: <K extends keyof StepOneData>(key: K, value: StepOneData[K]) => void; applyPreset: (name: string) => void }) {
   const availableFaces = faceOptions(data.presenterType);
-  const safetyIssues = getPresenterSafetyIssues(data);
+  const safetyIssues = [...getPresenterSafetyIssues(data), ...getPresenterJangraiIssues(data)];
   return (
     <div className="form-stack">
       <div className="info-box"><b>Presenter เป็นจุดจำ แต่เนื้อหาเป็นเหตุผลที่คนติดตาม</b><span>ทุกตัวละครเป็นบุคคลสมมติอายุ 25 ปีขึ้นไป ไม่เลียนแบบดารา และโหมดนี้ยังไม่มีสินค้า</span></div>
@@ -222,12 +224,28 @@ function StepOneForm({ data, patch, applyPreset }: { data: StepOneData; patch: <
           <CustomField selected={data.tone} value={data.toneCustom} onChange={(value) => patch("toneCustom", value)} placeholder="เช่น จริงใจ พูดไว มีมุกจิกกัดตัวเองเล็กน้อย" />
         </Field>
       </div>
+      <label className="switch-row">
+        <span className="switch-copy">
+          <b id="presenter-jangrai-label">จังไรโหมด</b>
+          <span id="presenter-jangrai-hint">สร้างช่อง tease-first สำหรับผู้ชมผู้ใหญ่หนึ่งคน · Hook ไม่เกิน 2 วินาที · Setup → pause → clean payoff · ไม่โจ่งแจ้งและไม่มีสินค้า</span>
+        </span>
+        <input
+          aria-describedby="presenter-jangrai-hint"
+          aria-labelledby="presenter-jangrai-label"
+          checked={data.creativeMode === "jangrai-safe"}
+          onChange={(event) => patch("creativeMode", event.target.checked ? "jangrai-safe" : "standard")}
+          role="switch"
+          type="checkbox"
+        />
+      </label>
       <Field label="ระดับความแซ่บ" hint="ไม่มีภาพหรือคำพูดโจ่งแจ้ง และตัวละครทุกคนอายุ 25+">
-        <Select value={data.spiceLevel} onChange={(value) => patch("spiceLevel", value)}>
+        <Select disabled={data.creativeMode === "jangrai-safe"} value={data.spiceLevel} onChange={(value) => patch("spiceLevel", value)}>
           {SPICE_LEVELS.map((option) => <option key={option}>{option}</option>)}
         </Select>
       </Field>
-      {data.spiceLevel === "มุกผู้ใหญ่สองแง่สองง่ามแบบไม่โจ่งแจ้ง" && (
+      {data.creativeMode === "jangrai-safe" ? (
+        <div className="info-box info-box--warning" role="status"><b>โหมดนี้ใช้มุกผู้ใหญ่แบบปลอดภัยเป็นแก่นช่อง</b><span>แนวช่องทั่วไปเป็นเพียงฉากหรือบริบท ทุกแนวทางต้องพูดกับผู้ชมผู้ใหญ่หนึ่งคนและผ่าน TEASE-REMOVAL TEST · ใช้เฉพาะความกำกวมเรื่องชอบ หยอด จีบ คิดถึง หรืออยากให้สังเกต</span></div>
+      ) : data.spiceLevel === JANGRAI_SAFE_SPICE_LEVEL && (
         <div className="info-box info-box--warning" role="status"><b>มุกผู้ใหญ่แบบปลอดภัยเท่านั้น</b><span>ใช้การเล่นคำ ไม่กล่าวถึงอวัยวะหรือกิจกรรมทางเพศ ไม่คุกคาม และไม่ใช้มุมกล้องเน้นร่างกาย</span></div>
       )}
       <div className="field-grid">
@@ -272,13 +290,16 @@ function StepTwoForm({ data, patch, currentRevision }: { data: StepTwoData; patc
   );
 }
 
-function StepThreeForm({ data, patch, referenceCurrent }: { data: StepThreeData; patch: <K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) => void; referenceCurrent: boolean }) {
+function StepThreeForm({ data, patch, referenceCurrent, creativeMode }: { data: StepThreeData; patch: <K extends keyof StepThreeData>(key: K, value: StepThreeData[K]) => void; referenceCurrent: boolean; creativeMode: StepOneData["creativeMode"] }) {
   return (
     <div className="form-stack">
       <div className={referenceCurrent ? "info-box" : "info-box info-box--warning"} role="status">
         <b>{referenceCurrent ? "Character Reference พร้อมใช้งาน" : "Character Reference ไม่ตรงกับตัวละครล่าสุด"}</b>
         <span>{referenceCurrent ? "ทุก Image Prompt จะใช้ reference นี้เป็นแหล่งความจริง" : "กลับ STEP 2 สร้างและยืนยัน Character Reference ล่าสุดก่อนคัดลอก Prompt"}</span>
       </div>
+      {creativeMode === "jangrai-safe" && (
+        <div className="info-box info-box--warning" role="status"><b>จังไรโหมดสืบทอดจาก STEP 1</b><span>ไม่มีสวิตช์ซ้ำในขั้นนี้ · ทุกเรื่องต้อง tease-first พูดกับผู้ชมผู้ใหญ่หนึ่งคน มี Hook ไม่เกิน 2 วินาที, Setup → pause → clean payoff, one continuous action และ active reaction ending</span></div>
+      )}
       <Field label="ชื่อช่อง" required><TextInput value={data.channelName} onChange={(value) => patch("channelName", value)} placeholder="เช่น มินท์เล่าให้ฟัง" /></Field>
       <Field label="แก่นหลักของช่อง" required><TextArea value={data.channelConcept} onChange={(value) => patch("channelConcept", value)} placeholder="ช่องนี้ให้คุณค่าหรืออารมณ์อะไร เล่าแบบไหน และคนติดตามเพราะอะไร" /></Field>
       <div className="field-grid">
@@ -295,6 +316,9 @@ function StepThreeForm({ data, patch, referenceCurrent }: { data: StepThreeData;
         <Field label="เวลาต่อฉาก"><Select value={data.sceneDuration} onChange={(value) => patch("sceneDuration", value)}><option>8 วินาที</option><option>10 วินาที</option><option>15 วินาที</option></Select></Field>
       </div>
       <Field label="ความเร็วในการพูด" hint="ใช้กับทุกฉาก · ทุกฉากมีบทพูด ไม่มีฉากเงียบ"><Select value={data.speechSpeed} onChange={(value) => patch("speechSpeed", value)}><option>ช้า — 10–15 คำ</option><option>ปกติ — 20–25 คำ</option><option>เร็ว — 30–35 คำ</option></Select></Field>
+      {creativeMode === "jangrai-safe" && data.sceneDuration === "8 วินาที" && data.speechSpeed === "ช้า — 10–15 คำ" && <div className="info-box"><b>จังหวะที่แนะนำสำหรับ 8 วินาที</b><span>ใช้ 10–15 คำกับ action เบาหนึ่งอย่าง เพื่อเหลือเวลาให้ pause, clean payoff และ active reaction</span></div>}
+      {creativeMode === "jangrai-safe" && data.sceneDuration === "8 วินาที" && data.speechSpeed === "ปกติ — 20–25 คำ" && <div className="info-box info-box--warning" role="status"><b>8 วินาทีกับ 20–25 คำค่อนข้างแน่น</b><span>แนะนำเปลี่ยนเป็น 10–15 คำ หากคงค่านี้ต้องลด action ให้เล็กที่สุด ห้ามตัด Hook, pause, payoff, reaction หรือบทพูด</span></div>}
+      {creativeMode === "jangrai-safe" && data.sceneDuration === "8 วินาที" && data.speechSpeed === "เร็ว — 30–35 คำ" && <div className="info-box info-box--warning" role="alert"><b>ชุดค่านี้ใช้กับจังไรโหมดไม่ได้</b><span>8 วินาทีไม่มีพื้นที่พอสำหรับ 30–35 คำ พร้อม Hook, pause, payoff และ active reaction กรุณาลดจำนวนคำหรือเพิ่มเวลา</span></div>}
       {data.speechSpeed === "เร็ว — 30–35 คำ" && <div className="info-box info-box--warning"><b>โหมดเร็วต้องลดการเคลื่อนไหวทุกฉาก</b><span>ทุกฉากยังต้องพูดให้ครบ 30–35 คำ หาก action ทำให้คำหรือ lip sync ไม่ครบ ให้ลด action และสร้าง source ฉากนั้นใหม่</span></div>}
       <div className="section-divider"><span>โทนและสถานที่</span></div>
       <Field label="โทนการเล่า"><TextInput value={data.tone} onChange={(value) => patch("tone", value)} /></Field>
@@ -341,6 +365,14 @@ export function PresenterIdentityBuilder() {
   }
 
   function patchStepOne<K extends keyof StepOneData>(key: K, value: StepOneData[K]) {
+    if (key === "creativeMode") {
+      setStepOne((current) => ({
+        ...current,
+        creativeMode: value as StepOneData["creativeMode"],
+        spiceLevel: value === "jangrai-safe" ? JANGRAI_SAFE_SPICE_LEVEL : current.spiceLevel,
+      }));
+      return;
+    }
     setStepOne((current) => ({ ...current, [key]: value }));
     invalidateReference();
   }
@@ -391,7 +423,11 @@ export function PresenterIdentityBuilder() {
       if (!stepThree.contentPillars.trim()) items.push("เสาหลักเนื้อหา 3–5 ข้อ");
       if (!referenceCurrent) items.push("Character Reference ล่าสุด");
     }
-    return [...items, ...getPresenterSafetyIssues(stepOne, activeStep >= 2 ? stepTwo : undefined)];
+    return [
+      ...items,
+      ...getPresenterSafetyIssues(stepOne, activeStep >= 2 ? stepTwo : undefined),
+      ...getPresenterJangraiIssues(stepOne, activeStep === 3 ? stepThree : undefined),
+    ];
   }, [activeStep, referenceCurrent, stepOne, stepTwo, stepThree]);
 
   async function copyPrompt() {
@@ -452,7 +488,7 @@ export function PresenterIdentityBuilder() {
           <div className="panel-heading"><div><span className="eyebrow">STEP 0{activeStep}</span><h1>{currentStep.title}</h1><p>{currentStep.short}</p></div><button className="reset-button" onClick={resetStep} type="button">ล้างข้อมูล</button></div>
           {activeStep === 1 && <StepOneForm data={stepOne} patch={patchStepOne} applyPreset={applyPreset} />}
           {activeStep === 2 && <StepTwoForm data={stepTwo} patch={patchStepTwo} currentRevision={currentRevision} />}
-          {activeStep === 3 && <StepThreeForm data={stepThree} patch={patchStepThree} referenceCurrent={referenceCurrent} />}
+          {activeStep === 3 && <StepThreeForm creativeMode={stepOne.creativeMode} data={stepThree} patch={patchStepThree} referenceCurrent={referenceCurrent} />}
         </section>
         <aside className={previewOpen ? "preview-panel mobile-open" : "preview-panel"}>
           <div className="preview-heading"><div><span className="status-dot" /><b>Prompt พร้อมใช้งาน</b><small>{prompt.length.toLocaleString("th-TH")} ตัวอักษร</small></div><button aria-label="ปิดตัวอย่าง Prompt" onClick={() => setPreviewOpen(false)} type="button">×</button></div>
