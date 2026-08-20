@@ -20,7 +20,6 @@ import {
   PRODUCT_INTERACTIONS,
   presenterSalesMissingFields,
   presenterSalesSafetyIssues,
-  resetPresenterSalesStepTwo,
   SALES_CTAS,
   SALES_FRAMEWORKS,
   SCENE_COUNTS,
@@ -34,19 +33,12 @@ import {
   type PresenterSalesProductSceneMode,
   type PresenterSalesSavedState,
   type PresenterSalesSpeechSpeed,
-  type PresenterSalesStepId,
 } from "./presenter-sales-prompt-data";
 
 const SPEECH_SPEEDS: Array<{ value: PresenterSalesSpeechSpeed; label: string }> = [
   { value: "slow", label: "ช้า — 10–15 คำ" },
   { value: "normal", label: "ปกติ — 20–25 คำ (แนะนำ)" },
   { value: "fast", label: "เร็ว — 30–35 คำ" },
-];
-
-const STEPS: Array<{ id: PresenterSalesStepId; title: string; short: string }> = [
-  { id: 1, title: "เลือกพรีเซนเตอร์", short: "นำเข้าตัวตนและยืนยัน Character Reference" },
-  { id: 2, title: "วางมุมขาย", short: "ใส่สินค้า เสน่ห์ มุมเล่า และระดับหลักฐาน" },
-  { id: 3, title: "สร้าง Prompt", short: "กำหนดฉาก ท่าทาง บทพูด และ Agent" },
 ];
 
 function loadSavedState(): PresenterSalesSavedState {
@@ -101,8 +93,7 @@ function StepOneForm({ data, importStatus, onImport, setData }: { data: Presente
   const patch = <K extends keyof PresenterSalesData>(key: K, value: PresenterSalesData[K]) => setData((current) => ({ ...current, [key]: value }));
   const patchIdentity = <K extends PresenterIdentityConfirmationField>(key: K, value: PresenterSalesData[K]) => setData((current) => updatePresenterSalesIdentityField(current, key, value));
   const imported = data.presenterSource === "identity";
-  const safetyIssues = presenterSalesSafetyIssues(data);
-  return <div className="form-stack">
+  return <div className="form-stack" style={{ padding: 0 }}>
     <div className="info-box info-box--sales"><b>ใช้ตัวละครเดิมเป็น Presenter Lock</b><span>Character Reference เป็นแหล่งจริงสูงสุด ระบบจะไม่เปลี่ยนหน้า อายุ รูปร่าง ผม เสื้อผ้า หรือลุคประเทศเพื่อให้เข้ากับสินค้า</span></div>
     <Field label="แหล่งข้อมูลพรีเซนเตอร์" required><Select onChange={(value) => patchIdentity("presenterSource", value === "manual" ? "manual" : "identity")} value={data.presenterSource}><option value="identity">ดึงจากโหมดสร้างตัวตนสาวสวย/หนุ่มหล่อ</option><option value="manual">กรอกข้อมูล Character Lock เอง</option></Select></Field>
     {imported && <div className="field field-with-action"><span className="field-heading"><span>ข้อมูลตัวตนบนเครื่องนี้</span><button className="import-identity-button" onClick={onImport} type="button">ดึงข้อมูล Presenter Identity</button></span>{importStatus && <small className="field-feedback" role="status">{importStatus}</small>}</div>}
@@ -129,7 +120,6 @@ function StepOneForm({ data, importStatus, onImport, setData }: { data: Presente
     <Confirmation checked={data.confirmsFictionalAdult} hint="ไม่ใช่ผู้เยาว์ ไม่ใช้ชุดหรือบริบทนักเรียน และไม่ทำให้ดูอายุต่ำกว่าเกณฑ์" id="presenter-adult" label="ตัวละครเป็นบุคคลสมมติที่เห็นชัดว่าอายุ 25 ปีขึ้นไป" onChange={(checked) => patch("confirmsFictionalAdult", checked)} />
     <Confirmation checked={data.confirmsReferenceRights} hint="ไม่ใช้ดารา คนดัง บุคคลจริง หรือภาพที่ไม่มีสิทธิ์นำมาเป็นตัวละคร" id="presenter-rights" label="ฉันมีสิทธิ์ใช้ Character Reference นี้" onChange={(checked) => patch("confirmsReferenceRights", checked)} />
     <Confirmation checked={data.willAttachCharacterReference} hint="ไฟล์ภาพไม่ถูกเก็บในเว็บไซต์ จึงต้องแนบพร้อม Prompt ทุกครั้ง" id="presenter-character-reference" label="ฉันจะแนบ Character Sheet พร้อม Prompt" onChange={(checked) => patch("willAttachCharacterReference", checked)} />
-    {safetyIssues.length > 0 && <div className="info-box info-box--warning" role="alert"><b>ยังไปขั้นต่อไปไม่ได้</b><span>{safetyIssues.join(" · ")}</span></div>}
   </div>;
 }
 
@@ -154,7 +144,7 @@ function StepTwoForm({ data, setData }: { data: PresenterSalesData; setData: Rea
     setData((current) => setPresenterSalesCreativeMode(current, enabled ? "jangrai-safe" : "standard"));
   }
 
-  return <div className="form-stack">
+  return <div className="form-stack" style={{ padding: 0 }}>
     <div className="info-box info-box--sales"><b>เสน่ห์ใช้หยุดสายตา สินค้าและหลักฐานใช้ปิดการขาย</b><span>ระบบไม่ใช้หน้าตาหรือรูปร่างของพรีเซนเตอร์เป็นหลักฐานว่าสินค้าทำให้สวย หล่อ ขาว ผอม อ่อนวัย หรือเปลี่ยนร่างกาย</span></div>
     <div className="section-divider"><span>ข้อมูลสินค้าและรูปอ้างอิง</span></div>
     <Field label="ชื่อสินค้า" hint="ใช้ชื่อบนสินค้า หรือชื่อที่ต้องการให้พูด" required><TextInput onChange={(value) => patch("productName", value)} placeholder="เช่น เซรั่มบำรุงผิว รุ่น..." required value={data.productName} /></Field>
@@ -187,7 +177,7 @@ function StepTwoForm({ data, setData }: { data: PresenterSalesData; setData: Rea
     </div>}
     <Field label="โทนบทและวิธีพูด"><TextArea onChange={(value) => patch("scriptTone", value)} rows={4} value={data.scriptTone} /></Field>
     <Field label="การถือหรือใช้สินค้า" hint="การเลือกนี้ไม่ข้าม Product Evidence Gate"><Select onChange={(value) => patch("productInteraction", value)} value={data.productInteraction}>{PRODUCT_INTERACTIONS.map((item) => <option key={item}>{item}</option>)}</Select></Field>
-    {safetyIssues.length > 0 && <div className="info-box info-box--warning" role="alert"><b>ยังไปขั้นต่อไปไม่ได้</b><span>{safetyIssues.join(" · ")}</span></div>}
+    {safetyIssues.length > 0 && <div className="info-box info-box--warning" role="alert"><b>ยังคัดลอก Prompt ไม่ได้</b><span>{safetyIssues.join(" · ")}</span></div>}
   </div>;
 }
 
@@ -212,7 +202,7 @@ function StepThreeForm({ data, setData }: { data: PresenterSalesData; setData: R
     }));
   }
 
-  return <div className="form-stack">
+  return <div className="form-stack" style={{ padding: 0 }}>
     <div className="sales-product-summary"><span>กำลังสร้างให้สินค้า</span><b>{data.productName || "ยังไม่ได้ระบุชื่อสินค้า"}</b></div>
     <div className="info-box info-box--sales"><b>Reference routing เดิมยังอยู่ครบ</b><span>ฉากมีสินค้าใช้ Character Reference + Original Product Reference ส่วนฉากไม่มีสินค้าใช้ Character Reference เท่านั้น พร้อม PASS / LIMITED / STOP และ U1 continuity</span></div>
     <div className="field-grid"><Field label="โครงสร้าง"><Select disabled={jangraiMode} onChange={(value) => patch("framework", value)} value={data.framework}>{jangraiMode ? <option value={JANGRAI_FRAMEWORK}>{JANGRAI_FRAMEWORK}</option> : SALES_FRAMEWORKS.map((item) => <option key={item}>{item}</option>)}</Select></Field><Field label="ตอนจบอยากให้คนทำอะไร"><Select onChange={(value) => patch("cta", value)} value={data.cta}>{(jangraiMode ? DIRECT_SALES_CTAS : SALES_CTAS).map((item) => <option key={item}>{item}</option>)}</Select></Field></div>
@@ -240,67 +230,42 @@ function StepThreeForm({ data, setData }: { data: PresenterSalesData; setData: R
   </div>;
 }
 
-function resetFieldsForStep(step: PresenterSalesStepId, current: PresenterSalesData): PresenterSalesData {
-  if (step === 1) return {
-    ...current,
-    presenterSource: initialPresenterSalesData.presenterSource,
-    presenterName: "", channelName: "", channelConcept: "", targetAudience: "", contentPillars: "", presenterDescription: "",
-    faceStyle: "", countryStyle: "", bodyStyle: "", personalityStyle: "",
-    confirmsFictionalAdult: false, confirmsReferenceRights: false, willAttachCharacterReference: false,
-  };
-  if (step === 2) return resetPresenterSalesStepTwo(current);
-  return {
-    ...current,
-    framework: current.creativeMode === "jangrai-safe" ? JANGRAI_FRAMEWORK : initialPresenterSalesData.framework, storyCount: initialPresenterSalesData.storyCount,
-    sceneCount: initialPresenterSalesData.sceneCount, productSceneMode: initialPresenterSalesData.productSceneMode,
-    productSceneNumbers: [], sceneDuration: initialPresenterSalesData.sceneDuration, speechSpeed: initialPresenterSalesData.speechSpeed,
-    cta: current.creativeMode === "jangrai-safe" ? SALES_CTAS[2] : initialPresenterSalesData.cta, poseEnergy: initialPresenterSalesData.poseEnergy,
-    nonProductPosePlan: initialPresenterSalesData.nonProductPosePlan, productPosePlan: initialPresenterSalesData.productPosePlan,
-    hookBalance: initialPresenterSalesData.hookBalance, settingPreferences: initialPresenterSalesData.settingPreferences,
-    excludedSettings: initialPresenterSalesData.excludedSettings, useAgent: false,
-  };
+function PresenterSalesForm({ data, importStatus, onImport, setData }: { data: PresenterSalesData; importStatus: string; onImport: () => void; setData: React.Dispatch<React.SetStateAction<PresenterSalesData>> }) {
+  return <div className="form-stack">
+    <section aria-labelledby="presenter-sales-identity-section" className="form-stack" style={{ padding: 0 }}>
+      <div className="section-divider"><span id="presenter-sales-identity-section">ตัวตนพรีเซนเตอร์และ Character Reference</span></div>
+      <StepOneForm data={data} importStatus={importStatus} onImport={onImport} setData={setData} />
+    </section>
+    <section aria-labelledby="presenter-sales-product-section" className="form-stack" style={{ padding: 0 }}>
+      <div className="section-divider"><span id="presenter-sales-product-section">สินค้า มุมขาย และจังไรโหมด</span></div>
+      <StepTwoForm data={data} setData={setData} />
+    </section>
+    <section aria-labelledby="presenter-sales-production-section" className="form-stack" style={{ padding: 0 }}>
+      <div className="section-divider"><span id="presenter-sales-production-section">ฉาก บทพูด และการผลิต</span></div>
+      <StepThreeForm data={data} setData={setData} />
+    </section>
+  </div>;
 }
 
 export function PresenterSalesPromptBuilder() {
-  const [saved] = useState(loadSavedState);
-  const [activeStep, setActiveStep] = useState<PresenterSalesStepId>(saved.activeStep);
-  const [data, setData] = useState<PresenterSalesData>(saved.data);
+  const [data, setData] = useState<PresenterSalesData>(() => loadSavedState().data);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
   const [importStatus, setImportStatus] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
-    try { sessionStorage.setItem(PRESENTER_SALES_STORAGE_KEY, JSON.stringify({ schemaVersion: 2, activeStep, data })); } catch { /* Storage can be unavailable. */ }
-  }, [activeStep, data]);
+    try { sessionStorage.setItem(PRESENTER_SALES_STORAGE_KEY, JSON.stringify({ schemaVersion: 2, activeStep: 1, data })); } catch { /* Storage can be unavailable. */ }
+  }, [data]);
 
   const prompt = useMemo(() => buildPresenterSalesPrompt(data), [data]);
-  const currentMissing = useMemo(() => presenterSalesMissingFields(data, activeStep), [activeStep, data]);
   const allMissing = useMemo(() => presenterSalesMissingFields(data), [data]);
-  const currentStep = STEPS[activeStep - 1];
 
-  function canOpenStep(step: PresenterSalesStepId) {
-    if (step === 1) return true;
-    if (presenterSalesMissingFields(data, 1).length) return false;
-    return step === 2 || presenterSalesMissingFields(data, 2).length === 0;
-  }
-
-  function goToStep(step: PresenterSalesStepId) {
-    if (!canOpenStep(step)) return;
-    setActiveStep(step);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function goNext() {
-    if (currentMissing.length || activeStep === 3) return;
-    goToStep((activeStep + 1) as PresenterSalesStepId);
-  }
-
-  function resetStep() {
-    if (!window.confirm(`ล้างข้อมูล STEP ${activeStep} ทั้งหมดใช่ไหม?`)) return;
-    setData((current) => resetFieldsForStep(activeStep, current));
+  function resetData() {
+    if (!window.confirm("ล้างข้อมูลคลิปขายสาวสวย/หนุ่มหล่อทั้งหมดใช่ไหม?")) return;
+    setData(initialPresenterSalesData);
+    setImportStatus("");
     setCopyError("");
-    if (activeStep === 1) setImportStatus("");
   }
 
   function importPresenterIdentity() {
@@ -319,7 +284,7 @@ export function PresenterSalesPromptBuilder() {
   }
 
   async function copyPrompt() {
-    if (activeStep !== 3 || allMissing.length) return;
+    if (allMissing.length) return;
     setCopyError("");
     try {
       await copyToClipboard(prompt);
@@ -332,16 +297,13 @@ export function PresenterSalesPromptBuilder() {
 
   return <div className="builder-shell">
     <aside className="mode-banner mode-banner--sales" aria-label="โหมดที่กำลังใช้งาน"><span className="mode-banner__mark" aria-hidden="true">♥</span><span className="mode-banner__copy"><span className="mode-banner__kicker">โหมดทดสอบ EP6</span><strong>ขายสินค้าสาวสวย/หนุ่มหล่อ</strong><small>ใช้ Presenter Lock ช่วยหยุดสายตา โดยสินค้าและหลักฐานยังเป็นพระเอก</small></span><a className="mode-banner__link" href="/gen3">กลับหน้าเลือกประเภทคลิป</a></aside>
-    <nav className="stepper" aria-label="ขั้นตอนสร้าง Prompt ขายสินค้า">{STEPS.map((step, index) => { const enabled = canOpenStep(step.id); return <button aria-current={activeStep === step.id ? "step" : undefined} className={activeStep === step.id ? "step active" : activeStep > step.id ? "step done" : "step"} disabled={!enabled} key={step.id} onClick={() => goToStep(step.id)} type="button"><span className="step-number">{activeStep > step.id ? "✓" : `0${step.id}`}</span><span><b>{step.title}</b><small>{step.short}</small></span>{index < 2 && <i />}</button>; })}</nav>
     <div className="builder-grid">
-      <section className="form-panel"><div className="panel-heading"><div><span className="eyebrow">STEP 0{activeStep}</span><h1>{currentStep.title}</h1><p>{currentStep.short}</p></div><button className="reset-button" onClick={resetStep} type="button">ล้างข้อมูล</button></div>
-        {activeStep === 1 && <StepOneForm data={data} importStatus={importStatus} onImport={importPresenterIdentity} setData={setData} />}
-        {activeStep === 2 && <StepTwoForm data={data} setData={setData} />}
-        {activeStep === 3 && <StepThreeForm data={data} setData={setData} />}
+      <section className="form-panel"><div className="panel-heading"><div><span className="eyebrow">ขั้นตอนเดียว</span><h1>สร้างคลิปขายด้วย Presenter พร้อมผลิต</h1><p>กรอกตัวตน สินค้า และการผลิตต่อเนื่องในหน้าเดียว แล้วคัดลอก Prompt เมื่อข้อมูลครบ</p></div><button className="reset-button" onClick={resetData} type="button">ล้างข้อมูล</button></div>
+        <PresenterSalesForm data={data} importStatus={importStatus} onImport={importPresenterIdentity} setData={setData} />
       </section>
-      <aside className={previewOpen ? "preview-panel mobile-open" : "preview-panel"}><div className="preview-heading"><div><span className="status-dot" /><b>Prompt พร้อมใช้งานเมื่อครบ 3 Steps</b><small>{prompt.length.toLocaleString("th-TH")} ตัวอักษร</small></div><button aria-label="ปิดตัวอย่าง Prompt" onClick={() => setPreviewOpen(false)} type="button">×</button></div><pre>{prompt}</pre><div className="preview-actions">{allMissing.length > 0 && <p>กรอกให้ครบ: {allMissing.join(", ")}</p>}{activeStep !== 3 && <p>ไป STEP 3 เพื่อคัดลอก Prompt ฉบับผลิต</p>}{copyError && <p role="alert">{copyError}</p>}<button className="copy-button" disabled={activeStep !== 3 || allMissing.length > 0} onClick={copyPrompt} type="button"><span>{copied ? "✓" : "⧉"}</span>{copied ? "คัดลอกแล้ว" : "คัดลอก Prompt สร้างคลิปขาย"}</button></div></aside>
+      <aside className={previewOpen ? "preview-panel mobile-open" : "preview-panel"}><div className="preview-heading"><div><span className="status-dot" /><b>Prompt พร้อมใช้งาน</b><small>{prompt.length.toLocaleString("th-TH")} ตัวอักษร</small></div><button aria-label="ปิดตัวอย่าง Prompt" onClick={() => setPreviewOpen(false)} type="button">×</button></div><pre>{prompt}</pre><div className="preview-actions">{allMissing.length > 0 && <p>กรอกให้ครบ: {allMissing.join(", ")}</p>}{copyError && <p role="alert">{copyError}</p>}<button className="copy-button" disabled={allMissing.length > 0} onClick={copyPrompt} type="button"><span>{copied ? "✓" : "⧉"}</span>{copied ? "คัดลอกแล้ว" : "คัดลอก Prompt สร้างคลิปขาย"}</button></div></aside>
     </div>
-    <div className="bottom-bar"><button className="preview-mobile-button" onClick={() => setPreviewOpen(true)} type="button">ดู Prompt</button><div className="bottom-status"><span>บันทึกชั่วคราวในแท็บนี้อัตโนมัติ</span>{currentMissing.length > 0 && <small>STEP นี้เหลือ {currentMissing.length} ช่องสำคัญ</small>}</div>{activeStep > 1 && <button className="copy-secondary" onClick={() => goToStep((activeStep - 1) as PresenterSalesStepId)} type="button">← STEP {activeStep - 1}</button>}{activeStep < 3 && <button className="next-button" disabled={currentMissing.length > 0} onClick={goNext} type="button">บันทึกและไป STEP {activeStep + 1} →</button>}{activeStep === 3 && <button className="copy-secondary" disabled={allMissing.length > 0} onClick={copyPrompt} type="button">{copied ? "คัดลอกแล้ว ✓" : "คัดลอก Prompt"}</button>}</div>
+    <div className="bottom-bar"><button className="preview-mobile-button" onClick={() => setPreviewOpen(true)} type="button">ดู Prompt</button><div className="bottom-status"><span>บันทึกชั่วคราวในแท็บนี้อัตโนมัติ</span>{allMissing.length > 0 && <small>เหลือ {allMissing.length} ช่องสำคัญ</small>}</div><button className="copy-secondary" disabled={allMissing.length > 0} onClick={copyPrompt} type="button">{copied ? "คัดลอกแล้ว ✓" : "คัดลอก Prompt"}</button></div>
     {copied && <div className="toast" role="status">คัดลอก Prompt แล้ว แนบ Character Sheet และรูปสินค้าต้นฉบับใน Gemini แล้วส่งได้เลย</div>}
   </div>;
 }

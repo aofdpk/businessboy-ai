@@ -662,6 +662,28 @@ test("Sales form typing and paste handlers stay writable outside intentional imp
   assert.doesNotMatch(stepTwoSource, /readOnly=/, "product facts and custom Hook must remain typeable and pasteable");
 });
 
+test("Presenter Sales renders one continuous form with Sales-compatible copy actions and draft-compatible storage", async () => {
+  const builderSource = await readFile(new URL("./presenter-sales-prompt-builder.tsx", import.meta.url), "utf8");
+  const formStart = builderSource.indexOf("function PresenterSalesForm");
+  const identitySection = builderSource.indexOf("<StepOneForm", formStart);
+  const productSection = builderSource.indexOf("<StepTwoForm", formStart);
+  const productionSection = builderSource.indexOf("<StepThreeForm", formStart);
+
+  assert.ok(formStart >= 0, "single-page Presenter Sales form must exist");
+  assert.ok(identitySection > formStart && productSection > identitySection && productionSection > productSection, "all three sections must render together in their intended order");
+  assert.match(builderSource, /<span className="eyebrow">ขั้นตอนเดียว<\/span>/);
+  assert.doesNotMatch(builderSource, /className="stepper"|goToStep|goNext|บันทึกและไป STEP/);
+  assert.equal((builderSource.match(/onClick=\{copyPrompt\}/g) || []).length, 2, "preview and bottom bar must expose the normal Sales copy action");
+  assert.match(builderSource, /<b>Prompt พร้อมใช้งาน<\/b>/);
+  assert.match(builderSource, /schemaVersion: 2, activeStep: 1, data/);
+  assert.match(builderSource, /preview-mobile-button/);
+  assert.match(builderSource, /aria-labelledby="presenter-sales-identity-section"/);
+  assert.match(builderSource, /aria-labelledby="presenter-sales-product-section"/);
+  assert.match(builderSource, /aria-labelledby="presenter-sales-production-section"/);
+  assert.doesNotMatch(builderSource, />STEP 0[123]</);
+  assert.doesNotMatch(builderSource, />[123]\. (?:ตัวตนพรีเซนเตอร์|สินค้า มุมขาย|ฉาก บทพูด)/);
+});
+
 test("Jangrai category firewalls explicitly block supplement, beauty, automotive, electrical, and food outcomes", () => {
   const fixtures = [
     ["อาหารเสริม", /testosterone fertility สมรรถภาพ/],
