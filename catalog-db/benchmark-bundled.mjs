@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { queryCatalog } = require('../api/_catalog-data-source');
+const { _testing, queryCatalog } = require('../api/_catalog-data-source');
 
 async function measure(label, operation) {
   const started = performance.now();
@@ -13,8 +13,12 @@ async function measure(label, operation) {
 }
 
 const common = { group: 'automotive', minRating: '4.7', sort: 'sold-desc', limit: '24' };
-await measure('cold/common query', () => queryCatalog(common));
+_testing.clearRuntimeCaches();
+const cold = await measure('cold/common query', () => queryCatalog(common));
 await measure('warm/common query', () => queryCatalog(common));
+if (cold.nextCursor) await measure('cursor page with reused aggregate facets', () => queryCatalog({ ...common, cursor: cold.nextCursor }));
+_testing.clearRuntimeCaches();
+await measure('50 concurrent identical cold queries (in-flight deduped)', () => Promise.all(Array.from({ length: 50 }, () => queryCatalog(common))));
 await measure('50 concurrent identical cached queries', () => Promise.all(Array.from({ length: 50 }, () => queryCatalog(common))));
 const distinct = await measure('50 concurrent distinct queries', () => Promise.all(Array.from({ length: 50 }, (_, index) => queryCatalog({
   q: `benchmark-${index}`,

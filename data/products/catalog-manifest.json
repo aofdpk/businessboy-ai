@@ -1,0 +1,37 @@
+{
+  "artifactVersion": "catalog-artifacts-v5",
+  "schemaVersion": 5,
+  "taxonomyVersion": "taxonomy-v5",
+  "generatedAt": "2026-08-21T12:53:23.576Z",
+  "sourceCheckedAt": "2026-08-17T05:31:45+07:00",
+  "artifacts": {
+    "fullCatalog": {
+      "path": "catalog-full.json.gz",
+      "catalogArtifactMode": "full-approved",
+      "rankedCount": 60000,
+      "compression": "gzip",
+      "compressedBytes": 16295954,
+      "compressedSha256": "5f6ba7061460e6c5132ba5c6d5e87b0ad2f12cda6d9bc1e40abea0054daabd8f",
+      "uncompressedBytes": 178594094,
+      "uncompressedSha256": "4e745ccd4e170006f2caedecc05f17f9647d991ae9bdbc623205c7ba2bc30836"
+    },
+    "bundledFallback": {
+      "path": "catalog.json",
+      "catalogArtifactMode": "bundled-fallback",
+      "rankedCount": 20000,
+      "bytes": 59656686,
+      "sha256": "b35ef89b46b4f271b74ce72eed5e98161e88662adcb4ec24a5b04e37544d5d8a"
+    },
+    "reserve": {
+      "path": "catalog-reserve.json",
+      "reserveCount": 6000,
+      "bytes": 17423991,
+      "sha256": "97f38c9803a273741724481c5984e830c89bd760ba8e062ce4b4d4481997cd92"
+    },
+    "buildReport": {
+      "path": "build-report.json",
+      "bytes": 203741,
+      "sha256": "2e48d0a071b029663f98f9727fe4dffc73703369cdc03f2287b727b3d21ea8a0"
+    }
+  }
+}

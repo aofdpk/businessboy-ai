@@ -2,24 +2,26 @@ import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { basename } from 'node:path';
+import { createGunzip } from 'node:zlib';
 import { neon } from '@neondatabase/serverless';
 
 const argumentsList = process.argv.slice(2);
 const validateOnly = argumentsList.includes('--validate-only');
 const positional = argumentsList.filter((value) => value !== '--validate-only');
 const [filePath, runId, expectedArgument] = positional;
-const expectedRanked = Number.parseInt(expectedArgument || process.env.GEN3_CATALOG_EXPECTED_RANKED || '20000', 10);
+const expectedText = expectedArgument || process.env.GEN3_CATALOG_EXPECTED_RANKED || '';
+const expectedRanked = expectedText ? Number.parseInt(expectedText, 10) : null;
 const connectionString = process.env.GEN3_CATALOG_DATABASE_URL || process.env.DATABASE_URL;
 if (!filePath || !runId) throw new Error('Usage: node catalog-db/import-jsonl-to-neon.mjs <catalog.jsonl> <new-run-id> [expected-ranked] [--validate-only]');
 if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{2,80}$/.test(runId)) throw new Error('Run ID must be 3–81 safe characters');
-if (!Number.isInteger(expectedRanked) || expectedRanked < 1) throw new Error('Expected ranked count must be a positive integer');
+if (expectedRanked !== null && (!Number.isInteger(expectedRanked) || expectedRanked < 1)) throw new Error('Expected ranked count must be a positive integer');
 if (!validateOnly && !connectionString) throw new Error('Set GEN3_CATALOG_DATABASE_URL before importing');
 
 const columns = [
   'run_id', 'id', 'public_id', 'rank', 'featured', 'category_group_key', 'category_group', 'category_key', 'category',
   'subcategory_key', 'subcategory', 'image_url', 'clean_name', 'summary', 'price_min', 'price_max', 'price_type',
   'checked_at', 'product_url', 'shop_name', 'item_sold', 'rating', 'likes', 'shop_rating', 'shop_type',
-  'stock_status', 'stock_level', 'recommendation_score', 'reason_codes', 'season_tags', 'month_tags',
+  'stock_status', 'stock_level', 'merchandising_tags', 'recommendation_score', 'reason_codes', 'season_tags', 'month_tags',
   'seasonal_score', 'season_reason', 'metadata_version', 'evergreen', 'season_scores', 'season_reasons', 'month_scores',
   'month_reasons', 'campaign_tags', 'risk_tier', 'review_status', 'review_method', 'normalized_search_text', 'source_hash',
 ];
@@ -48,7 +50,7 @@ function valueFor(record) {
     record.cleanName, record.summary || '', record.priceMin ?? null, record.priceMax ?? null, record.priceType || 'fixed',
     record.checkedAt, record.productUrl, record.shopName || null, record.itemSold ?? null, record.rating ?? null,
     record.likes ?? null, record.shopRating ?? null, record.shopType || 'general', record.stockStatus || 'unknown',
-    record.stockLevel || null, record.recommendationScore ?? 0, record.reasonCodes || [], record.seasonTags || [],
+    record.stockLevel || null, record.merchandisingTags || [], record.recommendationScore ?? 0, record.reasonCodes || [], record.seasonTags || [],
     record.monthTags || [], record.seasonalScore ?? 0, record.seasonReason || '', record.metadataVersion || 'seasonal-legacy',
     record.evergreen === true, JSON.stringify(record.seasonScores || {}), JSON.stringify(record.seasonReasons || {}),
     JSON.stringify(record.monthScores || {}), JSON.stringify(record.monthReasons || {}), record.campaignTags || [], record.riskTier || 'green',
@@ -57,7 +59,9 @@ function valueFor(record) {
 }
 
 async function* jsonLines() {
-  const input = createInterface({ input: createReadStream(filePath, { encoding: 'utf8' }), crlfDelay: Infinity });
+  const rawInput = createReadStream(filePath);
+  const decodedInput = filePath.toLowerCase().endsWith('.gz') ? rawInput.pipe(createGunzip()) : rawInput;
+  const input = createInterface({ input: decodedInput, crlfDelay: Infinity });
   let lineNumber = 0;
   for await (const line of input) {
     lineNumber += 1;
@@ -78,6 +82,8 @@ async function preflight() {
   let featured = 0;
   let total = 0;
   const rankedMetadataVersions = new Set();
+  const catalogSchemaVersions = new Set();
+  const allowedMerchandisingTags = new Set(['fashion-sleepwear', 'fashion-plus-size', 'fashion-office']);
 
   function validateScores(value, allowedKeys, fieldName, lineNumber, id) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}`);
@@ -91,7 +97,8 @@ async function preflight() {
   function validateReasons(value, allowedKeys, fieldName, lineNumber, id) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}`);
     for (const [key, reasons] of Object.entries(value)) {
-      if (!allowedKeys.has(String(key)) || !Array.isArray(reasons) || reasons.length < 1 || reasons.length > 3 || reasons.some((reason) => !String(reason || '').trim() || String(reason).length > 180)) {
+      if (!allowedKeys.has(String(key)) || !Array.isArray(reasons) || reasons.length < 1 || reasons.length > 4 || reasons.some((reason) =>
+        typeof reason !== 'string' || reason.length < 8 || reason.length > 120 || /[\n\r\\#*`<>]/u.test(reason))) {
         throw new Error(`Line ${lineNumber} (${id}) has invalid ${fieldName}.${key}`);
       }
     }
@@ -132,6 +139,19 @@ async function preflight() {
       throw new Error(`Line ${lineNumber} is missing one or more required catalog fields`);
     }
     if (record.reviewStatus !== 'approved') throw new Error(`Line ${lineNumber} (${id}) is not approved`);
+    const inferredSchemaVersion = Object.hasOwn(record, 'merchandisingTags') ? 5 : record.metadataVersion === 'seasonal-v4' ? 4 : 3;
+    const catalogSchemaVersion = Number(record.catalogSchemaVersion || inferredSchemaVersion);
+    if (!Number.isInteger(catalogSchemaVersion) || catalogSchemaVersion < 3 || catalogSchemaVersion > 5) {
+      throw new Error(`Line ${lineNumber} (${id}) has unsupported catalogSchemaVersion`);
+    }
+    catalogSchemaVersions.add(catalogSchemaVersion);
+    const merchandisingTags = record.merchandisingTags ?? [];
+    if (!Array.isArray(merchandisingTags) || merchandisingTags.some((tag) => !allowedMerchandisingTags.has(tag)) || new Set(merchandisingTags).size !== merchandisingTags.length) {
+      throw new Error(`Line ${lineNumber} (${id}) has invalid merchandisingTags`);
+    }
+    if (catalogSchemaVersion >= 5 && !Object.hasOwn(record, 'merchandisingTags')) {
+      throw new Error(`Line ${lineNumber} (${id}) is missing schema-v5 merchandisingTags`);
+    }
     if (record.metadataVersion === 'seasonal-v4') validateSeasonalV4(record, lineNumber, id);
     else if (record.metadataVersion && record.metadataVersion !== 'seasonal-legacy') throw new Error(`Line ${lineNumber} (${id}) has unsupported metadataVersion`);
     if (!['green', 'amber'].includes(record.riskTier)) throw new Error(`Line ${lineNumber} (${id}) has invalid riskTier`);
@@ -155,17 +175,27 @@ async function preflight() {
     }
     total += 1;
   }
-  if (ranked !== expectedRanked || featured !== 1 || total !== expectedRanked + 1) {
+  if (expectedRanked !== null && ranked !== expectedRanked) {
     throw new Error(`JSONL count mismatch: expected ${expectedRanked} ranked + 1 featured, received ${ranked} ranked + ${featured} featured`);
   }
-  for (let rank = 1; rank <= expectedRanked; rank += 1) {
+  if (ranked < 1 || featured !== 1 || total !== ranked + 1) {
+    throw new Error(`JSONL must contain a positive ranked set and exactly 1 featured product; received ${ranked} ranked + ${featured} featured`);
+  }
+  for (let rank = 1; rank <= ranked; rank += 1) {
     if (!ranks.has(rank)) throw new Error(`JSONL is missing rank ${rank}`);
   }
   if (rankedMetadataVersions.size !== 1) throw new Error('Ranked records mix legacy and seasonal-v4 metadata');
-  return { ranked, featured, total, schemaVersion: rankedMetadataVersions.has('seasonal-v4') ? 4 : 3 };
+  if (catalogSchemaVersions.size !== 1) throw new Error('Records mix catalog schema versions');
+  const schemaVersion = [...catalogSchemaVersions][0];
+  if (schemaVersion >= 5 && !rankedMetadataVersions.has('seasonal-v4')) {
+    throw new Error('Schema-v5 ranked records must use seasonal-v4 metadata');
+  }
+  if (schemaVersion < 5 && rankedMetadataVersions.has('seasonal-v4')) return { ranked, featured, total, schemaVersion: 4 };
+  return { ranked, featured, total, schemaVersion };
 }
 
 const counts = await preflight();
+const exactRanked = expectedRanked ?? counts.ranked;
 if (validateOnly) {
   process.stdout.write(`JSONL valid: ${counts.ranked} approved ranked products + ${counts.featured} featured product\n`);
   process.exit(0);
@@ -178,10 +208,12 @@ const existing = await sql.query(`SELECT r.id, r.status, COUNT(p.id)::int AS row
 if (existing[0]) throw new Error(`Run ID ${runId} already exists (${existing[0].status}, ${existing[0].row_count} rows); use a new run ID`);
 
 await sql.query(`INSERT INTO gen3_catalog_runs (id, status, schema_version, generated_at, total_count, metadata)
-  VALUES ($1, 'staged', $2, NOW(), $3, $4::jsonb)`, [runId, counts.schemaVersion, expectedRanked, JSON.stringify({ importedFrom: basename(filePath), expectedRanked, metadataVersion: counts.schemaVersion >= 4 ? 'seasonal-v4' : 'seasonal-legacy' })]);
+  VALUES ($1, 'staged', $2, NOW(), $3, $4::jsonb)`, [runId, counts.schemaVersion, exactRanked, JSON.stringify({ importedFrom: basename(filePath), expectedRanked: exactRanked, metadataVersion: counts.schemaVersion >= 4 ? 'seasonal-v4' : 'seasonal-legacy' })]);
 
 let imported = 0;
 let batch = [];
+const requestedBatchSize = Number.parseInt(process.env.GEN3_CATALOG_IMPORT_BATCH_SIZE || '250', 10);
+const batchSize = Number.isInteger(requestedBatchSize) ? Math.min(500, Math.max(50, requestedBatchSize)) : 250;
 async function flush() {
   if (!batch.length) return;
   const params = [];
@@ -198,7 +230,7 @@ async function flush() {
 try {
   for await (const { record } of jsonLines()) {
     batch.push(record);
-    if (batch.length >= 100) await flush();
+    if (batch.length >= batchSize) await flush();
   }
   await flush();
   const verified = await sql.query(`SELECT
@@ -207,7 +239,7 @@ try {
       COUNT(*) FILTER (WHERE featured = true AND review_status = 'approved')::int AS approved_featured
     FROM gen3_catalog_products WHERE run_id = $1`, [runId]);
   const result = verified[0];
-  if (Number(result.total) !== expectedRanked + 1 || Number(result.approved_ranked) !== expectedRanked || Number(result.approved_featured) !== 1) {
+  if (Number(result.total) !== exactRanked + 1 || Number(result.approved_ranked) !== exactRanked || Number(result.approved_featured) !== 1) {
     throw new Error(`Database verification failed after import: ${JSON.stringify(result)}`);
   }
 } catch (error) {
@@ -215,4 +247,4 @@ try {
   throw error;
 }
 
-process.stdout.write(`Staged and verified ${imported} records (${expectedRanked} approved ranked + 1 featured) in new run ${runId}\n`);
+process.stdout.write(`Staged and verified ${imported} records (${exactRanked} approved ranked + 1 featured) in new run ${runId}\n`);
