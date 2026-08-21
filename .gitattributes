@@ -1,0 +1,3 @@
+# Catalog manifests pin exact byte hashes, so generated JSON must stay LF-only.
+data/products/*.json text eol=lf
+data/products/*.gz -text

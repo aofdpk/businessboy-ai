@@ -77,6 +77,11 @@ function text(value, maxLength = 500) {
   return typeof value === 'string' ? value.normalize('NFKC').replace(/\s+/g, ' ').trim().slice(0, maxLength) : '';
 }
 
+function timestampText(value, maxLength = 80) {
+  if (value instanceof Date) return Number.isFinite(value.getTime()) ? value.toISOString() : '';
+  return text(value, maxLength);
+}
+
 function queryText(value, maxLength = 120) {
   return text(first(value), maxLength);
 }
@@ -276,7 +281,7 @@ function normalizeProduct(record, featuredOverride = false, trustedBundle = fals
     priceMin: finiteNumber(field(record, 'priceMin', 'price_min')),
     priceMax: finiteNumber(field(record, 'priceMax', 'price_max')),
     priceType: text(field(record, 'priceType', 'price_type'), 16).toLowerCase() === 'range' ? 'range' : 'fixed',
-    checkedAt: text(field(record, 'checkedAt', 'checked_at'), 80),
+    checkedAt: timestampText(field(record, 'checkedAt', 'checked_at'), 80),
     productUrl,
     shopName: featured ? text(field(record, 'shopName', 'shop_name'), 120) : '',
     itemSold,
@@ -1060,8 +1065,8 @@ function sqlPeriodSortExpression(filters, schemaVersion) {
     return `(CASE WHEN ${peak} THEN 202 + ${score} WHEN ${evergreen} THEN 101 ELSE 0 END)`;
   }
   if (CLIMATE_SEASONS.has(filters.period)) return `(202 + ${sqlPeriodScoreExpression(filters.period, schemaVersion)})`;
-  if (filters.period === 'all-year') return `101`;
-  return `0`;
+  if (filters.period === 'all-year') return `CAST(101 AS numeric)`;
+  return `CAST(0 AS numeric)`;
 }
 
 function sqlMonthTierExpression(filters, schemaVersion) {
@@ -1075,13 +1080,19 @@ function sqlMonthTierExpression(filters, schemaVersion) {
 function sqlSortExpressions(filters, schemaVersion) {
   const tier = sqlMonthTierExpression(filters, schemaVersion);
   const hasMonthTier = filters.period.startsWith('month-');
+  // A bare integer in ORDER BY is parsed by PostgreSQL as a select-list
+  // position. Keep cursor values numeric while typing constant SQL terms.
+  const zeroTieBreaker = `CAST(0 AS numeric)`;
+  // Neon returns timestamptz as a JavaScript Date, whose cursor precision is
+  // integer milliseconds. Truncate SQL timestamps to that same precision.
+  const checkedAtMillis = `COALESCE(FLOOR(EXTRACT(EPOCH FROM p.checked_at) * 1000), 0)`;
   const expressions = {
     'sold-desc': [hasMonthTier ? `(${tier} * 1000000000000 + LEAST(COALESCE(p.item_sold, -1), 999999999999))` : `COALESCE(p.item_sold, -1)`, `COALESCE(p.recommendation_score, 0)`],
     'rating-desc': [hasMonthTier ? `(${tier} * 10 + COALESCE(p.rating, -1))` : `COALESCE(p.rating, -1)`, `COALESCE(p.item_sold, -1)`],
-    'price-asc': [hasMonthTier ? `((2 - ${tier}) * 10000000000000 + COALESCE(p.price_min, p.price_max, 9000000000000))` : `COALESCE(p.price_min, p.price_max, 9000000000000)`, `0`],
-    'price-desc': [hasMonthTier ? `(${tier} * 10000000000000 + COALESCE(p.price_max, p.price_min, -1))` : `COALESCE(p.price_max, p.price_min, -1)`, `0`],
+    'price-asc': [hasMonthTier ? `((2 - ${tier}) * 10000000000000 + COALESCE(p.price_min, p.price_max, 9000000000000))` : `COALESCE(p.price_min, p.price_max, 9000000000000)`, zeroTieBreaker],
+    'price-desc': [hasMonthTier ? `(${tier} * 10000000000000 + COALESCE(p.price_max, p.price_min, -1))` : `COALESCE(p.price_max, p.price_min, -1)`, zeroTieBreaker],
     seasonal: [sqlPeriodSortExpression(filters, schemaVersion), `COALESCE(p.recommendation_score, 0)`],
-    newest: [hasMonthTier ? `(${tier} * 10000000000000 + COALESCE(EXTRACT(EPOCH FROM p.checked_at) * 1000, 0))` : `COALESCE(EXTRACT(EPOCH FROM p.checked_at) * 1000, 0)`, `0`],
+    newest: [hasMonthTier ? `(${tier} * 10000000000000 + ${checkedAtMillis})` : checkedAtMillis, zeroTieBreaker],
     recommended: [hasMonthTier ? `(${tier} * 10000000 + COALESCE(p.recommendation_score, 0))` : `COALESCE(p.recommendation_score, 0)`, `-COALESCE(p.rank, 2147483647)`],
   };
   return expressions[filters.sort];
@@ -1114,14 +1125,16 @@ function sqlFilters(filters, runId, includeCursor, schemaVersion, excluded = NO_
 
   const cursor = includeCursor ? decodeCursor(filters.cursor, filters) : null;
   if (cursor) {
-    const a = addParameter(params, cursor.a);
-    const b = addParameter(params, cursor.b);
-    const id = addParameter(params, cursor.id);
     if (filters.sort === 'price-asc') {
+      const a = addParameter(params, cursor.a);
+      const id = addParameter(params, cursor.id);
       const [firstExpression] = sqlSortExpressions(filters, schemaVersion);
       conditions.push(`(${firstExpression} > ${a} OR (${firstExpression} = ${a} AND p.public_id > ${id}))`);
     }
     else {
+      const a = addParameter(params, cursor.a);
+      const b = addParameter(params, cursor.b);
+      const id = addParameter(params, cursor.id);
       const [firstExpression, secondExpression] = sqlSortExpressions(filters, schemaVersion);
       conditions.push(`(${firstExpression} < ${a} OR (${firstExpression} = ${a} AND ${secondExpression} < ${b}) OR (${firstExpression} = ${a} AND ${secondExpression} = ${b} AND p.public_id > ${id}))`);
     }
@@ -1429,7 +1442,9 @@ module.exports = {
   _testing: Object.freeze({
     aggregateCacheKey,
     clearRuntimeCaches,
+    encodeCursor,
     neonAggregate,
+    normalizeProduct,
     parseFilters,
     shareInFlight,
     sortValues,

@@ -5,6 +5,12 @@ const require = createRequire(import.meta.url);
 const { _testing, getCatalogProductById, queryCatalog } = require('../api/_catalog-data-source');
 const sorts = ['recommended', 'sold-desc', 'rating-desc', 'price-asc', 'price-desc', 'seasonal', 'newest'];
 
+function assertContiguousSqlParameters(statement, params, label) {
+  const actual = [...new Set([...statement.matchAll(/\$(\d+)/g)].map((match) => Number(match[1])))].sort((left, right) => left - right);
+  const expected = Array.from({ length: params.length }, (_value, index) => index + 1);
+  assert.deepEqual(actual, expected, `${label} has an unused or non-contiguous SQL parameter`);
+}
+
 const first = await queryCatalog({ limit: '24' });
 assert.equal(first.items.length, Math.min(24, first.matched));
 assert.ok(first.total >= first.items.length);
@@ -174,16 +180,90 @@ for (const sort of sorts) {
 const unavailableSeasonalSort = await queryCatalog({ sort: 'seasonal', limit: '24' });
 assert.equal(unavailableSeasonalSort.applied.sort, 'recommended', 'period-fit sort must be unavailable without a selected period');
 
+for (const schemaVersion of [4, 5]) {
+  for (const period of ['all', 'all-year', 'hot', 'month-1']) {
+    for (const sort of sorts) {
+      const filters = _testing.parseFilters({ sort, period });
+      const order = _testing.sqlOrder(filters, schemaVersion);
+      assert.doesNotMatch(order, /(?:^|,\s*)\d+\s+(?:ASC|DESC)(?:,|$)/, `${sort}/${period}/v${schemaVersion} emitted a PostgreSQL ORDER BY ordinal`);
+    }
+  }
+}
+for (const sort of ['price-desc', 'newest']) {
+  const order = _testing.sqlOrder(_testing.parseFilters({ sort }), 5);
+  assert.match(order, /CAST\(0 AS numeric\) DESC/, `${sort} must type its constant cursor tie-breaker`);
+}
+for (const schemaVersion of [4, 5]) {
+  const order = _testing.sqlOrder(_testing.parseFilters({ sort: 'seasonal', period: 'all-year' }), schemaVersion);
+  assert.match(order, /^CAST\(101 AS numeric\) DESC/, `seasonal/all-year/v${schemaVersion} must type its constant period score`);
+}
+
+const neonDate = new Date('2026-08-21T10:20:30.456Z');
+const fakeNeonRecord = {
+  id: 'fake-neon-date-source',
+  public_id: 'fakeNeonDateProduct01',
+  rank: 1,
+  clean_name: 'สินค้าทดสอบวันที่ Neon',
+  image_url: 'https://down-th.img.susercontent.com/file/fake-neon-date-product',
+  product_url: 'https://shopee.co.th/product/1/1',
+  review_status: 'approved',
+  checked_at: neonDate,
+};
+const normalizedNeonDate = _testing.normalizeProduct(fakeNeonRecord);
+assert.equal(normalizedNeonDate?.checkedAt, neonDate.toISOString(), 'Neon Date checked_at must normalize to ISO text');
+const neonMicrosecondText = '2026-08-20T01:02:03.456789Z';
+const normalizedNeonMicroseconds = _testing.normalizeProduct({
+  ...fakeNeonRecord,
+  public_id: 'fakeNeonTextProduct01',
+  checked_at: neonMicrosecondText,
+});
+assert.equal(
+  normalizedNeonMicroseconds?.checkedAt,
+  neonMicrosecondText,
+  'string checked_at normalization must remain unchanged',
+);
+const fakeNewestFilters = _testing.parseFilters({ sort: 'newest', limit: '1' });
+const fakeNewestCursor = _testing.encodeCursor(normalizedNeonDate, fakeNewestFilters, 'fake-neon-date-snapshot');
+const fakeNewestCursorFilters = _testing.parseFilters({ sort: 'newest', limit: '1', cursor: fakeNewestCursor });
+const fakeNewestSql = _testing.sqlFilters(fakeNewestCursorFilters, 'fake-neon-date-run', true, 5);
+assertContiguousSqlParameters(fakeNewestSql.where, fakeNewestSql.params, 'newest Date cursor');
+assert.deepEqual(fakeNewestSql.params.slice(1), [neonDate.getTime(), 0, fakeNeonRecord.public_id], 'newest Date cursor must use its real epoch on page 2');
+assert.match(fakeNewestSql.where, /FLOOR\(EXTRACT\(EPOCH FROM p\.checked_at\) \* 1000\)/, 'newest cursor SQL must truncate database microseconds to cursor milliseconds');
+const fakeMicrosecondCursor = _testing.encodeCursor(normalizedNeonMicroseconds, fakeNewestFilters, 'fake-neon-microsecond-snapshot');
+const fakeMicrosecondSql = _testing.sqlFilters(
+  _testing.parseFilters({ sort: 'newest', limit: '1', cursor: fakeMicrosecondCursor }),
+  'fake-neon-microsecond-run',
+  true,
+  5,
+);
+assert.equal(fakeMicrosecondSql.params[1], Date.parse(neonMicrosecondText), 'microsecond timestamp cursor must truncate to the same integer millisecond as JavaScript');
+for (const schemaVersion of [4, 5]) {
+  for (const period of ['all', 'month-1']) {
+    const order = _testing.sqlOrder(_testing.parseFilters({ sort: 'newest', period }), schemaVersion);
+    assert.match(order, /FLOOR\(EXTRACT\(EPOCH FROM p\.checked_at\) \* 1000\)/, `newest/${period}/v${schemaVersion} must order at cursor millisecond precision`);
+  }
+}
+
 for (const sort of sorts) {
-  const sortQuery = sort === 'seasonal' ? { sort, period: 'month-8', limit: '48' } : { sort, limit: '48' };
+  const sortQuery = sort === 'seasonal'
+    ? { sort, period: 'month-8', limit: '48' }
+    : sort === 'price-asc' ? { sort, price: '100-300', limit: '48' } : { sort, limit: '48' };
   const pageOne = await queryCatalog(sortQuery);
   assert.ok(pageOne.items.length <= 48, `${sort} exceeded max page size`);
   if (!pageOne.nextCursor) continue;
   const decoded = JSON.parse(Buffer.from(pageOne.nextCursor.split('.')[0], 'base64url').toString('utf8'));
   assert.ok(decoded.c, `${sort} cursor is not bound to a catalog snapshot`);
   assert.doesNotMatch(decoded.id, /^\d+-\d+$/, `${sort} cursor leaked the source ID`);
+  const cursorFilters = _testing.parseFilters({ ...sortQuery, cursor: pageOne.nextCursor });
+  const cursorSql = _testing.sqlFilters(cursorFilters, 'contract-run', true, 5);
+  assertContiguousSqlParameters(cursorSql.where, cursorSql.params, `${sort} page 2`);
+  if (sort === 'price-asc') {
+    assert.equal(cursorSql.params.length, 5, 'price-asc page 2 must add only cursor a and id after its two price filters');
+    assert.deepEqual(cursorSql.params.slice(-2), [decoded.a, decoded.id], 'price-asc page 2 must not allocate an unused cursor b parameter');
+  }
   const pageTwo = await queryCatalog({ ...sortQuery, cursor: pageOne.nextCursor });
   const pageOneIds = new Set(pageOne.items.map((item) => item.id));
+  assert.ok(pageTwo.items.length > 0, `${sort} fixture page 2 must not be empty`);
   assert.equal(pageTwo.items.some((item) => pageOneIds.has(item.id)), false, `${sort} cursor repeated a row`);
 }
 
