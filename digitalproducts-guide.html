@@ -1,0 +1,701 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#0d0d0d">
+<title>คู่มือการตอบ · คลังสินค้าดิจิทัล</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700;800&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0d0d0d;--bg2:#161616;--card:#1c1c1c;--line:#2e2a22;--ink:#f3ede0;--muted:#a89f8c;--gold:#d4af37;--gold2:#f0d27a;--red:#c8102e;--red2:#e63950;--green:#19b36b}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Sarabun',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+h1,h2,h3,.f{font-family:'Prompt',sans-serif}
+a{color:var(--gold2)}
+.hero{background:radial-gradient(120% 90% at 50% 0%,#2a2210 0%,#121212 60%,#0d0d0d 100%);border-bottom:1px solid var(--line);padding:28px 18px 22px;text-align:center}
+.hero .badge{display:inline-block;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.55);color:var(--gold2);font-family:'Prompt';font-weight:600;font-size:12.5px;padding:5px 14px;border-radius:99px;margin-bottom:10px}
+.hero h1{font-size:23px;font-weight:800;color:var(--gold2);line-height:1.3}
+.hero .sub{color:var(--muted);font-size:14px;margin-top:6px;max-width:640px;margin-left:auto;margin-right:auto}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:'Prompt';font-weight:700;font-size:13px;border:0;cursor:pointer;border-radius:9px;padding:9px 13px;text-decoration:none;white-space:nowrap;transition:.12s}
+.btn.gold{background:var(--gold);color:#1a1400}.btn.gold:hover{background:var(--gold2)}
+.btn.red{background:linear-gradient(90deg,var(--red),var(--red2));color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:var(--gold)}
+.btn.done{background:var(--green)!important;color:#fff!important}
+.foot{text-align:center;color:#6f6858;font-size:12px;padding:22px;font-family:'Prompt'}
+/* gate */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(120% 90% at 50% 0%,#2a2210 0%,#0d0d0d 70%)}
+.gate-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:30px 24px;max-width:420px;width:100%;text-align:center}
+.gate-card .em{font-size:44px}
+.gate-card h1{font-size:20px;font-weight:800;color:var(--gold2);margin:10px 0 4px}
+.gate-card .sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.gate-card input{width:100%;font-size:18px;padding:13px;border-radius:12px;border:1.5px solid var(--line);background:#111;color:var(--ink);text-align:center;letter-spacing:.08em;font-family:'Prompt';font-weight:700}
+.gate-card input:focus{outline:0;border-color:var(--gold)}
+.gate-card button{width:100%;margin-top:12px;font-size:16px;padding:13px}
+#gateErr{color:#ff7a8a;font-weight:700;margin-top:12px;min-height:1.6em;font-size:14px}
+.gate-note{margin-top:14px;font-size:12.5px;color:var(--muted)}
+#app{display:none}
+.wrap{max-width:760px}
+.steps{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.steps h2{font-size:15px;color:var(--gold2);margin-bottom:8px}
+.steps ol{padding-left:20px;font-size:14px;color:#d9d1bf;display:grid;gap:3px}
+.steps .rules{margin-top:10px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.steps .rules b{color:var(--gold2)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;position:sticky;top:0;background:var(--bg);z-index:5}
+.chip{flex:0 0 auto;font-family:'Prompt';font-weight:600;font-size:13px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);padding:8px 14px;border-radius:99px;white-space:nowrap;cursor:pointer;transition:.15s}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#1a1400}
+.klink{background:#1f1a0f;border:1px solid #4a3d1a;border-radius:12px;padding:10px 14px;font-size:13px;color:#e2d7bd;margin-bottom:10px;word-break:break-all}
+.sec{font-family:'Prompt';font-weight:700;color:var(--gold2);margin:16px 0 8px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.pill{font-family:'Prompt';font-weight:700;font-size:12px;padding:4px 11px;border-radius:99px;white-space:nowrap}
+.p1{background:rgba(212,175,55,.16);color:var(--gold2)}.p2{background:rgba(200,16,46,.2);color:#ff8a9a}
+.rh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#151515;flex-wrap:wrap}
+.rh .nm{font-family:'Prompt';font-weight:700;font-size:14px;color:var(--ink);flex:1;min-width:120px}
+.txt{padding:13px 15px;font-size:14px;white-space:pre-wrap;word-break:break-word}
+</style></head><body>
+<div id="gate"><div class="gate-card">
+  <div class="em">📦🔑</div>
+  <h1>คู่มือการตอบพร้อมใช้</h1>
+  <div class="sub">สำหรับผู้เรียนเท่านั้น<br>กรอกรหัสที่ได้รับในห้องเรียน</div>
+  <input id="pw" type="text" placeholder="กรอกรหัสเข้าใช้งาน" autocomplete="off" autocapitalize="characters">
+  <button id="pwBtn" class="btn red">🔓 เข้าใช้งาน</button>
+  <div id="gateErr"></div>
+  <div class="gate-note">กรอกครั้งเดียว เครื่องจะจำไว้ให้</div>
+</div></div>
+<div id="app">
+<div class="hero"><span class="badge">📋 คู่มือการตอบ</span><h1>ข้อความพร้อมก๊อป 8 สินค้า</h1><div class="sub">เลือกสินค้า → ก๊อปข้อความ → วางในแชทลูกค้าได้เลย</div></div>
+<div class="wrap">
+  <div class="steps"><h2>ลำดับปิดการขาย 4 ขั้น</h2>
+    <ol><li>ลูกค้าทัก → ส่ง <b>① ลิงก์ตัวอย่าง</b> ก่อนเสมอ (ยังไม่พูดราคา)</li><li>ลูกค้าถามราคา → ส่ง <b>② โปร</b> ให้เห็นทั้ง 2 ขั้น</li><li>ลังเล → ส่ง <b>③ ปิดการขาย</b> ดันโปร 2</li><li>โอนแล้วส่งสลิป → ส่ง <b>หลังโอน</b> ของโปรที่ซื้อทันที (ลิงก์อยู่ในข้อความแล้ว)</li></ol>
+    <div class="rules"><b>กติกา 3 ข้อ:</b> ส่งตัวอย่างก่อนราคาเสมอ · ดันโปร 2 ด้วย “เพิ่มแค่ 40 บาท ได้เพิ่มเท่าตัว” · โอนแล้วส่งลิงก์ภายใน 1 นาที ยิ่งเร็วยิ่งได้รีวิวดี</div></div>
+  <div class="chips"><button class="chip on" data-k="coloring-kids-th">🖍️ สมุดระบายสีเด็ก</button><button class="chip" data-k="writing-sheets-th">✏️ ชีทฝึกเขียน ไทย + อังกฤษ</button><button class="chip" data-k="live-backdrop-300">🎬 ฉากไลฟ์สด 9:16</button><button class="chip" data-k="brain-games-kids">🧩 เกมฝึกสมองเด็ก</button><button class="chip" data-k="math-sheets-k1">🔢 ชีทคณิตคิดสนุก อนุบาล ป.1</button><button class="chip" data-k="flashcards-2lang">🃏 แฟลชการ์ดคำศัพท์ 2 ภาษา</button><button class="chip" data-k="storybook-th">📚 นิทานเด็ก AI สอนใจ</button><button class="chip" data-k="teacher-decor-kit">🏫 สื่อตกแต่งห้องเรียนคุณครู</button></div>
+  <div class="kit" data-k="coloring-kids-th">
+    <div class="klink">🔗 ตัวอย่าง <a href="https://coloring-kids-th.vercel.app" target="_blank" rel="noopener">coloring-kids-th.vercel.app</a> · 📥 <a href="https://coloring-kids-th.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://coloring-kids-th.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างสมุดระบายสีให้ดูเลยค่ะ 🖍️
+กดดูในมือถือได้เลย มีให้เลือกครบ 50 เล่ม
+👉 https://coloring-kids-th.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างสมุดระบายสีให้ดูเลยค่ะ 🖍️
+กดดูในมือถือได้เลย มีให้เลือกครบ 50 เล่ม
+👉 https://coloring-kids-th.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 159 บาท ได้เล่มที่ 1 ถึง 20 (ชุดที่จัดไว้ให้ เลือกเล่มเองไม่ได้นะคะ)
+• 199 บาท ครบ 50 เล่ม คุ้มสุด ได้ทุกธีม
+
+📖 ทุกเล่มมี 20 หน้าเต็มๆ เท่ากันหมดค่ะ (รูปตัวอย่างที่ส่งให้ดูเป็นแค่หน้าเดียว)
+เป็นไฟล์ ปริ้นเองที่บ้านหรือร้านถ่ายเอกสารได้เลย ปริ้นซ้ำได้ไม่จำกัดค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 159 บาท ได้เล่มที่ 1 ถึง 20 (ชุดที่จัดไว้ให้ เลือกเล่มเองไม่ได้นะคะ)
+• 199 บาท ครบ 50 เล่ม คุ้มสุด ได้ทุกธีม
+
+📖 ทุกเล่มมี 20 หน้าเต็มๆ เท่ากันหมดค่ะ (รูปตัวอย่างที่ส่งให้ดูเป็นแค่หน้าเดียว)
+เป็นไฟล์ ปริ้นเองที่บ้านหรือร้านถ่ายเอกสารได้เลย ปริ้นซ้ำได้ไม่จำกัดค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="เล่มไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 50 เล่ม 199 บาท คุ้มสุด ได้ครบทุกธีมเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">เล่มไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 50 เล่ม 199 บาท คุ้มสุด ได้ครบทุกธีมเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">สมุดระบายสีเด็ก 20 เล่ม</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สมุดระบายสีเด็ก (20 เล่ม) ของลูกค้าค่ะ 👇
+https://coloring-kids-th.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สมุดระบายสีเด็ก (20 เล่ม) ของลูกค้าค่ะ 👇
+https://coloring-kids-th.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">สมุดระบายสีเด็ก ครบ 50 เล่ม</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สมุดระบายสีเด็ก ครบ 50 เล่ม (1,000 หน้า) ของลูกค้าค่ะ 👇
+https://coloring-kids-th.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สมุดระบายสีเด็ก ครบ 50 เล่ม (1,000 หน้า) ของลูกค้าค่ะ 👇
+https://coloring-kids-th.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="writing-sheets-th" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://writing-sheets-th.vercel.app" target="_blank" rel="noopener">writing-sheets-th.vercel.app</a> · 📥 <a href="https://writing-sheets-th.vercel.app/pro1th" target="_blank" rel="noopener">/pro1th</a> <a href="https://writing-sheets-th.vercel.app/pro1en" target="_blank" rel="noopener">/pro1en</a> <a href="https://writing-sheets-th.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างชีทฝึกเขียนให้ดูเลยค่ะ ✏️
+มีทั้งภาษาไทยและอังกฤษ ครบทุกแบบ กดดูในมือถือได้เลย
+👉 https://writing-sheets-th.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างชีทฝึกเขียนให้ดูเลยค่ะ ✏️
+มีทั้งภาษาไทยและอังกฤษ ครบทุกแบบ กดดูในมือถือได้เลย
+👉 https://writing-sheets-th.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 20 แบบ เลือกไทย หรือ อังกฤษ อย่างใดอย่างหนึ่ง 159 บาท
+• 40 แบบ ครบทั้งไทยและอังกฤษ 199 บาท (คุ้มสุด)
+
+📖 แต่ละแบบมีหลายหน้า (ตั้งแต่ 10 ถึง 40 กว่าหน้าแล้วแต่แบบ) รูปตัวอย่างที่ส่งเป็นแค่หน้าเดียวนะคะ
+มีเส้นประนำ ฝึกคัดง่าย เป็นไฟล์ปริ้นซ้ำได้ไม่จำกัดค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 20 แบบ เลือกไทย หรือ อังกฤษ อย่างใดอย่างหนึ่ง 159 บาท
+• 40 แบบ ครบทั้งไทยและอังกฤษ 199 บาท (คุ้มสุด)
+
+📖 แต่ละแบบมีหลายหน้า (ตั้งแต่ 10 ถึง 40 กว่าหน้าแล้วแต่แบบ) รูปตัวอย่างที่ส่งเป็นแค่หน้าเดียวนะคะ
+มีเส้นประนำ ฝึกคัดง่าย เป็นไฟล์ปริ้นซ้ำได้ไม่จำกัดค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="ชอบแบบไหนบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 40 แบบ 199 บาท ได้ครบทั้งไทยและอังกฤษเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">ชอบแบบไหนบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 40 แบบ 199 บาท ได้ครบทั้งไทยและอังกฤษเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">ชีทฝึกเขียน ภาษาไทย 20 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทฝึกเขียนภาษาไทย (20 แบบ) ของลูกค้าค่ะ 👇
+https://writing-sheets-th.vercel.app/pro1th
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทฝึกเขียนภาษาไทย (20 แบบ) ของลูกค้าค่ะ 👇
+https://writing-sheets-th.vercel.app/pro1th
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">ชีทฝึกเขียน ภาษาอังกฤษ 20 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทฝึกเขียนภาษาอังกฤษ (20 แบบ) ของลูกค้าค่ะ 👇
+https://writing-sheets-th.vercel.app/pro1en
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทฝึกเขียนภาษาอังกฤษ (20 แบบ) ของลูกค้าค่ะ 👇
+https://writing-sheets-th.vercel.app/pro1en
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">ชีทฝึกเขียน ไทย+อังกฤษ 40 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทฝึกเขียน ไทย+อังกฤษ ครบ 40 แบบ ของลูกค้าค่ะ 👇
+https://writing-sheets-th.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทฝึกเขียน ไทย+อังกฤษ ครบ 40 แบบ ของลูกค้าค่ะ 👇
+https://writing-sheets-th.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="live-backdrop-300" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://live-backdrop-300.vercel.app" target="_blank" rel="noopener">live-backdrop-300.vercel.app</a> · 📥 <a href="https://live-backdrop-300.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://live-backdrop-300.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างฉากไลฟ์สดให้ดูเลยค่ะ 🎬
+คมชัดระดับสตูดิโอ กดดูในมือถือได้เลย
+👉 https://live-backdrop-300.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างฉากไลฟ์สดให้ดูเลยค่ะ 🎬
+คมชัดระดับสตูดิโอ กดดูในมือถือได้เลย
+👉 https://live-backdrop-300.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 100 แบบ 159 บาท
+• 300 แบบ 199 บาท (คุ้มสุด)
+
+🖼️ แต่ละภาพเป็นฉากเต็มจอ 9:16 คมชัด ของจริงไม่มีลายน้ำนะคะ
+เปลี่ยนฉากไลฟ์ได้ทุกวันไม่ซ้ำ เป็นไฟล์ใช้ได้ทุกแพลตฟอร์มเลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 100 แบบ 159 บาท
+• 300 แบบ 199 บาท (คุ้มสุด)
+
+🖼️ แต่ละภาพเป็นฉากเต็มจอ 9:16 คมชัด ของจริงไม่มีลายน้ำนะคะ
+เปลี่ยนฉากไลฟ์ได้ทุกวันไม่ซ้ำ เป็นไฟล์ใช้ได้ทุกแพลตฟอร์มเลยค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="ชอบแนวไหนบอกแอดมินได้เลยนะคะ 😊
+แพ็ก 300 แบบ 199 บาท คุ้มสุด มีให้เปลี่ยนทั้งปีเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">ชอบแนวไหนบอกแอดมินได้เลยนะคะ 😊
+แพ็ก 300 แบบ 199 บาท คุ้มสุด มีให้เปลี่ยนทั้งปีเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">ฉากหลังไลฟ์สด 100 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ฉากหลังไลฟ์สด (100 แบบ) ของลูกค้าค่ะ 👇
+https://live-backdrop-300.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ฉากหลังไลฟ์สด (100 แบบ) ของลูกค้าค่ะ 👇
+https://live-backdrop-300.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">ฉากหลังไลฟ์สด ครบ 300 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ฉากหลังไลฟ์สด ครบ 300 แบบ ของลูกค้าค่ะ 👇
+https://live-backdrop-300.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ฉากหลังไลฟ์สด ครบ 300 แบบ ของลูกค้าค่ะ 👇
+https://live-backdrop-300.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="brain-games-kids" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://brain-games-kids.vercel.app" target="_blank" rel="noopener">brain-games-kids.vercel.app</a> · 📥 <a href="https://brain-games-kids.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://brain-games-kids.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างเกมฝึกสมองให้ดูเลยค่ะ 🧩
+มีเขาวงกต หาคำซ่อน เลขปริศนา นับจับคู่ ครบ 40 ชุด
+กดที่รูปได้เลยนะคะ จะเปิดให้ดูหน้าข้างในจริง 3 หน้า ทั้งด่านแรก กลางเล่ม และหน้าเฉลย
+👉 https://brain-games-kids.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างเกมฝึกสมองให้ดูเลยค่ะ 🧩
+มีเขาวงกต หาคำซ่อน เลขปริศนา นับจับคู่ ครบ 40 ชุด
+กดที่รูปได้เลยนะคะ จะเปิดให้ดูหน้าข้างในจริง 3 หน้า ทั้งด่านแรก กลางเล่ม และหน้าเฉลย
+👉 https://brain-games-kids.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 20 ชุด 159 บาท
+• 40 ชุด 199 บาท (คุ้มสุด ได้ครบทุกแนว)
+
+📖 แต่ละชุดมีหลายหน้า (10 ถึง 13 หน้า) พร้อมเฉลยครบทุกด่านนะคะ ในเว็บกดดูข้างในได้ 3 หน้าเลยค่ะ
+เป็นไฟล์ ปริ้นซ้ำได้ไม่จำกัด เหมาะกับวัย 3 ถึง 10 ปีค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 20 ชุด 159 บาท
+• 40 ชุด 199 บาท (คุ้มสุด ได้ครบทุกแนว)
+
+📖 แต่ละชุดมีหลายหน้า (10 ถึง 13 หน้า) พร้อมเฉลยครบทุกด่านนะคะ ในเว็บกดดูข้างในได้ 3 หน้าเลยค่ะ
+เป็นไฟล์ ปริ้นซ้ำได้ไม่จำกัด เหมาะกับวัย 3 ถึง 10 ปีค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="ชุดไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 40 ชุด 199 บาท เพิ่มแค่ 40 บาทได้เพิ่มอีก 20 ชุด ลูกเล่นครบทุกแนวเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">ชุดไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 40 ชุด 199 บาท เพิ่มแค่ 40 บาทได้เพิ่มอีก 20 ชุด ลูกเล่นครบทุกแนวเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">เกมฝึกสมองเด็ก 20 ชุด</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด เกมฝึกสมองเด็ก (20 ชุด พร้อมเฉลย) ของลูกค้าค่ะ 👇
+https://brain-games-kids.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด เกมฝึกสมองเด็ก (20 ชุด พร้อมเฉลย) ของลูกค้าค่ะ 👇
+https://brain-games-kids.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">เกมฝึกสมองเด็ก ครบ 40 ชุด</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด เกมฝึกสมองเด็ก ครบ 40 ชุด พร้อมเฉลยทุกด่าน ของลูกค้าค่ะ 👇
+https://brain-games-kids.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด เกมฝึกสมองเด็ก ครบ 40 ชุด พร้อมเฉลยทุกด่าน ของลูกค้าค่ะ 👇
+https://brain-games-kids.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="math-sheets-k1" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://math-sheets-k1.vercel.app" target="_blank" rel="noopener">math-sheets-k1.vercel.app</a> · 📥 <a href="https://math-sheets-k1.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://math-sheets-k1.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างชีทคณิตให้ดูเลยค่ะ 🔢
+นับเลข บวกลบ นาฬิกา รูปทรง เงินบาท ครบ 40 แบบ
+กดที่รูปได้เลยนะคะ จะเปิดให้ดูโจทย์ข้างในจริง 3 หน้า พร้อมหน้าเฉลย
+👉 https://math-sheets-k1.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างชีทคณิตให้ดูเลยค่ะ 🔢
+นับเลข บวกลบ นาฬิกา รูปทรง เงินบาท ครบ 40 แบบ
+กดที่รูปได้เลยนะคะ จะเปิดให้ดูโจทย์ข้างในจริง 3 หน้า พร้อมหน้าเฉลย
+👉 https://math-sheets-k1.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 20 แบบ 159 บาท
+• 40 แบบ 199 บาท (คุ้มสุด)
+
+📖 แต่ละแบบมี 8 หน้า (แบบฝึก 6 หน้า + ปก + เฉลยครบ) ในเว็บกดดูโจทย์ข้างในได้ 3 หน้าเลยค่ะ
+มีเฉลยทุกข้อ พ่อแม่ตรวจให้ลูกได้เลย ปริ้นซ้ำได้ไม่จำกัดค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 20 แบบ 159 บาท
+• 40 แบบ 199 บาท (คุ้มสุด)
+
+📖 แต่ละแบบมี 8 หน้า (แบบฝึก 6 หน้า + ปก + เฉลยครบ) ในเว็บกดดูโจทย์ข้างในได้ 3 หน้าเลยค่ะ
+มีเฉลยทุกข้อ พ่อแม่ตรวจให้ลูกได้เลย ปริ้นซ้ำได้ไม่จำกัดค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="แบบไหนเหมาะกับลูกบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 40 แบบ 199 บาท ใช้ฝึกยาวตั้งแต่อนุบาลถึง ป.1 เลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">แบบไหนเหมาะกับลูกบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็ก 40 แบบ 199 บาท ใช้ฝึกยาวตั้งแต่อนุบาลถึง ป.1 เลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">ชีทคณิตอนุบาล ป.1 · 20 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทคณิตคิดสนุก (20 แบบ พร้อมเฉลย) ของลูกค้าค่ะ 👇
+https://math-sheets-k1.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทคณิตคิดสนุก (20 แบบ พร้อมเฉลย) ของลูกค้าค่ะ 👇
+https://math-sheets-k1.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">ชีทคณิต ครบ 40 แบบ</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทคณิตคิดสนุก ครบ 40 แบบ พร้อมเฉลยทุกข้อ ของลูกค้าค่ะ 👇
+https://math-sheets-k1.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด ชีทคณิตคิดสนุก ครบ 40 แบบ พร้อมเฉลยทุกข้อ ของลูกค้าค่ะ 👇
+https://math-sheets-k1.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="flashcards-2lang" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://flashcards-2lang.vercel.app" target="_blank" rel="noopener">flashcards-2lang.vercel.app</a> · 📥 <a href="https://flashcards-2lang.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://flashcards-2lang.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างแฟลชการ์ดให้ดูเลยค่ะ 🃏
+ไทย + อังกฤษ 8 หมวด ดูหน้าการ์ดจริงได้ครบทุกไฟล์ กดดูในมือถือได้เลย
+👉 https://flashcards-2lang.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างแฟลชการ์ดให้ดูเลยค่ะ 🃏
+ไทย + อังกฤษ 8 หมวด ดูหน้าการ์ดจริงได้ครบทุกไฟล์ กดดูในมือถือได้เลย
+👉 https://flashcards-2lang.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 4 หมวด (การ์ด 72 ใบ) 159 บาท
+• ครบ 8 หมวด (การ์ด 144 ใบ) 199 บาท (คุ้มสุด เฉลี่ยใบละไม่ถึง 1.5 บาท)
+
+🃏 แต่ละหมวดได้ 2 ไฟล์ (ฉบับไทยเด่น + อังกฤษเด่น) พิมพ์แล้วตัดตามรอยประได้เลย
+รูปวาดน่ารักสไตล์เดียวกันทุกใบ ปริ้นซ้ำได้ไม่จำกัดค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 4 หมวด (การ์ด 72 ใบ) 159 บาท
+• ครบ 8 หมวด (การ์ด 144 ใบ) 199 บาท (คุ้มสุด เฉลี่ยใบละไม่ถึง 1.5 บาท)
+
+🃏 แต่ละหมวดได้ 2 ไฟล์ (ฉบับไทยเด่น + อังกฤษเด่น) พิมพ์แล้วตัดตามรอยประได้เลย
+รูปวาดน่ารักสไตล์เดียวกันทุกใบ ปริ้นซ้ำได้ไม่จำกัดค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="หมวดไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็กครบ 8 หมวด 199 บาท ได้การ์ดตั้ง 144 ใบ สอนลูกได้ทั้งปีเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">หมวดไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็กครบ 8 หมวด 199 บาท ได้การ์ดตั้ง 144 ใบ สอนลูกได้ทั้งปีเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">แฟลชการ์ด 4 หมวด 8 ไฟล์</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด แฟลชการ์ดคำศัพท์ 2 ภาษา (4 หมวด การ์ด 72 ใบ) ของลูกค้าค่ะ 👇
+https://flashcards-2lang.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด แฟลชการ์ดคำศัพท์ 2 ภาษา (4 หมวด การ์ด 72 ใบ) ของลูกค้าค่ะ 👇
+https://flashcards-2lang.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">แฟลชการ์ด ครบ 8 หมวด 16 ไฟล์</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด แฟลชการ์ดคำศัพท์ 2 ภาษา ครบ 8 หมวด (การ์ด 144 ใบ) ของลูกค้าค่ะ 👇
+https://flashcards-2lang.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด แฟลชการ์ดคำศัพท์ 2 ภาษา ครบ 8 หมวด (การ์ด 144 ใบ) ของลูกค้าค่ะ 👇
+https://flashcards-2lang.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="storybook-th" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://storybook-th.vercel.app" target="_blank" rel="noopener">storybook-th.vercel.app</a> · 📥 <a href="https://storybook-th.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://storybook-th.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างนิทานให้ดูเลยค่ะ 📚
+ภาพสีน้ำน่ารัก เรื่องละ 10 หน้า มีข้อคิดสอนใจท้ายเล่มทุกเรื่อง
+กดที่รูปได้เลยนะคะ จะเปิดให้อ่านหน้าข้างในจริง 3 หน้า
+👉 https://storybook-th.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างนิทานให้ดูเลยค่ะ 📚
+ภาพสีน้ำน่ารัก เรื่องละ 10 หน้า มีข้อคิดสอนใจท้ายเล่มทุกเรื่อง
+กดที่รูปได้เลยนะคะ จะเปิดให้อ่านหน้าข้างในจริง 3 หน้า
+👉 https://storybook-th.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 3 เรื่อง 159 บาท
+• ครบ 6 เรื่อง 199 บาท (คุ้มสุด)
+
+📖 แต่ละเรื่องมี 10 หน้าเต็ม ภาพประกอบทุกหน้า ตัวละครตัวเดิมทั้งเรื่องนะคะ ในเว็บกดเปิดอ่านข้างในได้ 3 หน้าเลยค่ะ
+เปิดอ่านในมือถือก่อนนอน หรือปริ้นเป็นเล่มก็ได้ ปริ้นซ้ำได้ไม่จำกัดค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 3 เรื่อง 159 บาท
+• ครบ 6 เรื่อง 199 บาท (คุ้มสุด)
+
+📖 แต่ละเรื่องมี 10 หน้าเต็ม ภาพประกอบทุกหน้า ตัวละครตัวเดิมทั้งเรื่องนะคะ ในเว็บกดเปิดอ่านข้างในได้ 3 หน้าเลยค่ะ
+เปิดอ่านในมือถือก่อนนอน หรือปริ้นเป็นเล่มก็ได้ ปริ้นซ้ำได้ไม่จำกัดค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="เรื่องไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็กครบ 6 เรื่อง 199 บาท อ่านสลับได้ทั้งอาทิตย์ไม่เบื่อเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">เรื่องไหนถูกใจบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็กครบ 6 เรื่อง 199 บาท อ่านสลับได้ทั้งอาทิตย์ไม่เบื่อเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">นิทานเด็ก AI 3 เรื่อง</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด นิทานเด็ก AI สอนใจ (3 เรื่อง) ของลูกค้าค่ะ 👇
+https://storybook-th.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด นิทานเด็ก AI สอนใจ (3 เรื่อง) ของลูกค้าค่ะ 👇
+https://storybook-th.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">นิทานเด็ก AI ครบ 6 เรื่อง</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด นิทานเด็ก AI สอนใจ ครบ 6 เรื่อง ของลูกค้าค่ะ 👇
+https://storybook-th.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด นิทานเด็ก AI สอนใจ ครบ 6 เรื่อง ของลูกค้าค่ะ 👇
+https://storybook-th.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+<div class="kit" data-k="teacher-decor-kit" hidden>
+    <div class="klink">🔗 ตัวอย่าง <a href="https://teacher-decor-kit.vercel.app" target="_blank" rel="noopener">teacher-decor-kit.vercel.app</a> · 📥 <a href="https://teacher-decor-kit.vercel.app/pro1" target="_blank" rel="noopener">/pro1</a> <a href="https://teacher-decor-kit.vercel.app/pro2" target="_blank" rel="noopener">/pro2</a></div>
+    <div class="sec">📤 ก่อนขาย (ส่งเรียง ① ② ③)</div>
+    <div class="card"><div class="rh"><span class="pill p1">①</span><span class="nm">ส่งลิงก์ดูตัวอย่าง</span><button class="btn gold" data-copy="ส่งตัวอย่างสื่อตกแต่งห้องเรียนให้ดูเลยค่ะ 🏫
+บัตรคำ ก-ฮ ABC ตัวเลข สระ เกียรติบัตร ตารางเรียน ป้ายชื่อโต๊ะ ธงราว ดูได้ครบ 40 ไฟล์ กดดูในมือถือได้เลย
+👉 https://teacher-decor-kit.vercel.app">⧉ ก๊อปข้อความ</button></div><div class="txt">ส่งตัวอย่างสื่อตกแต่งห้องเรียนให้ดูเลยค่ะ 🏫
+บัตรคำ ก-ฮ ABC ตัวเลข สระ เกียรติบัตร ตารางเรียน ป้ายชื่อโต๊ะ ธงราว ดูได้ครบ 40 ไฟล์ กดดูในมือถือได้เลย
+👉 https://teacher-decor-kit.vercel.app</div></div>
+<div class="card"><div class="rh"><span class="pill p1">②</span><span class="nm">โปรโมชัน / ราคา</span><button class="btn gold" data-copy="โปรตอนนี้ค่ะ
+• 20 ไฟล์ 159 บาท
+• ครบ 40 ไฟล์ 199 บาท (คุ้มสุด ตกแต่งได้ทั้งห้อง)
+
+📄 หลายไฟล์มีหลายหน้านะคะ (บัตรคำ ก-ฮ มีตั้ง 9 หน้า 44 ใบ) รูปตัวอย่างที่เห็นเป็นแค่หน้าเดียวค่ะ
+เป็นไฟล์ PDF คมชัด ปริ้นซ้ำได้ไม่จำกัด ใช้ได้ทุกเทอมเลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">โปรตอนนี้ค่ะ
+• 20 ไฟล์ 159 บาท
+• ครบ 40 ไฟล์ 199 บาท (คุ้มสุด ตกแต่งได้ทั้งห้อง)
+
+📄 หลายไฟล์มีหลายหน้านะคะ (บัตรคำ ก-ฮ มีตั้ง 9 หน้า 44 ใบ) รูปตัวอย่างที่เห็นเป็นแค่หน้าเดียวค่ะ
+เป็นไฟล์ PDF คมชัด ปริ้นซ้ำได้ไม่จำกัด ใช้ได้ทุกเทอมเลยค่ะ</div></div>
+<div class="card"><div class="rh"><span class="pill p1">③</span><span class="nm">ปิดการขาย</span><button class="btn gold" data-copy="คุณครูถูกใจชุดไหนบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็กครบ 40 ไฟล์ 199 บาท เพิ่มแค่ 40 บาท ได้ตกแต่งครบทั้งห้องเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ">⧉ ก๊อปข้อความ</button></div><div class="txt">คุณครูถูกใจชุดไหนบอกแอดมินได้เลยนะคะ 😊
+แนะนำแพ็กครบ 40 ไฟล์ 199 บาท เพิ่มแค่ 40 บาท ได้ตกแต่งครบทั้งห้องเลยค่ะ
+โอนแล้วส่งสลิปในแชทนี้ เดี๋ยวส่งไฟล์ให้เลยค่ะ</div></div>
+    <div class="sec">📦 หลังโอน (เลือกตามโปรที่ซื้อ)</div>
+    <div class="card"><div class="rh"><span class="pill p2">โปร 1</span><span class="nm">สื่อครูตกแต่งห้องเรียน 20 ไฟล์</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สื่อตกแต่งห้องเรียนคุณครู (20 ไฟล์) ของลูกค้าค่ะ 👇
+https://teacher-decor-kit.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สื่อตกแต่งห้องเรียนคุณครู (20 ไฟล์) ของลูกค้าค่ะ 👇
+https://teacher-decor-kit.vercel.app/pro1
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+<div class="card"><div class="rh"><span class="pill p2">โปร 2</span><span class="nm">สื่อครู ครบ 40 ไฟล์</span><button class="btn gold" data-copy="ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สื่อตกแต่งห้องเรียนคุณครู ครบ 40 ไฟล์ ของลูกค้าค่ะ 👇
+https://teacher-decor-kit.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊">⧉ ก๊อปข้อความ</button></div><div class="txt">ได้รับยอดเรียบร้อยแล้วค่ะ ขอบคุณมากนะคะ 🙏
+นี่คือลิงก์ดาวน์โหลด สื่อตกแต่งห้องเรียนคุณครู ครบ 40 ไฟล์ ของลูกค้าค่ะ 👇
+https://teacher-decor-kit.vercel.app/pro2
+
+💻 แนะนำเปิดลิงก์ในคอมพิวเตอร์นะคะ จะง่ายที่สุด
+1) กดปุ่มแดง “โหลดทั้งหมด” จะได้ไฟล์ zip
+2) แตกไฟล์ zip แล้วปริ้นได้เลยค่ะ
+(ถ้าใช้มือถือ แตกไฟล์ zip ไม่ได้ ให้เลื่อนลงกดโหลดทีละไฟล์แทนค่ะ)
+
+📎 ถ้าจะเอาไปปริ้นที่ร้าน ส่งลิงก์นี้ให้ร้านเปิดโหลดเองได้เลยค่ะ ไม่ต้องโหลดใส่เครื่องไปก่อน กดง่ายกว่า
+
+ลิงก์นี้เก็บไว้โหลดซ้ำได้ตลอดนะคะ 😊</div></div>
+  </div>
+  <div class="foot">แก้คำลงท้าย/ชื่อร้านได้ตามสะดวก · ห้ามใช้ขีดยาวและอีโมจิแทนตัวเลขในข้อความ</div>
+</div>
+</div>
+<script>function sha256(ascii){function rightRotate(v,a){return(v>>>a)|(v<<(32-a))}var mathPow=Math.pow,maxWord=mathPow(2,32),result='',words=[],asciiBitLength=ascii.length*8,hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],primeCounter=k.length,isComposite={};for(var candidate=2;primeCounter<64;candidate++){if(!isComposite[candidate]){for(var i=0;i<313;i+=candidate)isComposite[i]=candidate;hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0}}ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';for(i=0;i<ascii.length;i++){var j=ascii.charCodeAt(i);if(j>>8)return;words[i>>2]|=j<<((3-i)%4)*8}words[words.length]=(asciiBitLength/maxWord)|0;words[words.length]=asciiBitLength;for(j=0;j<words.length;){var w=words.slice(j,j+=16),oldHash=hash;hash=hash.slice(0,8);for(i=0;i<64;i++){var w15=w[i-15],w2=w[i-2],a=hash[0],e=hash[4],temp1=hash[7]+(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))+((e&hash[5])^(~e&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))+w[i-7]+(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10)))|0),temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));hash=[(temp1+temp2)|0].concat(hash);hash[4]=(hash[4]+temp1)|0}for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0}for(i=0;i<8;i++){for(j=3;j+1;j--){var b=(hash[i]>>(j*8))&255;result+=((b<16)?0:'')+b.toString(16)}}return result}
+function thaiSafeHash(str){const bytes=new TextEncoder().encode(str);let s='';bytes.forEach(b=>s+=String.fromCharCode(b));return sha256(s);}
+const PW_HASHES=["045d1fd8862a9e18f091106a753a0a7a69435dd6fe7bdea9e049cbf6669e86a1"];
+const gate=document.getElementById('gate'),app=document.getElementById('app');
+function unlock(){gate.style.display='none';app.style.display='block';if(typeof onUnlock==='function')onUnlock();}
+if(PW_HASHES.includes(localStorage.getItem('dp_auth')))unlock();
+function tryLogin(){const val=(document.getElementById('pw').value||'').trim().toUpperCase();const h=thaiSafeHash(val);
+  if(PW_HASHES.includes(h)){localStorage.setItem('dp_auth',h);unlock();window.scrollTo(0,0);}
+  else{document.getElementById('gateErr').textContent='รหัสไม่ถูกต้อง ลองใหม่อีกครั้งค่ะ';document.getElementById('pw').select();}}
+document.getElementById('pwBtn').addEventListener('click',tryLogin);
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-copy]');if(!b)return;
+  var txt=b.getAttribute('data-copy'),orig=b.innerHTML;
+  function done(){b.classList.add('done');b.innerHTML='✓ ก๊อปแล้ว';setTimeout(function(){b.classList.remove('done');b.innerHTML=orig;},1500);}
+  function fb(){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.top='0';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy');done();}catch(err){alert('คัดลอกไม่ได้ ให้กดค้างที่ข้อความเพื่อคัดลอกเองค่ะ');}document.body.removeChild(ta);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fb);}else fb();
+});
+function showKit(k){document.querySelectorAll('.chip').forEach(function(c){c.classList.toggle('on',c.dataset.k===k);});document.querySelectorAll('.kit').forEach(function(x){x.hidden=(x.dataset.k!==k);});try{localStorage.setItem('dp_kit',k);}catch(e){}}
+document.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){showKit(c.dataset.k);window.scrollTo({top:0});};});
+function onUnlock(){var h=(location.hash||'').slice(1);var k=h&&document.querySelector('.chip[data-k="'+h+'"]')?h:null;try{if(!k)k=localStorage.getItem('dp_kit');}catch(e){}if(k&&document.querySelector('.chip[data-k="'+k+'"]'))showKit(k);}
+window.addEventListener('hashchange',onUnlock);
+if(app.style.display==='block')onUnlock();</script>
+</body></html>

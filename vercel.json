@@ -2,10 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/gen3-products.js": {
-      "regions": ["sin1"]
+      "regions": [
+        "sin1"
+      ]
     },
     "api/gen3-product-image.js": {
-      "regions": ["sin1"]
+      "regions": [
+        "sin1"
+      ]
     }
   },
   "trailingSlash": false,
@@ -17,6 +21,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/digitalproducts",
+      "destination": "/digitalproducts.html"
+    },
+    {
+      "source": "/digitalproducts/guide",
+      "destination": "/digitalproducts-guide.html"
+    },
     {
       "source": "/gen3/presenter-identity",
       "destination": "/api/gen3-page?view=presenter-identity"

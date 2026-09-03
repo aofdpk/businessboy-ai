@@ -1,0 +1,146 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#0d0d0d">
+<title>คลังสินค้าดิจิทัล 8 สินค้า</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700;800&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0d0d0d;--bg2:#161616;--card:#1c1c1c;--line:#2e2a22;--ink:#f3ede0;--muted:#a89f8c;--gold:#d4af37;--gold2:#f0d27a;--red:#c8102e;--red2:#e63950;--green:#19b36b}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Sarabun',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+h1,h2,h3,.f{font-family:'Prompt',sans-serif}
+a{color:var(--gold2)}
+.hero{background:radial-gradient(120% 90% at 50% 0%,#2a2210 0%,#121212 60%,#0d0d0d 100%);border-bottom:1px solid var(--line);padding:28px 18px 22px;text-align:center}
+.hero .badge{display:inline-block;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.55);color:var(--gold2);font-family:'Prompt';font-weight:600;font-size:12.5px;padding:5px 14px;border-radius:99px;margin-bottom:10px}
+.hero h1{font-size:23px;font-weight:800;color:var(--gold2);line-height:1.3}
+.hero .sub{color:var(--muted);font-size:14px;margin-top:6px;max-width:640px;margin-left:auto;margin-right:auto}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:'Prompt';font-weight:700;font-size:13px;border:0;cursor:pointer;border-radius:9px;padding:9px 13px;text-decoration:none;white-space:nowrap;transition:.12s}
+.btn.gold{background:var(--gold);color:#1a1400}.btn.gold:hover{background:var(--gold2)}
+.btn.red{background:linear-gradient(90deg,var(--red),var(--red2));color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:var(--gold)}
+.btn.done{background:var(--green)!important;color:#fff!important}
+.foot{text-align:center;color:#6f6858;font-size:12px;padding:22px;font-family:'Prompt'}
+/* gate */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(120% 90% at 50% 0%,#2a2210 0%,#0d0d0d 70%)}
+.gate-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:30px 24px;max-width:420px;width:100%;text-align:center}
+.gate-card .em{font-size:44px}
+.gate-card h1{font-size:20px;font-weight:800;color:var(--gold2);margin:10px 0 4px}
+.gate-card .sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.gate-card input{width:100%;font-size:18px;padding:13px;border-radius:12px;border:1.5px solid var(--line);background:#111;color:var(--ink);text-align:center;letter-spacing:.08em;font-family:'Prompt';font-weight:700}
+.gate-card input:focus{outline:0;border-color:var(--gold)}
+.gate-card button{width:100%;margin-top:12px;font-size:16px;padding:13px}
+#gateErr{color:#ff7a8a;font-weight:700;margin-top:12px;min-height:1.6em;font-size:14px}
+.gate-note{margin-top:14px;font-size:12.5px;color:var(--muted)}
+#app{display:none}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ph{display:flex;gap:12px;align-items:center;padding:14px 14px 8px}
+.ph img{width:64px;height:84px;object-fit:cover;border-radius:8px;background:#222;flex:0 0 auto}
+.pt{font-family:'Prompt';font-weight:800;font-size:17px;color:var(--gold2);line-height:1.3}
+.pw{font-size:13px;color:var(--muted);margin-top:3px}
+.pd{padding:4px 14px 10px;font-size:13.5px;color:#d9d1bf;display:grid;gap:3px}
+.pd b{color:var(--ink);font-family:'Prompt';font-weight:600}
+.best{font-family:'Prompt';font-weight:700;font-size:10.5px;background:linear-gradient(90deg,var(--red),var(--red2));color:#fff;padding:1px 8px;border-radius:99px;vertical-align:middle}
+.lk{border-top:1px solid var(--line);padding:10px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+.lt{font-family:'Prompt';font-weight:600;font-size:12.5px;color:var(--muted);grid-column:1/-1}
+.lu{font-size:13px;word-break:break-all;color:var(--gold2);text-decoration:none}
+.lb{display:flex;gap:6px}
+.pg{padding:12px 14px 14px;border-top:1px solid var(--line);text-align:center}
+.pg .btn{width:100%;justify-content:center;font-size:14px;padding:12px}
+.tip{background:#1f1a0f;border:1px solid #4a3d1a;border-radius:12px;padding:12px 15px;font-size:13.5px;color:#e2d7bd;margin-bottom:14px}
+.tip b{color:var(--gold2)}
+</style></head><body>
+<div id="gate"><div class="gate-card">
+  <div class="em">📦🔑</div>
+  <h1>คลังสินค้าดิจิทัล 8 สินค้า</h1>
+  <div class="sub">สำหรับผู้เรียนเท่านั้น<br>กรอกรหัสที่ได้รับในห้องเรียน</div>
+  <input id="pw" type="text" placeholder="กรอกรหัสเข้าใช้งาน" autocomplete="off" autocapitalize="characters">
+  <button id="pwBtn" class="btn red">🔓 เข้าใช้งาน</button>
+  <div id="gateErr"></div>
+  <div class="gate-note">กรอกครั้งเดียว เครื่องจะจำไว้ให้</div>
+</div></div>
+<div id="app">
+<div class="hero"><span class="badge">📦 คลังสินค้าพร้อมขาย</span><h1>คลังสินค้าดิจิทัล 8 สินค้า</h1>
+<div class="sub">ทุกสินค้ามี 3 ลิงก์: <b>เว็บตัวอย่าง</b> ส่งให้ลูกค้าดูก่อนซื้อ · <b>โปร 1 / โปร 2</b> ส่งหลังลูกค้าโอน · กดก๊อปแล้ววางในแชทได้เลย</div></div>
+<div class="wrap">
+  <div class="tip">💡 <b>ลำดับขาย:</b> ส่งเว็บตัวอย่าง → บอกโปร (ดันโปร 2 “เพิ่มแค่ 40 บาท ได้เพิ่มเท่าตัว”) → ลูกค้าโอน → ส่งลิงก์โปรที่ซื้อ · ข้อความสำเร็จรูปทุกขั้นอยู่ในปุ่ม <b>เปิดคู่มือการตอบ</b> ของแต่ละสินค้า</div>
+  <div class="grid"><article class="pc" id="coloring-kids-th">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/products/coloring/thumbs/c01-dinosaur.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">🖍️ สมุดระบายสีเด็ก</div><div class="pw">👤 แม่ที่ลูก 3-6 ขวบ อยากได้กิจกรรมเลิกจอ</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> สมุดระบายสี 50 เล่ม เล่มละ 20 หน้า (1,000 หน้า)</div><div><b>โปร 1 · 159:</b> 20 เล่ม 400 หน้า &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 50 เล่ม 1,000 หน้า <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> ปริ้นซ้ำได้ไม่จำกัด ธีมครบ 50 แบบ</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://coloring-kids-th.vercel.app" target="_blank" rel="noopener">coloring-kids-th.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://coloring-kids-th.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://coloring-kids-th.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://coloring-kids-th.vercel.app/pro1" target="_blank" rel="noopener">coloring-kids-th.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://coloring-kids-th.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://coloring-kids-th.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://coloring-kids-th.vercel.app/pro2" target="_blank" rel="noopener">coloring-kids-th.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://coloring-kids-th.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://coloring-kids-th.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#coloring-kids-th" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="writing-sheets-th">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/products/writing/thumbs/th01-consonant.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">✏️ ชีทฝึกเขียน ไทย + อังกฤษ</div><div class="pw">👤 แม่ลูกอนุบาล-ป.1 และครูอนุบาล</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> ชีทฝึกเขียน 40 แบบ ไทย 20 + อังกฤษ 20 (แบบละ 10-44 หน้า)</div><div><b>โปร 1 · 159:</b> 20 แบบ ไทย หรือ อังกฤษ &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 40 แบบ ครบ 2 ภาษา <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> มีเส้นประนำ ตัวอักษรมาตรฐาน</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://writing-sheets-th.vercel.app" target="_blank" rel="noopener">writing-sheets-th.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://writing-sheets-th.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://writing-sheets-th.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท · ภาษาไทย 20 แบบ</div><a class="lu" href="https://writing-sheets-th.vercel.app/pro1th" target="_blank" rel="noopener">writing-sheets-th.vercel.app/pro1th</a><div class="lb"><button class="btn gold" data-copy="https://writing-sheets-th.vercel.app/pro1th">⧉ ก๊อป</button><a class="btn ghost" href="https://writing-sheets-th.vercel.app/pro1th" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท · ภาษาอังกฤษ 20 แบบ</div><a class="lu" href="https://writing-sheets-th.vercel.app/pro1en" target="_blank" rel="noopener">writing-sheets-th.vercel.app/pro1en</a><div class="lb"><button class="btn gold" data-copy="https://writing-sheets-th.vercel.app/pro1en">⧉ ก๊อป</button><a class="btn ghost" href="https://writing-sheets-th.vercel.app/pro1en" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://writing-sheets-th.vercel.app/pro2" target="_blank" rel="noopener">writing-sheets-th.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://writing-sheets-th.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://writing-sheets-th.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#writing-sheets-th" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="live-backdrop-300">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/products/backdrop/thumbs/warehouse-01.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">🎬 ฉากไลฟ์สด 9:16</div><div class="pw">👤 แม่ค้าไลฟ์ อยากเปลี่ยนฉากทุกวันไม่ซ้ำ</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> ฉากไลฟ์สด 9:16 คมชัด 300 ภาพ</div><div><b>โปร 1 · 159:</b> 100 ภาพ &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 300 ภาพ <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> ใช้ได้ทุกแพลตฟอร์ม โกดัง/ร้าน/สตูดิโอ/เทศกาล</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://live-backdrop-300.vercel.app" target="_blank" rel="noopener">live-backdrop-300.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://live-backdrop-300.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://live-backdrop-300.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://live-backdrop-300.vercel.app/pro1" target="_blank" rel="noopener">live-backdrop-300.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://live-backdrop-300.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://live-backdrop-300.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://live-backdrop-300.vercel.app/pro2" target="_blank" rel="noopener">live-backdrop-300.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://live-backdrop-300.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://live-backdrop-300.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#live-backdrop-300" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="brain-games-kids">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/slips/products2/braingames/thumbs/mz-e1.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">🧩 เกมฝึกสมองเด็ก</div><div class="pw">👤 แม่ลูก 3-10 ขวบ และครู อยากได้กิจกรรมเงียบๆ</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> เกมฝึกสมอง 40 ชุด (เขาวงกต หาคำ เลข นับ) พร้อมเฉลย</div><div><b>โปร 1 · 159:</b> 20 ชุด &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 40 ชุด <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> ในเว็บกดดูข้างในได้ 3 หน้า เฉลยครบทุกด่าน</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://brain-games-kids.vercel.app" target="_blank" rel="noopener">brain-games-kids.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://brain-games-kids.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://brain-games-kids.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://brain-games-kids.vercel.app/pro1" target="_blank" rel="noopener">brain-games-kids.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://brain-games-kids.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://brain-games-kids.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://brain-games-kids.vercel.app/pro2" target="_blank" rel="noopener">brain-games-kids.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://brain-games-kids.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://brain-games-kids.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#brain-games-kids" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="math-sheets-k1">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/slips/products2/math/thumbs/m01-count5.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">🔢 ชีทคณิตคิดสนุก อนุบาล ป.1</div><div class="pw">👤 แม่ ครู ติวเตอร์ อนุบาล-ป.1</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> ชีทคณิต 40 แบบ แบบละ 8 หน้า มีเฉลยทุกข้อ</div><div><b>โปร 1 · 159:</b> 20 แบบ &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 40 แบบ <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> นับเลข บวกลบ นาฬิกา รูปทรง เงินบาท</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://math-sheets-k1.vercel.app" target="_blank" rel="noopener">math-sheets-k1.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://math-sheets-k1.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://math-sheets-k1.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://math-sheets-k1.vercel.app/pro1" target="_blank" rel="noopener">math-sheets-k1.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://math-sheets-k1.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://math-sheets-k1.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://math-sheets-k1.vercel.app/pro2" target="_blank" rel="noopener">math-sheets-k1.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://math-sheets-k1.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://math-sheets-k1.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#math-sheets-k1" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="flashcards-2lang">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/slips/products3/flashcards/thumbs/animals-th.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">🃏 แฟลชการ์ดคำศัพท์ 2 ภาษา</div><div class="pw">👤 แม่ ครู โรงเรียนสอนภาษา</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> แฟลชการ์ด 2 ภาษา 8 หมวด 16 ไฟล์ (144 ใบ)</div><div><b>โปร 1 · 159:</b> 4 หมวด 72 ใบ &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 8 หมวด 144 ใบ <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> รูปสไตล์เดียวกันทุกใบ ตัดตามรอยประ</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://flashcards-2lang.vercel.app" target="_blank" rel="noopener">flashcards-2lang.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://flashcards-2lang.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://flashcards-2lang.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://flashcards-2lang.vercel.app/pro1" target="_blank" rel="noopener">flashcards-2lang.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://flashcards-2lang.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://flashcards-2lang.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://flashcards-2lang.vercel.app/pro2" target="_blank" rel="noopener">flashcards-2lang.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://flashcards-2lang.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://flashcards-2lang.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#flashcards-2lang" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="storybook-th">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/slips/products3/story/thumbs/s1.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">📚 นิทานเด็ก AI สอนใจ</div><div class="pw">👤 แม่อ่านก่อนนอน / ครูใช้เล่า</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> นิทานภาพสีน้ำ 6 เรื่อง เรื่องละ 10 หน้า มีข้อคิด</div><div><b>โปร 1 · 159:</b> 3 เรื่อง &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 6 เรื่อง <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> ตัวละครเดิมทั้งเรื่อง อ่านในแท็บเล็ตหรือปริ้นได้</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://storybook-th.vercel.app" target="_blank" rel="noopener">storybook-th.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://storybook-th.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://storybook-th.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://storybook-th.vercel.app/pro1" target="_blank" rel="noopener">storybook-th.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://storybook-th.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://storybook-th.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://storybook-th.vercel.app/pro2" target="_blank" rel="noopener">storybook-th.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://storybook-th.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://storybook-th.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#storybook-th" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article>
+<article class="pc" id="teacher-decor-kit">
+    <div class="ph"><img src="https://txsgttyregmpoymstkdy.supabase.co/storage/v1/object/public/slips/products3/teacher/thumbs/fc-ko.jpg" alt="" referrerpolicy="no-referrer"><div><div class="pt">🏫 สื่อตกแต่งห้องเรียนคุณครู</div><div class="pw">👤 ครูอนุบาล-ประถม ต้องมีสื่อพรุ่งนี้</div></div></div>
+    <div class="pd"><div><b>ได้อะไร:</b> สื่อตกแต่งห้องเรียน 40 ไฟล์ (บัตรคำ ป้าย เกียรติบัตร ตาราง ธงราว)</div><div><b>โปร 1 · 159:</b> 20 ไฟล์ &nbsp;·&nbsp; <b>โปร 2 · 199:</b> 40 ไฟล์ <span class="best">คุ้มสุด</span></div><div><b>จุดขาย:</b> ขายพีคช่วงเปิดเทอม พ.ค. และ พ.ย.</div></div>
+    <div class="lk"><div class="lt">เว็บตัวอย่างส่งให้ลูกค้า (ดูก่อนซื้อ)</div><a class="lu" href="https://teacher-decor-kit.vercel.app" target="_blank" rel="noopener">teacher-decor-kit.vercel.app</a><div class="lb"><button class="btn gold" data-copy="https://teacher-decor-kit.vercel.app">⧉ ก๊อป</button><a class="btn ghost" href="https://teacher-decor-kit.vercel.app" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="lk"><div class="lt">เว็บสินค้าจริง โปร 1 · 159 บาท</div><a class="lu" href="https://teacher-decor-kit.vercel.app/pro1" target="_blank" rel="noopener">teacher-decor-kit.vercel.app/pro1</a><div class="lb"><button class="btn gold" data-copy="https://teacher-decor-kit.vercel.app/pro1">⧉ ก๊อป</button><a class="btn ghost" href="https://teacher-decor-kit.vercel.app/pro1" target="_blank" rel="noopener">เปิดดู</a></div></div><div class="lk"><div class="lt">เว็บสินค้าจริง โปร 2 · 199 บาท</div><a class="lu" href="https://teacher-decor-kit.vercel.app/pro2" target="_blank" rel="noopener">teacher-decor-kit.vercel.app/pro2</a><div class="lb"><button class="btn gold" data-copy="https://teacher-decor-kit.vercel.app/pro2">⧉ ก๊อป</button><a class="btn ghost" href="https://teacher-decor-kit.vercel.app/pro2" target="_blank" rel="noopener">เปิดดู</a></div></div>
+    <div class="pg"><a class="btn red" href="/digitalproducts/guide#teacher-decor-kit" target="_blank" rel="noopener">📋 เปิดคู่มือการตอบ (แท็บใหม่)</a></div>
+  </article></div>
+  <div class="foot">ราคาบนเว็บตัวอย่างล็อกที่ 159 / 199 บาท · ลิงก์ทั้งหมดใช้ร่วมกัน ห้ามแก้ไขหรือส่งต่อนอกห้องเรียน</div>
+</div>
+</div>
+<script>function sha256(ascii){function rightRotate(v,a){return(v>>>a)|(v<<(32-a))}var mathPow=Math.pow,maxWord=mathPow(2,32),result='',words=[],asciiBitLength=ascii.length*8,hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[],primeCounter=k.length,isComposite={};for(var candidate=2;primeCounter<64;candidate++){if(!isComposite[candidate]){for(var i=0;i<313;i+=candidate)isComposite[i]=candidate;hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0}}ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';for(i=0;i<ascii.length;i++){var j=ascii.charCodeAt(i);if(j>>8)return;words[i>>2]|=j<<((3-i)%4)*8}words[words.length]=(asciiBitLength/maxWord)|0;words[words.length]=asciiBitLength;for(j=0;j<words.length;){var w=words.slice(j,j+=16),oldHash=hash;hash=hash.slice(0,8);for(i=0;i<64;i++){var w15=w[i-15],w2=w[i-2],a=hash[0],e=hash[4],temp1=hash[7]+(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))+((e&hash[5])^(~e&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))+w[i-7]+(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10)))|0),temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));hash=[(temp1+temp2)|0].concat(hash);hash[4]=(hash[4]+temp1)|0}for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0}for(i=0;i<8;i++){for(j=3;j+1;j--){var b=(hash[i]>>(j*8))&255;result+=((b<16)?0:'')+b.toString(16)}}return result}
+function thaiSafeHash(str){const bytes=new TextEncoder().encode(str);let s='';bytes.forEach(b=>s+=String.fromCharCode(b));return sha256(s);}
+const PW_HASHES=["045d1fd8862a9e18f091106a753a0a7a69435dd6fe7bdea9e049cbf6669e86a1"];
+const gate=document.getElementById('gate'),app=document.getElementById('app');
+function unlock(){gate.style.display='none';app.style.display='block';if(typeof onUnlock==='function')onUnlock();}
+if(PW_HASHES.includes(localStorage.getItem('dp_auth')))unlock();
+function tryLogin(){const val=(document.getElementById('pw').value||'').trim().toUpperCase();const h=thaiSafeHash(val);
+  if(PW_HASHES.includes(h)){localStorage.setItem('dp_auth',h);unlock();window.scrollTo(0,0);}
+  else{document.getElementById('gateErr').textContent='รหัสไม่ถูกต้อง ลองใหม่อีกครั้งค่ะ';document.getElementById('pw').select();}}
+document.getElementById('pwBtn').addEventListener('click',tryLogin);
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-copy]');if(!b)return;
+  var txt=b.getAttribute('data-copy'),orig=b.innerHTML;
+  function done(){b.classList.add('done');b.innerHTML='✓ ก๊อปแล้ว';setTimeout(function(){b.classList.remove('done');b.innerHTML=orig;},1500);}
+  function fb(){var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.top='0';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy');done();}catch(err){alert('คัดลอกไม่ได้ ให้กดค้างที่ข้อความเพื่อคัดลอกเองค่ะ');}document.body.removeChild(ta);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fb);}else fb();
+});</script>
+</body></html>
