@@ -22,6 +22,10 @@
   ],
   "rewrites": [
     {
+      "source": "/starter",
+      "destination": "/starter.html"
+    },
+    {
       "source": "/digitalproducts",
       "destination": "/digitalproducts.html"
     },
