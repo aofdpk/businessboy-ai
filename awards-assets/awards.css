@@ -3,3 +3,7 @@
 .intro{padding:30px 0}.intro h1{font-size:clamp(1.8rem,3vw,2.45rem)}.intro-description{font-size:.95rem}.cutoff{gap:6px}.stat{padding:16px 24px}.stat strong{font-size:1.7rem}
 
 .person-row>span:first-child{min-width:0}.filters label{min-width:0}.channel-block,.detail-ep{overflow-wrap:anywhere}@media(max-width:560px){.person-row{grid-template-columns:minmax(0,1fr) 20px}}
+
+.total-score{padding:14px 16px;background:#edf4ef;border-radius:12px}.total-score strong{font-size:1.6rem;color:#1b6044}.criterion-detail{border:1px solid #dce2e5;border-radius:12px;padding:12px 16px;margin:16px 0}.criterion-detail summary{cursor:pointer;font-weight:700}.criterion-detail h4{margin:20px 0 6px}.score strong{overflow-wrap:anywhere}.winner .small{margin-top:-6px}
+
+.person-ep-nav{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 22px}.person-ep-nav button{border:1px solid #dce2e5;background:#f5f8f7;border-radius:8px;padding:7px 12px;color:#1b6044;cursor:pointer}.detail-ep{scroll-margin-top:90px}
