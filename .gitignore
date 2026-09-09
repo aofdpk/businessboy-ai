@@ -9,3 +9,7 @@ catalog-db/*.jsonl
 _assets/
 local-gen3-server.js
 qa-runs/
+
+!api/_awards-private.js
+
+!api/_awards-admin-config.js

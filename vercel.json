@@ -22,6 +22,54 @@
   ],
   "rewrites": [
     {
+      "source": "/gen3-awards/admin",
+      "destination": "/api/gen3-awards-admin"
+    },
+    {
+      "source": "/awards-assets/people/:path*",
+      "destination": "/api/gen3-awards-admin?asset=legacy"
+    },
+    {
+      "source": "/awards-assets/results.json",
+      "destination": "/api/gen3-awards-admin?asset=results"
+    },
+    {
+      "source": "/awards-assets/winners-v2.json",
+      "destination": "/api/gen3-awards-admin?asset=legacy"
+    },
+    {
+      "source": "/awards-assets/winners-v3.json",
+      "destination": "/api/gen3-awards-admin?asset=legacy"
+    },
+    {
+      "source": "/awards-assets/awards.js",
+      "destination": "/api/gen3-awards-admin?asset=legacy"
+    },
+    {
+      "source": "/awards-assets/awards-v2.js",
+      "destination": "/api/gen3-awards-admin?asset=legacy"
+    },
+    {
+      "source": "/awards-assets/awards-v3.js",
+      "destination": "/api/gen3-awards-admin?asset=legacy"
+    },
+    {
+      "source": "/api/_awards-private",
+      "destination": "/api/gen3-awards-admin?asset=blocked"
+    },
+    {
+      "source": "/api/_awards-private.js",
+      "destination": "/api/gen3-awards-admin?asset=blocked"
+    },
+    {
+      "source": "/api/_awards-admin-config",
+      "destination": "/api/gen3-awards-admin?asset=blocked"
+    },
+    {
+      "source": "/api/_awards-admin-config.js",
+      "destination": "/api/gen3-awards-admin?asset=blocked"
+    },
+    {
       "source": "/gen3-awards",
       "destination": "/gen3-awards.html"
     },

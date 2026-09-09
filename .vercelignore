@@ -5,3 +5,10 @@ qa-runs/
 scripts/
 data/
 catalog-db/
+awards-assets/people/
+awards-assets/results.json
+awards-assets/winners-v2.json
+awards-assets/winners-v3.json
+awards-assets/awards.js
+awards-assets/awards-v2.js
+awards-assets/awards-v3.js
