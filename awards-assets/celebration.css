@@ -60,3 +60,9 @@ dialog{background:white;border:1px solid var(--line);color:var(--ink);box-shadow
 .envelope-prize-art{display:block;width:min(460px,100%);height:270px;object-fit:contain;margin:0 auto 12px;border-radius:16px}
 @media(min-width:1000px){.cards:has(.award-card:only-child){max-width:720px}.cards:has(.award-card:only-child) .prize-art{height:320px}.cards:has(.award-card:only-child) .official-product{width:130px;right:16px;bottom:12px}.cards:has(.award-card:only-child) .official-product img{height:74px}}
 @media(max-width:760px){.prize-art{height:200px}.award-card{padding:18px 22px 28px}.official-product{width:86px;right:2px;bottom:2px}.official-product img{height:46px}.official-product span{font-size:9px}.prize-mini{width:72px;height:48px}.prize{font-size:13px;gap:8px}.envelope-prize-art{height:205px}.envelope{min-height:400px}}
+/* Private class title and instructor team, v10 */
+.ep-title h2{max-width:820px;margin-left:auto;margin-right:auto;text-wrap:balance}
+.award-card h3,.envelope h2{text-wrap:balance;overflow-wrap:break-word}
+.stage-toolbar span{min-width:0;overflow-wrap:break-word;line-height:1.6}.stage-toolbar .close-button{flex-shrink:0}
+@media(max-width:760px){.stage-toolbar span{font-size:11px}.award-card h3{font-size:22px}.envelope h2{font-size:25px;line-height:1.6}.prize span{min-width:0;overflow-wrap:break-word}}
+.class-title-line{display:block;white-space:nowrap;font-size:.88em;line-height:1.65}
