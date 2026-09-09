@@ -26,6 +26,18 @@
       "destination": "/gen3-awards.html"
     },
     {
+      "source": "/starter",
+      "destination": "/starter.html"
+    },
+    {
+      "source": "/digitalproducts",
+      "destination": "/digitalproducts.html"
+    },
+    {
+      "source": "/digitalproducts/guide",
+      "destination": "/digitalproducts-guide.html"
+    },
+    {
       "source": "/gen3/presenter-identity",
       "destination": "/api/gen3-page?view=presenter-identity"
     },
