@@ -1,6 +1,11 @@
 (() => {
   'use strict';
   const gallery=document.getElementById('gallery-dialog'),image=document.getElementById('gallery-full'),caption=document.getElementById('gallery-caption');
+  const imageWrap=gallery.querySelector('.gallery-image-wrap'),zoom=document.createElement('button');
+  zoom.type='button';zoom.id='zoom-gallery';zoom.textContent='ซูม +';zoom.setAttribute('aria-pressed','false');
+  gallery.querySelector('.gallery-toolbar').insertBefore(zoom,document.getElementById('close-gallery'));
+  const resetZoom=()=>{imageWrap.classList.remove('zoomed');zoom.setAttribute('aria-pressed','false');zoom.textContent='ซูม +';};
+  zoom.addEventListener('click',()=>{const expanded=imageWrap.classList.toggle('zoomed');zoom.setAttribute('aria-pressed',String(expanded));zoom.textContent=expanded?'ย่อ −':'ซูม +';});
   const sticky=document.getElementById('sticky-apply'),apply=document.getElementById('apply'),hero=document.getElementById('hero-cta');
   let priorFocus=null,heroVisible=true,applyVisible=false;
   const updateSticky=()=>{
@@ -10,7 +15,7 @@
     sticky.hidden=innerWidth>760||heroVisible||applyVisible||inputFocused||passedForm||!!document.querySelector('dialog[open]');
   };
   for(const button of document.querySelectorAll('[data-gallery]'))button.addEventListener('click',()=>{
-    priorFocus=button;image.src=button.dataset.gallery;image.alt=button.dataset.caption;caption.textContent=button.dataset.caption;
+    priorFocus=button;resetZoom();image.src=button.dataset.gallery;image.alt=button.dataset.caption;caption.textContent=button.dataset.caption;
     gallery.showModal();document.body.style.overflow='hidden';updateSticky();
   });
   document.getElementById('close-gallery').addEventListener('click',()=>gallery.close());
