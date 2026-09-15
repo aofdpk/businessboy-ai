@@ -117,7 +117,7 @@ module.exports=async(req,res)=>{
     const action=String(req.query?.action||'');
     if(action==='session' && req.method==='GET')return json(200,{authenticated:admin(req)});
     if(action==='logout' && req.method==='POST'){res.setHeader('Set-Cookie',`${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`);return json(200,{ok:true});}
-    if(['list','image','status'].includes(action) && !admin(req))return json(401,{error:'กรุณาเข้าสู่ระบบผู้ดูแล'});
+    if(['list','image','status','qa-cleanup'].includes(action) && !admin(req))return json(401,{error:'กรุณาเข้าสู่ระบบผู้ดูแล'});
     await schema();const sql=db();
     const ip=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim();
     const ipHash=mac('ip:'+ip);
@@ -173,6 +173,14 @@ module.exports=async(req,res)=>{
           AND slot NOT IN (SELECT value::integer FROM jsonb_array_elements_text(${selected}::jsonb))`
       ]);
       return json(200,{ok:true,receipt:'BB-'+id.slice(0,8).toUpperCase()});
+    }
+    // Only disposable synthetic fixtures created by this feature's verification can be removed.
+    if(action==='qa-cleanup' && req.method==='POST') {
+      if(!/^[0-9a-f-]{36}$/.test(body.id||''))fail('ข้อมูลไม่ถูกต้อง');
+      const removed=await sql`DELETE FROM student_story_applications WHERE id=${body.id}
+        AND source='qa-student-story' AND full_name LIKE '[QA TEST]%'
+        AND facebook_name='QA TEST ONLY' AND phone='0800000000' RETURNING id`;
+      return json(200,{ok:true,removed:removed.length});
     }
     if(action==='list' && req.method==='GET') {
       const page=Math.floor(Math.max(0,Math.min(10000,Number(req.query.page)||0)));
