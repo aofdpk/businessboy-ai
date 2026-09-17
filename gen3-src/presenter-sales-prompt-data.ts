@@ -3,7 +3,7 @@ import {
   type SalesProductSceneMode,
   type SalesPromptData,
   type SalesSpeechSpeed,
-} from "./sales-prompt-data";
+} from "./presenter-sales-base-prompt-data";
 
 export type PresenterSalesStepId = 1 | 2 | 3;
 export type PresenterSourceMode = "identity" | "manual";
