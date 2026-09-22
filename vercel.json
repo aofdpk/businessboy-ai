@@ -28,6 +28,10 @@
   ],
   "rewrites": [
     {
+      "source": "/ai-page-gen4",
+      "destination": "/ai-page-gen4.html"
+    },
+    {
       "source": "/student-story",
       "destination": "/student-story.html"
     },
