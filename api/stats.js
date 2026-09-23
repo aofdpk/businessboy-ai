@@ -88,9 +88,22 @@ function trend(data, range) {
   }
   return [...result].map(([date, views]) => ({date, views}));
 }
+function trendRanges(range) {
+  const result = [], end = Date.parse(range.until);
+  for (let start = Date.parse(range.since); start <= end; start += 6 * DAY) {
+    result.push({since:new Date(start).toISOString(),until:new Date(Math.min(end,start+6*DAY-1)).toISOString()});
+  }
+  return result;
+}
+async function hourlyTrend(range, filter) {
+  // Provider limits hourly queries to 168 hours. Preserve Thai calendar days by
+  // querying smaller, non-overlapping windows instead of using UTC day buckets.
+  const batches = await Promise.all(trendRanges(range).map(chunk => query('visits','hour',chunk,filter)));
+  return [...new Map(batches.flat().map(row => [row.timestamp,row])).values()];
+}
 async function report(days, scope, includeTests) {
   const range = period(days); let filter = filters(scope, includeTests), utm = true, sourceRows = []; 
-  const key = `bb:stats:report:v3:${days}:${scope}:${includeTests}:${range.since}`;
+  const key = `bb:stats:report:v4:${days}:${scope}:${includeTests}:${range.since}`;
   await schema();
   const sql = store();
   const cached = await sql`SELECT payload FROM bb_stats_cache WHERE key=${key} AND expires_at>now()`;
@@ -104,7 +117,7 @@ async function report(days, scope, includeTests) {
     ['events','eventData/section', "eventName eq 'gen4_section_viewed'"],
     ['events','eventData/package', "eventName eq 'gen4_line_click'"],
   ];
-  const data = await Promise.all(queries.map(([dataset,by,extra]) => by ? query(dataset,by,range,filter + (extra ? ' and ' + extra : '')) : Promise.resolve([])));
+  const data = await Promise.all(queries.map(([dataset,by,extra]) => by === 'hour' ? hourlyTrend(range,filter) : by ? query(dataset,by,range,filter + (extra ? ' and ' + extra : '')) : Promise.resolve([])));
   const visits = data[0].reduce((sum,r) => ({visitors: sum.visitors + number(r.visitors), views: sum.views + number(r.pageviews)}), {visitors:0,views:0});
   const events = rows(data[7],'eventName');
   const line = events.find(e => e.label === 'gen4_line_click') || {visitors:0,count:0};
@@ -160,4 +173,4 @@ async function handler(req,res) {
   }
 }
 module.exports = handler;
-module.exports._test = { period, filters, trend, session, rows };
+module.exports._test = { period, filters, trend, trendRanges, session, rows };

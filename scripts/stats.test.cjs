@@ -52,3 +52,8 @@ test('custom event dimensions preserve section and package labels',()=>{
  for(const row of [{'eventData/section':'packages'},{'eventData.section':'packages'},{eventData:{section:'packages'}},{eventData:'packages'}])assert.equal(h.rows([row],'eventData/section')[0].label,'packages');
  assert.equal(h.rows([{'eventData/package':'1_year',count:2}],'eventData/package')[0].label,'1_year');
 });
+test('30-day hourly ranges stay within provider limits with no gaps or overlaps',()=>{
+ const {helpers:h}=setup(),range=h.period(30,Date.parse('2026-09-23T08:00:00Z')),chunks=h.trendRanges(range);
+ assert.equal(chunks.length,5);assert.equal(chunks[0].since,range.since);assert.equal(chunks.at(-1).until,range.until);
+ for(let i=0;i<chunks.length;i++){assert.ok(Date.parse(chunks[i].until)-Date.parse(chunks[i].since)<168*3600000);if(i)assert.equal(Date.parse(chunks[i].since)-Date.parse(chunks[i-1].until),1);}
+});
