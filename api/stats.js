@@ -64,7 +64,7 @@ async function query(dataset, by, range, filter) {
   const url = new URL(`https://api.vercel.com/v1/query/web-analytics/${dataset}/aggregate`);
   for (const [key, value] of Object.entries({projectId: PROJECT, teamId: TEAM, by, since: range.since, until: range.until, limit: '20', filter})) url.searchParams.set(key, value);
   const response = await fetch(url, { headers: { Authorization: 'Bearer ' + process.env.STATS_VERCEL_TOKEN }, signal: AbortSignal.timeout(15000) });
-  if (!response.ok) { console.error(JSON.stringify({ route: 'stats', upstreamStatus: response.status, dataset, by })); fail(502, 'ดึงสถิติยังไม่สำเร็จ กรุณาลองใหม่อีกสักครู่'); }
+  if (!response.ok) { const detail = await response.json().catch(() => ({})); console.error(JSON.stringify({ route: 'stats', upstreamStatus: response.status, dataset, by, code: String(detail.error?.code || '').slice(0,100), reason: String(detail.error?.message || '').replace(/(?:vercel_|vcp_)[A-Za-z0-9_]+/g,'[redacted]').slice(0,300) })); fail(502, 'ดึงสถิติยังไม่สำเร็จ กรุณาลองใหม่อีกสักครู่'); }
   const body = await response.json();
   if (!Array.isArray(body.data)) fail(502, 'รูปแบบข้อมูลสถิติไม่ถูกต้อง');
   return body.data;
