@@ -1,0 +1,44 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const crypto=require('node:crypto');
+const path=require('node:path');
+function setup(){
+ const cache=new Map(),counts=new Map(),calls=[];
+ class Redis{on(){} async eval(_s,_n,key){const n=(counts.get(key)||0)+1;counts.set(key,n);return n;}async get(k){return cache.get(k);}async set(k,v){cache.set(k,v);}}
+ const salt='unit-test-only',digest=crypto.scryptSync('correct-test-password',salt,64).toString('hex');
+ let code=fs.readFileSync(path.join(__dirname,'../api/stats.js'),'utf8').replace(/const SALT = '[^']+';/,`const SALT = '${salt}';`).replace(/const DIGEST = '[^']+';/,`const DIGEST = '${digest}';`);
+ const context={module:{exports:{}},require:n=>n==='ioredis'?Redis:require(n),Buffer,URL,AbortSignal,console,Date,process:{env:{SESSION_SECRET:'unit-test-signing-secret',REDIS_URL:'redis://test',STATS_VERCEL_TOKEN:'unit-test-token'}},fetch:async(url)=>{calls.push(url.href);const u=new URL(url);const by=u.searchParams.get('by');const event=u.pathname.includes('/events/');return{ok:true,json:async()=>({data:event?by==='eventName'?[{eventName:'gen4_line_click',count:4,visitors:2}]:[]:by==='hour'?[{timestamp:'2026-09-22T18:00:00Z',pageviews:5,visitors:3}]:[{[by]:'production',pageviews:20,visitors:10}]})};}};
+ vm.runInNewContext(code,context);return{handler:context.module.exports,counts,calls,helpers:context.module.exports._test};
+}
+async function request(handler,{method='GET',query={},body,headers={}}={}){
+ const response={headers:{},setHeader(k,v){this.headers[k]=v;},end(value){this.body=JSON.parse(value);}};
+ await handler({method,query,body,headers:{host:'businessboy.ai',...headers},socket:{remoteAddress:'127.0.0.1'}},response);return response;
+}
+test('unauthenticated and forged sessions cannot access statistics',async()=>{
+ const {handler,calls}=setup();for(const cookie of ['', '__Host-bb_stats=9999999999999.fake']){const r=await request(handler,{headers:{cookie}});assert.equal(r.statusCode,401);assert.equal(r.headers['Cache-Control'],'private, no-store');}assert.equal(calls.length,0);
+});
+test('login uses secure session; logout expires it; cross-origin login denied',async()=>{
+ const {handler}=setup(),headers={origin:'https://businessboy.ai','content-type':'application/json'};
+ let r=await request(handler,{method:'POST',query:{action:'login'},headers:{...headers,origin:'https://attacker.test'},body:{password:'correct-test-password'}});assert.equal(r.statusCode,403);
+ r=await request(handler,{method:'POST',query:{action:'login'},headers,body:{password:'wrong'}});assert.equal(r.statusCode,401);
+ r=await request(handler,{method:'POST',query:{action:'login'},headers,body:{password:'correct-test-password'}});assert.equal(r.statusCode,200);
+ assert.match(r.headers['Set-Cookie'],/HttpOnly; Secure; SameSite=Strict/);const cookie=r.headers['Set-Cookie'].split(';')[0];
+ r=await request(handler,{query:{action:'session'},headers:{cookie}});assert.equal(r.statusCode,200);
+ r=await request(handler,{method:'POST',query:{action:'logout'},headers,body:{}});assert.match(r.headers['Set-Cookie'],/Max-Age=0/);
+});
+test('distributed login rate limiting blocks repeated attempts',async()=>{
+ const {handler}=setup();let r;for(let i=0;i<11;i++)r=await request(handler,{method:'POST',query:{action:'login'},headers:{origin:'https://businessboy.ai','content-type':'application/json'},body:{password:''}});assert.equal(r.statusCode,429);
+});
+test('Bangkok day boundaries and hourly chart rollup are correct',()=>{
+ const {helpers:h}=setup(),now=Date.parse('2026-09-23T02:00:00Z');const range=h.period(1,now);assert.equal(range.since,'2026-09-22T17:00:00.000Z');
+ const points=h.trend([{timestamp:'2026-09-22T18:00:00Z',pageviews:5},{timestamp:'2026-09-23T01:00:00Z',pageviews:3}],range);assert.equal(points[0].date,'2026-09-23');assert.equal(points[0].views,8);
+ assert.throws(()=>h.period(1000),/รองรับ/);assert.throws(()=>h.filters("all' or true",false),/รองรับ/);
+});
+test('authenticated report uses fixed project, production filter and cache',async()=>{
+ const {handler,calls}=setup();const auth=await request(handler,{method:'POST',query:{action:'login'},headers:{origin:'https://businessboy.ai','content-type':'application/json'},body:{password:'correct-test-password'}});const headers={cookie:auth.headers['Set-Cookie'].split(';')[0]};
+ const r=await request(handler,{headers,query:{days:'7',scope:'gen4'}});assert.equal(r.statusCode,200);assert.equal(r.body.totals.views,20);assert.equal(r.body.totals.lineClicks,4);assert.equal(r.body.totals.clickRate,20);assert.equal(calls.length,10);
+ for(const call of calls){const u=new URL(call);assert.equal(u.hostname,'api.vercel.com');assert.equal(u.searchParams.get('projectId'),'prj_GQAb9h8tzmAnXtaCnTedFtfwhYua');assert.match(u.searchParams.get('filter'),/environment eq 'production'/);assert.match(u.searchParams.get('filter'),/utmSource ne 'qa'/);}
+ await request(handler,{headers,query:{days:'7',scope:'gen4'}});assert.equal(calls.length,10);
+});

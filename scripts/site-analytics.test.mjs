@@ -45,6 +45,6 @@ test('LINE click sends only placement and selected package; bootstrap is idempot
 test('all public static pages include one tracker, private admin includes none', () => {
   for (const file of readdirSync('.').filter(name => name.endsWith('.html'))) {
     const count = (readFileSync(file,'utf8').match(/src="\/site-analytics.js\?v=1"/g)||[]).length;
-    assert.equal(count,file.includes('admin')?0:1,file);
+    assert.equal(count,(file.includes('admin')||file==='stats.html')?0:1,file);
   }
 });
