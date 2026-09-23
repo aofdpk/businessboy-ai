@@ -1,53 +1,36 @@
 (() => {
-  'use strict';
-  const videos = [...document.querySelectorAll('video')];
-  videos.forEach(video => {
-    const play = document.createElement('button');
-    play.type = 'button';
-    play.className = 'video-play';
-    play.textContent = '▶ เล่นคลิป';
-    play.setAttribute('aria-label', 'เล่น ' + video.getAttribute('aria-label'));
-    video.parentElement.append(play);
-    play.addEventListener('click', () => video.play().catch(() => {
-      play.textContent = '▶ ลองเล่นอีกครั้ง';
-    }));
-    video.addEventListener('play', () => { play.hidden = true; });
-    video.addEventListener('pause', () => { play.hidden = false; });
-    video.addEventListener('ended', () => { play.hidden = false; });
-  });
-  videos.forEach(video => video.addEventListener('play', () => {
-    videos.forEach(other => { if (other !== video) other.pause(); });
-  }));
-  const selected = document.getElementById('selected-plan');
-  const line = document.getElementById('line-contact');
-  const hint = document.getElementById('contact-hint');
-  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const lineMessage = message => 'https://line.me/R/oaMessage/%40034oysgq/?' + encodeURIComponent(message);
-  if (mobile) line.href = lineMessage('สนใจสมัครคอร์สรุ่น 4 จากหน้าเว็บไซต์');
-  document.querySelectorAll('[data-plan]').forEach(link => link.addEventListener('click', () => {
-    const message = `สนใจสมัครคอร์สรุ่น 4 โปร ${link.dataset.plan} ราคา ${link.dataset.price} บาท จากหน้าเว็บไซต์`;
-    selected.textContent = `คุณเลือกโปร ${link.dataset.plan} · ${link.dataset.planName} · ${link.dataset.price} บาท`;
-    hint.textContent = `เข้า LINE แล้วแจ้ง “สมัครรุ่น 4 โปร ${link.dataset.plan}” กับแอดมิน`;
-    line.href = mobile ? lineMessage(message) : 'https://lin.ee/sl6unNh';
-    line.textContent = `เปิด LINE สมัครโปร ${link.dataset.plan} ↗`;
-  }));
-  const dialog = document.getElementById('image-dialog');
-  const image = document.getElementById('dialog-image');
-  const title = document.getElementById('image-title');
-  let previousFocus;
-  document.querySelectorAll('[data-image]').forEach(button => button.addEventListener('click', () => {
-    previousFocus = button;
-    image.src = button.dataset.image;
-    image.alt = button.dataset.title;
-    title.textContent = button.dataset.title;
-    dialog.showModal();
-    document.body.classList.add('dialog-open');
-    document.getElementById('close-dialog').focus();
-  }));
-  document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-  dialog.addEventListener('close', () => {
-    document.body.classList.remove('dialog-open');
-    previousFocus?.focus({preventScroll:true});
-  });
+'use strict';
+const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const general='สนใจสมัครคอร์ส เปลี่ยนเพจธรรมดา ให้กลายเป็นเครื่องจักรผลิตเงิน รุ่นที่ 4';
+const lineUrl=message=>mobile?'https://line.me/R/oaMessage/%40034oysgq/?'+encodeURIComponent(message):'https://lin.ee/sl6unNh';
+document.querySelectorAll('[data-line]').forEach(link=>{link.href=lineUrl(link.hasAttribute('data-onsite')?general+' แพ็กเกจ 25,990 บาท พร้อมเรียนในห้อง 3 ครั้ง':general);});
+const fmt=new Intl.NumberFormat('th-TH');
+function updatePackage(input){
+ const price=Number(input.dataset.price), duration=input.dataset.duration;
+ document.getElementById('selected-name').textContent='คุณเลือก: คอร์ส + KVID '+duration;
+ document.getElementById('selected-price').textContent=fmt.format(price)+' บาท';
+ document.getElementById('selected-installment').textContent=fmt.format(price/10)+' บาท/เดือน';
+ const cta=document.getElementById('selected-cta');
+ cta.href=lineUrl(general+' แพ็กเกจ KVID '+duration+' ราคา '+fmt.format(price)+' บาท');
+ cta.setAttribute('aria-label','สมัครคอร์สพร้อม KVID '+duration+' ราคา '+fmt.format(price)+' บาท ผ่าน LINE');
+}
+document.querySelectorAll('input[name="package"]').forEach(input=>input.addEventListener('change',()=>updatePackage(input)));
+updatePackage(document.querySelector('input[name="package"]:checked'));
+const dialog=document.getElementById('media-dialog'), title=document.getElementById('media-title'), img=document.getElementById('dialog-image'), video=document.getElementById('dialog-video'), help=document.getElementById('video-help'), close=document.getElementById('close-dialog');
+let previousFocus;
+const zoomTools=document.getElementById('zoom-tools'), zoomToggle=document.getElementById('zoom-toggle'), zoomHint=document.getElementById('zoom-hint');
+zoomToggle.addEventListener('click',()=>{const expanded=img.classList.toggle('zoomed');zoomToggle.textContent=expanded?'ย่อภาพ −':'ขยายตัวอักษร ＋';zoomToggle.setAttribute('aria-pressed',String(expanded));zoomHint.textContent=expanded?'เลื่อนภาพซ้าย–ขวา และขึ้น–ลง เพื่ออ่านต่อ':'กดขยายเพื่ออ่านภาพให้ใหญ่ขึ้น';});
+function openMedia(button,kind){
+ zoomTools.hidden=kind!=='image';img.classList.remove('zoomed');zoomToggle.textContent='ขยายตัวอักษร ＋';zoomToggle.setAttribute('aria-pressed','false');zoomHint.textContent='กดขยายเพื่ออ่านภาพให้ใหญ่ขึ้น';
+ previousFocus=button;title.textContent=button.dataset.title;img.hidden=kind!=='image';video.hidden=kind!=='video';help.hidden=true;
+ if(kind==='image'){img.src=button.dataset.image;img.alt=button.dataset.title;}
+ else{video.src=button.dataset.video;video.poster=button.dataset.poster;video.setAttribute('aria-label',button.dataset.title);}
+ dialog.showModal();document.body.classList.add('dialog-open');close.focus();
+ if(kind==='video')video.play().catch(()=>{help.hidden=false;});
+}
+document.querySelectorAll('[data-image]').forEach(button=>button.addEventListener('click',()=>openMedia(button,'image')));
+document.querySelectorAll('[data-video]').forEach(button=>button.addEventListener('click',()=>openMedia(button,'video')));
+close.addEventListener('click',()=>dialog.close());
+dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+dialog.addEventListener('close',()=>{video.pause();video.removeAttribute('src');video.load();document.body.classList.remove('dialog-open');previousFocus?.focus({preventScroll:true});});
 })();
