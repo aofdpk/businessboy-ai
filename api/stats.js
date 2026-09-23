@@ -64,7 +64,7 @@ async function query(dataset, by, range, filter) {
   const url = new URL(`https://api.vercel.com/v1/query/web-analytics/${dataset}/aggregate`);
   for (const [key, value] of Object.entries({projectId: PROJECT, teamId: TEAM, by, since: range.since, until: range.until, limit: '20', filter})) url.searchParams.set(key, value);
   const response = await fetch(url, { headers: { Authorization: 'Bearer ' + process.env.STATS_VERCEL_TOKEN }, signal: AbortSignal.timeout(15000) });
-  if (!response.ok) { const detail = await response.json().catch(() => ({})); console.error(JSON.stringify({ route: 'stats', upstreamStatus: response.status, dataset, by, code: String(detail.error?.code || '').slice(0,100), reason: String(detail.error?.message || '').replace(/(?:vercel_|vcp_)[A-Za-z0-9_]+/g,'[redacted]').slice(0,300) })); fail(502, 'ดึงสถิติยังไม่สำเร็จ กรุณาลองใหม่อีกสักครู่'); }
+  if (!response.ok) { const detail = await response.json().catch(() => ({})); if (response.status === 402 && /UTM dimensions/.test(detail.error?.message || '')) { const error = new Error('UTM unavailable'); error.utmUnavailable = true; throw error; } console.error(JSON.stringify({ route: 'stats', upstreamStatus: response.status, dataset, by, code: String(detail.error?.code || '').slice(0,100), reason: String(detail.error?.message || '').replace(/(?:vercel_|vcp_)[A-Za-z0-9_]+/g,'[redacted]').slice(0,300) })); fail(502, 'ดึงสถิติยังไม่สำเร็จ กรุณาลองใหม่อีกสักครู่'); }
   const body = await response.json();
   if (!Array.isArray(body.data)) fail(502, 'รูปแบบข้อมูลสถิติไม่ถูกต้อง');
   return body.data;
@@ -81,26 +81,28 @@ function trend(data, range) {
   return [...result].map(([date, views]) => ({date, views}));
 }
 async function report(days, scope, includeTests) {
-  const range = period(days), filter = filters(scope, includeTests);
-  const key = `bb:stats:report:v1:${days}:${scope}:${includeTests}:${range.since}`;
+  const range = period(days); let filter = filters(scope, includeTests), utm = true, sourceRows = []; 
+  const key = `bb:stats:report:v2:${days}:${scope}:${includeTests}:${range.since}`;
   await schema();
   const sql = store();
   const cached = await sql`SELECT payload FROM bb_stats_cache WHERE key=${key} AND expires_at>now()`;
   if (cached.length) return cached[0].payload;
   if (!process.env.STATS_VERCEL_TOKEN) fail(503, 'กำลังเชื่อมต่อข้อมูลสถิติ กรุณาลองใหม่ภายหลัง');
+  try { sourceRows = await query('visits','utmSource',range,filter); }
+  catch (e) { if (!e.utmUnavailable) throw e; utm = false; filter = filters(scope,true); }
   const queries = [
-    ['visits','environment'], ['visits','hour'], ['visits','requestPath'], ['visits','utmSource'],
-    ['visits','referrerHostname'], ['visits','deviceType'], ['visits','utmCampaign'], ['events','eventName'],
+    ['visits','environment'], ['visits','hour'], ['visits','requestPath'], ['visits',null],
+    ['visits','referrerHostname'], ['visits','deviceType'], ['visits',utm ? 'utmCampaign' : null], ['events','eventName'],
     ['events','eventData/section', "eventName eq 'gen4_section_viewed'"],
     ['events','eventData/package', "eventName eq 'gen4_line_click'"],
   ];
-  const data = await Promise.all(queries.map(([dataset,by,extra]) => query(dataset,by,range,filter + (extra ? ' and ' + extra : ''))));
+  const data = await Promise.all(queries.map(([dataset,by,extra]) => by ? query(dataset,by,range,filter + (extra ? ' and ' + extra : '')) : Promise.resolve([])));
   const visits = data[0].reduce((sum,r) => ({visitors: sum.visitors + number(r.visitors), views: sum.views + number(r.pageviews)}), {visitors:0,views:0});
   const events = rows(data[7],'eventName');
   const line = events.find(e => e.label === 'gen4_line_click') || {visitors:0,count:0};
-  const result = {range, scope, includeTests, updatedAt:new Date().toISOString(), source:'Vercel Web Analytics',
+  const result = {range, scope, includeTests:utm ? includeTests : true, features:{utm}, updatedAt:new Date().toISOString(), source:'Vercel Web Analytics',
     totals:{...visits,lineClicks:line.count,lineVisitors:line.visitors,clickRate:visits.visitors ? line.visitors/visits.visitors*100 : 0},
-    trend:trend(data[1],range), pages:rows(data[2],'requestPath'), sources:rows(data[3],'utmSource'), referrers:rows(data[4],'referrerHostname'),
+    trend:trend(data[1],range), pages:rows(data[2],'requestPath'), sources:rows(sourceRows,'utmSource'), referrers:rows(data[4],'referrerHostname'),
     devices:rows(data[5],'deviceType'), campaigns:rows(data[6],'utmCampaign'), events, sections:rows(data[8],'eventData'), packages:rows(data[9],'eventData')};
   await sql`INSERT INTO bb_stats_cache(key,payload,expires_at) VALUES(${key},${JSON.stringify(result)}::jsonb,now()+interval '120 seconds')
     ON CONFLICT(key) DO UPDATE SET payload=excluded.payload, expires_at=excluded.expires_at`;

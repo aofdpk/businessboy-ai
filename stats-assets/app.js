@@ -86,17 +86,23 @@ function devices(rows) {
 }
 function render(data) {
   const t=data.totals;
+  const utm=data.features?.utm!==false;
+  $('test-control').hidden=!utm;
+  $('plan-note').hidden=utm;
+  $('plan-note').textContent='ตัวเลขรวมการเข้าชมของทีมทดสอบด้วย · ดูแหล่งที่มาได้จากเว็บไซต์อ้างอิง ส่วนชื่อแคมเปญยังไม่เปิดใช้งาน';
+  $('sources-description').textContent=utm?'ลิงก์ที่ติดชื่อช่องทางไว้ (UTM)':'เว็บไซต์ที่ส่งคนเข้ามา · จำนวนเปิดหน้าเว็บ';
+  $('referrer-details').hidden=!utm;
   $('visitors').textContent=number.format(t.visitors);$('views').textContent=number.format(t.views);$('line-clicks').textContent=number.format(t.lineClicks);$('click-rate').textContent=t.visitors?t.clickRate.toFixed(1)+'%':'—';
   $('line-people').textContent=`จากผู้เข้าชมประมาณ ${number.format(t.lineVisitors)} คน`;
   $('date-range').textContent=`${date(data.range.since)} – ${date(data.range.until)} · เวลาไทย`;
   $('updated-at').textContent=`อัปเดตล่าสุด ${time(data.updatedAt)} น.`;
   $('empty-notice').hidden=t.views>0;
   chart(data.trend);devices(data.devices);
-  list('pages',data.pages);list('sources',data.sources,'views','ยังไม่มีข้อมูลช่องทาง','ไม่ได้ระบุช่องทาง');
+  list('pages',data.pages);list('sources',utm?data.sources:data.referrers,'views','ยังไม่มีข้อมูลช่องทาง',utm?'ไม่ได้ระบุช่องทาง':'เข้าโดยตรง / ไม่ส่งที่มา');
   list('referrers',data.referrers,'views','ยังไม่มีข้อมูลเว็บไซต์อ้างอิง','เข้าโดยตรง / ไม่ส่งที่มา');
   list('sections',data.sections,'visitors','เมื่อมีคนเลื่อนดูหน้ารุ่น 4 จะเห็นข้อมูลตรงนี้');
   list('packages',data.packages,'count','ยังไม่มีการกด LINE ในช่วงนี้');
-  list('campaigns',data.campaigns,'views','ยังไม่มีข้อมูลแคมเปญ','ไม่ได้ระบุแคมเปญ');
+  list('campaigns',data.campaigns,'views',utm?'ยังไม่มีข้อมูลแคมเปญ':'การแยกชื่อแคมเปญต้องใช้ Web Analytics Plus ของ Vercel · ยังไม่ได้เปิดบริการเสริมนี้','ไม่ได้ระบุแคมเปญ');
   list('events',data.events,'count','ยังไม่มีกิจกรรมในช่วงนี้');
 }
 async function load() {
