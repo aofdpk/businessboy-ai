@@ -89,6 +89,7 @@ function trend(data, range) {
   return [...result].map(([date, views]) => ({date, views}));
 }
 function trendRanges(range) {
+  if (Date.parse(range.until)-Date.parse(range.since)<167*3600000) return [range];
   const result = [], end = Date.parse(range.until);
   for (let start = Date.parse(range.since); start <= end; start += 6 * DAY) {
     result.push({since:new Date(start).toISOString(),until:new Date(Math.min(end,start+6*DAY-1)).toISOString()});
