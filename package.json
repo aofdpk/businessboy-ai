@@ -16,7 +16,8 @@
     "test:catalog-api": "node catalog-db/smoke-test.mjs",
     "test:catalog-db": "node catalog-db/pipeline-contract-test.mjs",
     "export:catalog-jsonl": "node catalog-db/export-approved-jsonl.mjs",
-    "benchmark:catalog": "node catalog-db/benchmark-bundled.mjs"
+    "benchmark:catalog": "node catalog-db/benchmark-bundled.mjs",
+    "build:analytics": "node scripts/build-site-analytics.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
