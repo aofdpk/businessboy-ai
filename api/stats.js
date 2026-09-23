@@ -1,7 +1,7 @@
 'use strict';
 const crypto = require('node:crypto');
 const { promisify } = require('node:util');
-const Redis = require('ioredis');
+const { neon } = require('@neondatabase/serverless');
 const scrypt = promisify(crypto.scrypt);
 const COOKIE = '__Host-bb_stats';
 const SALT = '0c97d6a027df32865b345d2df0121838';
@@ -11,21 +11,36 @@ const TEAM = 'team_GuVh2bhaUMiyFrLtSwWf1AP5';
 const AGE = 8 * 3600;
 const DAY = 86400000;
 const OFFSET = 7 * 3600000;
-let redis;
+let database, schemaPromise;
 const secret = () => process.env.STATS_SESSION_SECRET || process.env.SESSION_SECRET || '';
 const sign = value => crypto.createHmac('sha256', secret()).update('stats:v1:' + DIGEST + ':' + value).digest('base64url');
 const equal = (a,b) => typeof a === 'string' && typeof b === 'string' && Buffer.byteLength(a) === Buffer.byteLength(b) && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 function fail(status, message) { const e = new Error(message); e.status = status; throw e; }
 function store() {
-  if (!process.env.REDIS_URL) fail(503, 'ระบบเข้าสู่ระบบยังไม่พร้อม กรุณาลองใหม่ภายหลัง');
-  if (!redis) { redis = new Redis(process.env.REDIS_URL, { connectTimeout: 2500, commandTimeout: 4000, maxRetriesPerRequest: 1 }); redis.on('error', () => {}); }
-  return redis;
+  const url = process.env.STATS_DATABASE_URL || process.env.GEN3_CATALOG_DATABASE_URL || process.env.DATABASE_URL;
+  if (!url) fail(503, 'ระบบเข้าสู่ระบบยังไม่พร้อม กรุณาลองใหม่ภายหลัง');
+  if (!database) database = neon(url);
+  return database;
+}
+async function schema() {
+  if (!schemaPromise) schemaPromise = (async () => {
+    const sql = store();
+    await sql`CREATE TABLE IF NOT EXISTS bb_stats_limits (key text PRIMARY KEY, count integer NOT NULL, expires_at timestamptz NOT NULL)`;
+    await sql`CREATE TABLE IF NOT EXISTS bb_stats_cache (key text PRIMARY KEY, payload jsonb NOT NULL, expires_at timestamptz NOT NULL)`;
+    await sql`DELETE FROM bb_stats_limits WHERE expires_at < now()`;
+    await sql`DELETE FROM bb_stats_cache WHERE expires_at < now()`;
+  })().catch(e => { schemaPromise = null; throw e; });
+  return schemaPromise;
 }
 async function limit(req, kind, max, seconds) {
   const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
   const key = 'bb:stats:limit:' + kind + ':' + sign(ip);
-  const count = await store().eval('local n=redis.call("INCR",KEYS[1]); if n==1 then redis.call("EXPIRE",KEYS[1],ARGV[1]) end; return n', 1, key, seconds);
-  if (count > max) fail(429, 'ทำรายการบ่อยเกินไป กรุณารอสักครู่แล้วลองอีกครั้ง');
+  await schema();
+  const sql = store();
+  const result = await sql`INSERT INTO bb_stats_limits(key,count,expires_at) VALUES(${key},1,now()+${seconds}*interval '1 second')
+    ON CONFLICT(key) DO UPDATE SET count=CASE WHEN bb_stats_limits.expires_at<now() THEN 1 ELSE bb_stats_limits.count+1 END,
+    expires_at=CASE WHEN bb_stats_limits.expires_at<now() THEN now()+${seconds}*interval '1 second' ELSE bb_stats_limits.expires_at END RETURNING count`;
+  if (result[0].count > max) fail(429, 'ทำรายการบ่อยเกินไป กรุณารอสักครู่แล้วลองอีกครั้ง');
 }
 function session(req, now = Date.now()) {
   if (!secret()) return false;
@@ -68,8 +83,10 @@ function trend(data, range) {
 async function report(days, scope, includeTests) {
   const range = period(days), filter = filters(scope, includeTests);
   const key = `bb:stats:report:v1:${days}:${scope}:${includeTests}:${range.since}`;
-  const cached = await store().get(key);
-  if (cached) return JSON.parse(cached);
+  await schema();
+  const sql = store();
+  const cached = await sql`SELECT payload FROM bb_stats_cache WHERE key=${key} AND expires_at>now()`;
+  if (cached.length) return cached[0].payload;
   if (!process.env.STATS_VERCEL_TOKEN) fail(503, 'กำลังเชื่อมต่อข้อมูลสถิติ กรุณาลองใหม่ภายหลัง');
   const queries = [
     ['visits','environment'], ['visits','hour'], ['visits','requestPath'], ['visits','utmSource'],
@@ -85,7 +102,8 @@ async function report(days, scope, includeTests) {
     totals:{...visits,lineClicks:line.count,lineVisitors:line.visitors,clickRate:visits.visitors ? line.visitors/visits.visitors*100 : 0},
     trend:trend(data[1],range), pages:rows(data[2],'requestPath'), sources:rows(data[3],'utmSource'), referrers:rows(data[4],'referrerHostname'),
     devices:rows(data[5],'deviceType'), campaigns:rows(data[6],'utmCampaign'), events, sections:rows(data[8],'eventData'), packages:rows(data[9],'eventData')};
-  await store().set(key,JSON.stringify(result),'EX',120);
+  await sql`INSERT INTO bb_stats_cache(key,payload,expires_at) VALUES(${key},${JSON.stringify(result)}::jsonb,now()+interval '120 seconds')
+    ON CONFLICT(key) DO UPDATE SET payload=excluded.payload, expires_at=excluded.expires_at`;
   return result;
 }
 async function handler(req,res) {

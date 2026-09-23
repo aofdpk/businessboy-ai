@@ -6,10 +6,10 @@ const crypto=require('node:crypto');
 const path=require('node:path');
 function setup(){
  const cache=new Map(),counts=new Map(),calls=[];
- class Redis{on(){} async eval(_s,_n,key){const n=(counts.get(key)||0)+1;counts.set(key,n);return n;}async get(k){return cache.get(k);}async set(k,v){cache.set(k,v);}}
+ const sql=async(parts,...values)=>{const q=parts.join('?');if(q.includes('INSERT INTO bb_stats_limits')){const n=(counts.get(values[0])||0)+1;counts.set(values[0],n);return[{count:n}];}if(q.includes('SELECT payload'))return cache.has(values[0])?[{payload:cache.get(values[0])}]:[];if(q.includes('INSERT INTO bb_stats_cache'))cache.set(values[0],JSON.parse(values[1]));return[];};
  const salt='unit-test-only',digest=crypto.scryptSync('correct-test-password',salt,64).toString('hex');
  let code=fs.readFileSync(path.join(__dirname,'../api/stats.js'),'utf8').replace(/const SALT = '[^']+';/,`const SALT = '${salt}';`).replace(/const DIGEST = '[^']+';/,`const DIGEST = '${digest}';`);
- const context={module:{exports:{}},require:n=>n==='ioredis'?Redis:require(n),Buffer,URL,AbortSignal,console,Date,process:{env:{SESSION_SECRET:'unit-test-signing-secret',REDIS_URL:'redis://test',STATS_VERCEL_TOKEN:'unit-test-token'}},fetch:async(url)=>{calls.push(url.href);const u=new URL(url);const by=u.searchParams.get('by');const event=u.pathname.includes('/events/');return{ok:true,json:async()=>({data:event?by==='eventName'?[{eventName:'gen4_line_click',count:4,visitors:2}]:[]:by==='hour'?[{timestamp:'2026-09-22T18:00:00Z',pageviews:5,visitors:3}]:[{[by]:'production',pageviews:20,visitors:10}]})};}};
+ const context={module:{exports:{}},require:n=>n==='@neondatabase/serverless'?{neon:()=>sql}:require(n),Buffer,URL,AbortSignal,console,Date,process:{env:{SESSION_SECRET:'unit-test-signing-secret',STATS_DATABASE_URL:'postgres://test',STATS_VERCEL_TOKEN:'unit-test-token'}},fetch:async(url)=>{calls.push(url.href);const u=new URL(url);const by=u.searchParams.get('by');const event=u.pathname.includes('/events/');return{ok:true,json:async()=>({data:event?by==='eventName'?[{eventName:'gen4_line_click',count:4,visitors:2}]:[]:by==='hour'?[{timestamp:'2026-09-22T18:00:00Z',pageviews:5,visitors:3}]:[{[by]:'production',pageviews:20,visitors:10}]})};}};
  vm.runInNewContext(code,context);return{handler:context.module.exports,counts,calls,helpers:context.module.exports._test};
 }
 async function request(handler,{method='GET',query={},body,headers={}}={}){
