@@ -47,3 +47,8 @@ test('base plan still shows real analytics when UTM is unavailable',async()=>{
  const {handler,calls}=setup({utm:false});const auth=await request(handler,{method:'POST',query:{action:'login'},headers:{origin:'https://businessboy.ai','content-type':'application/json'},body:{password:'correct-test-password'}});
  const r=await request(handler,{headers:{cookie:auth.headers['Set-Cookie'].split(';')[0]},query:{days:'7',scope:'gen4'}});assert.equal(r.statusCode,200);assert.equal(r.body.features.utm,false);assert.equal(r.body.includeTests,true);assert.equal(r.body.totals.visitors,10);assert.equal(calls.length,9);for(const call of calls.slice(1))assert.doesNotMatch(new URL(call).searchParams.get('filter'),/utmSource/);
 });
+test('custom event dimensions preserve section and package labels',()=>{
+ const {helpers:h}=setup();
+ for(const row of [{'eventData/section':'packages'},{'eventData.section':'packages'},{eventData:{section:'packages'}},{eventData:'packages'}])assert.equal(h.rows([row],'eventData/section')[0].label,'packages');
+ assert.equal(h.rows([{'eventData/package':'1_year',count:2}],'eventData/package')[0].label,'1_year');
+});

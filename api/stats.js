@@ -70,7 +70,15 @@ async function query(dataset, by, range, filter) {
   return body.data;
 }
 const number = value => Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0;
-function rows(data, key) { return data.map(r => ({ label: String(r[key] ?? ''), visitors: number(r.visitors), views: number(r.pageviews), count: number(r.count) })); }
+function rows(data, key) {
+  return data.map(r => {
+    const part = key.split('/')[1];
+    const normalized = key.replace(/[^a-z0-9]/gi,'').toLowerCase();
+    const field = Object.keys(r).find(k => k.replace(/[^a-z0-9]/gi,'').toLowerCase() === normalized);
+    const value = r[key] ?? (field ? r[field] : undefined) ?? (part ? r.eventData?.[part] ?? (typeof r.eventData === 'string' ? r.eventData : undefined) : undefined) ?? '';
+    return { label: String(value), visitors: number(r.visitors), views: number(r.pageviews), count: number(r.count) };
+  });
+}
 function trend(data, range) {
   const result = new Map();
   for (let i = 0; i < range.days; i++) result.set(new Date(Date.parse(range.since) + OFFSET + i * DAY).toISOString().slice(0,10), 0);
@@ -82,7 +90,7 @@ function trend(data, range) {
 }
 async function report(days, scope, includeTests) {
   const range = period(days); let filter = filters(scope, includeTests), utm = true, sourceRows = []; 
-  const key = `bb:stats:report:v2:${days}:${scope}:${includeTests}:${range.since}`;
+  const key = `bb:stats:report:v3:${days}:${scope}:${includeTests}:${range.since}`;
   await schema();
   const sql = store();
   const cached = await sql`SELECT payload FROM bb_stats_cache WHERE key=${key} AND expires_at>now()`;
@@ -103,7 +111,7 @@ async function report(days, scope, includeTests) {
   const result = {range, scope, includeTests:utm ? includeTests : true, features:{utm}, updatedAt:new Date().toISOString(), source:'Vercel Web Analytics',
     totals:{...visits,lineClicks:line.count,lineVisitors:line.visitors,clickRate:visits.visitors ? line.visitors/visits.visitors*100 : 0},
     trend:trend(data[1],range), pages:rows(data[2],'requestPath'), sources:rows(sourceRows,'utmSource'), referrers:rows(data[4],'referrerHostname'),
-    devices:rows(data[5],'deviceType'), campaigns:rows(data[6],'utmCampaign'), events, sections:rows(data[8],'eventData'), packages:rows(data[9],'eventData')};
+    devices:rows(data[5],'deviceType'), campaigns:rows(data[6],'utmCampaign'), events, sections:rows(data[8],'eventData/section'), packages:rows(data[9],'eventData/package')};
   await sql`INSERT INTO bb_stats_cache(key,payload,expires_at) VALUES(${key},${JSON.stringify(result)}::jsonb,now()+interval '120 seconds')
     ON CONFLICT(key) DO UPDATE SET payload=excluded.payload, expires_at=excluded.expires_at`;
   return result;
