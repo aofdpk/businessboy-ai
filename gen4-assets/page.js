@@ -26,6 +26,7 @@ function openMedia(button,kind){
  zoomTools.hidden=kind!=='image';img.classList.remove('zoomed');zoomToggle.textContent='ขยายตัวอักษร ＋';zoomToggle.setAttribute('aria-pressed','false');zoomHint.textContent='กดขยายเพื่ออ่านภาพให้ใหญ่ขึ้น';
  previousFocus=button;title.textContent=button.dataset.title;img.hidden=kind!=='image';video.hidden=kind!=='video';help.hidden=true;
  dialog.classList.toggle('wide-video',kind==='video'&&button.dataset.layout==='wide');
+ img.classList.toggle('review-comment-image',kind==='image'&&button.dataset.image?.endsWith('-comment.webp'));
  if(kind==='image'){img.src=button.dataset.image;img.alt=button.dataset.title;}
  else{video.src=button.dataset.video;video.poster=button.dataset.poster;video.setAttribute('aria-label',button.dataset.title);}
  dialog.showModal();document.body.classList.add('dialog-open');close.focus();
