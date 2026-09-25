@@ -36,11 +36,11 @@ export function startAnalytics() {
   const send = (name, data) => { try { track(name, data); } catch { /* Never block enrollment. */ } };
   const packageName = () => ({ '1 เดือน': '1_month', '3 เดือน': '3_months', '1 ปี': '1_year', 'ตลอดชีพ': 'lifetime' }[document.querySelector('input[name="package"]:checked')?.dataset.duration] || 'unknown');
   document.addEventListener('click', event => {
-    const link = event.target.closest?.('a[data-line], #selected-cta');
+    const link = event.target.closest?.('a[data-line], a[data-register]');
     if (!link) return;
     const section = link.closest('section[id]')?.id;
     const placement = sections.has(section) ? section : link.closest('header') ? 'header' : 'floating';
-    send('gen4_line_click', { placement, package: link.id === 'selected-cta' ? packageName() : link.hasAttribute('data-onsite') ? 'onsite' : 'general' });
+    send(link.hasAttribute('data-register') ? 'gen4_register_click' : 'gen4_line_click', { placement, package: ['selected-cta', 'register-cta'].includes(link.id) ? packageName() : link.hasAttribute('data-onsite') ? 'onsite' : 'general' });
   });
   document.querySelectorAll('input[name="package"]').forEach(input => input.addEventListener('change', () => send('gen4_package_selected', { package: packageName() })));
   document.querySelectorAll('#faq details').forEach((detail, index) => {

@@ -12,7 +12,7 @@ function updatePackage(input){
  document.getElementById('selected-installment').textContent=fmt.format(price/10)+' บาท/เดือน';
  const cta=document.getElementById('selected-cta');
  cta.href=lineUrl(general+' แพ็กเกจ KVID '+duration+' ราคา '+fmt.format(price)+' บาท');
- cta.setAttribute('aria-label','สมัครคอร์สพร้อม KVID '+duration+' ราคา '+fmt.format(price)+' บาท ผ่าน LINE');
+ cta.setAttribute('aria-label','ให้แอดมินช่วยสมัครคอร์สพร้อม KVID '+duration+' ราคา '+fmt.format(price)+' บาท ผ่าน LINE');
 }
 document.querySelectorAll('input[name="package"]').forEach(input=>input.addEventListener('change',()=>updatePackage(input)));
 updatePackage(document.querySelector('input[name="package"]:checked'));

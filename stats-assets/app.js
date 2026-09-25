@@ -12,7 +12,7 @@ const labels = {
   mobile:'มือถือ',desktop:'คอมพิวเตอร์',tablet:'แท็บเล็ต',
   top:'ส่วนแนะนำคอร์ส','instructor-results':'ผลงานผู้สอน',learning:'รายละเอียดการเรียน',examples:'คลิปตัวอย่าง',reviews:'รีวิวผู้เรียน',results:'ผลลัพธ์ผู้เรียน',schedule:'ตารางเรียน',costs:'ค่าใช้จ่าย',packages:'ราคาและแพ็กเกจ',faq:'คำถามที่พบบ่อย',contact:'ส่วนติดต่อ',
   general:'ปุ่มสมัครทั่วไป',onsite:'แพ็กเกจเรียนในห้อง','1_month':'KVID 1 เดือน','3_months':'KVID 3 เดือน','1_year':'KVID 1 ปี',lifetime:'KVID ตลอดชีพ',unknown:'ไม่ระบุแพ็กเกจ',
-  gen4_line_click:'กดไป LINE',gen4_package_selected:'เปลี่ยนแพ็กเกจ',gen4_section_viewed:'เลื่อนเห็นส่วนของหน้า',gen4_faq_opened:'เปิดคำถามที่พบบ่อย',gen4_video_opened:'เปิดวิดีโอตัวอย่าง',
+  gen4_line_click:'กดไป LINE',gen4_register_click:'กดไปหน้าสมัครเรียน',gen4_package_selected:'เปลี่ยนแพ็กเกจ',gen4_section_viewed:'เลื่อนเห็นส่วนของหน้า',gen4_faq_opened:'เปิดคำถามที่พบบ่อย',gen4_video_opened:'เปิดวิดีโอตัวอย่าง',
   product_details_copied:'คัดลอกรายละเอียดสินค้า',identity_prompt_copied:'คัดลอก Prompt ตัวตน',sales_prompt_copied:'คัดลอก Prompt ขายสินค้า',product_image_download_clicked:'กดดาวน์โหลดรูปสินค้า',product_shopee_opened:'กดเปิด Shopee',live_26sep:'ไลฟ์ 26 กันยายน',analytics_setup:'ทดสอบติดตั้งสถิติ'
 };
 function showLogin() {

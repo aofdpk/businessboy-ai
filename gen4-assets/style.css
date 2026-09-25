@@ -37,3 +37,14 @@ dialog{border:0;border-radius:20px;width:min(1000px,calc(100% - 24px));max-heigh
 .instructor-proof-card .image-zoom{margin-top:20px}.instructor-proof-card .image-zoom img{display:block;width:100%;height:auto;object-fit:contain}.instructor-proof-card .image-zoom>span{font-size:18px;min-height:48px;display:flex;align-items:center;justify-content:center}
 .instructor-proof-next{text-align:center;margin:36px auto 0;max-width:760px}.instructor-proof-path{font-size:27px;line-height:1.7;font-weight:700;color:var(--navy)}.instructor-proof-next>p+p{font-size:21px;line-height:1.8;margin:20px 0 24px}.instructor-learning-link{color:#fff;background:var(--blue)}.instructor-learning-link:hover{background:#10449f}
 @media(max-width:720px){.instructor-proof-grid{grid-template-columns:1fr;gap:18px}.instructor-proof-card{padding:20px 14px;border-radius:20px}.instructor-proof-main{grid-column:auto}.instructor-proof-card h3>strong{font-size:42px}.instructor-proof-main h3>strong{font-size:50px}.instructor-proof-card h3 small{font-size:22px}.instructor-proof-card .image-zoom{margin-top:16px}.instructor-proof-next{margin-top:28px}.instructor-proof-path{font-size:24px}.instructor-proof-next>p+p{font-size:19px}.instructor-learning-link{width:100%;font-size:20px;padding-inline:12px}}
+
+/* Clear, large enrollment choices: self-service or LINE assistance. */
+.register-button{background:#f58522;color:#172b45;box-shadow:0 5px 0 #b85408}.register-button:hover{background:#ff9c43}
+.enroll-actions{display:grid;grid-template-columns:1fr;gap:16px;max-width:470px;margin-top:22px}.enroll-actions .button{width:100%;font-size:21px}
+.register-help{font-size:18px;line-height:1.8;color:var(--muted);margin:22px 0}.register-help b{font-weight:600;color:var(--ink)}
+.price-box>#register-cta,.price-box>#selected-cta{display:flex;width:100%;font-size:22px}.price-box>.register-help{text-align:center;margin:22px 0}
+.onsite-copy .enroll-actions{gap:14px}.onsite-copy .enroll-actions .button{font-size:20px}.onsite-copy .register-help{font-size:18px}
+.contact-grid .enroll-actions{margin-top:26px}.sticky-cta>.button{min-width:165px}.sticky-cta>.register-button{min-width:190px}
+@media(max-width:720px){.enroll-actions{max-width:none;gap:14px}.enroll-actions .button,.hero .enroll-actions .button,.contact-grid .enroll-actions .button{font-size:20px;min-height:60px}.register-help{font-size:18px}.price-box>#register-cta,.price-box>#selected-cta{font-size:20px}.sticky-cta{gap:10px}.sticky-cta>.button,.sticky-cta>.register-button{width:auto;flex:1;min-width:0;max-width:none;min-height:56px;font-size:20px;padding:12px 8px}.onsite-copy .enroll-actions .button{font-size:19px}}
+
+.enroll-actions .button{margin-top:0}

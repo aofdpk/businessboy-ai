@@ -48,3 +48,13 @@ test('all public static pages include one tracker, private admin includes none',
     assert.equal(count,(file.includes('admin')||file==='stats.html')?0:1,file);
   }
 });
+
+test('self-service enrollment records a register click, never a LINE click or purchase', () => {
+  const page = browser('https://businessboy.ai/ai-page-gen4');
+  const link = { id: 'register-cta', closest: () => ({id:'packages'}), hasAttribute: name => name === 'data-register' };
+  page.listeners.click({target: {closest: () => link}});
+  const events = page.window.vaq.filter(entry => entry[0] === 'event').map(entry => entry[1]);
+  assert.equal(events.length,1);
+  assert.equal(events[0].name,'gen4_register_click');
+  assert.deepEqual(JSON.parse(JSON.stringify(events[0].data)),{placement:'packages',package:'1_year'});
+});
