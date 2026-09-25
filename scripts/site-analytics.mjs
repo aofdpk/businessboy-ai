@@ -1,7 +1,7 @@
 import { inject, track } from '@vercel/analytics';
 
 const hosts = new Set(['businessboy.ai', 'www.businessboy.ai']);
-const sections = new Set(['top', 'instructor-results', 'learning', 'examples', 'reviews', 'results', 'schedule', 'costs', 'packages', 'faq', 'contact']);
+const sections = new Set(['top', 'instructor-results', 'learning', 'examples', 'kvid', 'reviews', 'results', 'schedule', 'costs', 'packages', 'faq', 'contact']);
 const campaignKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 
 // Keep only campaign labels, never arbitrary query strings, fragments or form data.
@@ -47,7 +47,7 @@ export function startAnalytics() {
     let sent = false;
     detail.addEventListener('toggle', () => { if (detail.open && !sent) { sent = true; send('gen4_faq_opened', { question: index + 1 }); } });
   });
-  document.querySelectorAll('[data-video]').forEach((button, index) => button.addEventListener('click', () => send('gen4_video_opened', { video: index + 1 })));
+  document.querySelectorAll('[data-video], [data-youtube]').forEach((button, index) => button.addEventListener('click', () => send('gen4_video_opened', { video: index + 1 })));
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {
       for (const entry of entries) if (entry.isIntersecting) {

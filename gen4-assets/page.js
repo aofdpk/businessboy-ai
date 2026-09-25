@@ -17,20 +17,23 @@ function updatePackage(input){
 document.querySelectorAll('input[name="package"]').forEach(input=>input.addEventListener('change',()=>updatePackage(input)));
 updatePackage(document.querySelector('input[name="package"]:checked'));
 const dialog=document.getElementById('media-dialog'), title=document.getElementById('media-title'), img=document.getElementById('dialog-image'), video=document.getElementById('dialog-video'), help=document.getElementById('video-help'), close=document.getElementById('close-dialog');
+const youtube=document.getElementById('dialog-youtube');
 let previousFocus;
 const zoomTools=document.getElementById('zoom-tools'), zoomToggle=document.getElementById('zoom-toggle'), zoomHint=document.getElementById('zoom-hint');
 zoomToggle.addEventListener('click',()=>{const expanded=img.classList.toggle('zoomed');zoomToggle.textContent=expanded?'ย่อภาพ −':'ขยายตัวอักษร ＋';zoomToggle.setAttribute('aria-pressed',String(expanded));zoomHint.textContent=expanded?'เลื่อนภาพซ้าย–ขวา และขึ้น–ลง เพื่ออ่านต่อ':'กดขยายเพื่ออ่านภาพให้ใหญ่ขึ้น';});
 function openMedia(button,kind){
  zoomTools.hidden=kind!=='image';img.classList.remove('zoomed');zoomToggle.textContent='ขยายตัวอักษร ＋';zoomToggle.setAttribute('aria-pressed','false');zoomHint.textContent='กดขยายเพื่ออ่านภาพให้ใหญ่ขึ้น';
- previousFocus=button;title.textContent=button.dataset.title;img.hidden=kind!=='image';video.hidden=kind!=='video';help.hidden=true;
+ previousFocus=button;title.textContent=button.dataset.title;img.hidden=kind!=='image';video.hidden=kind!=='video';youtube.hidden=kind!=='youtube';help.hidden=true;
  if(kind==='image'){img.src=button.dataset.image;img.alt=button.dataset.title;}
+ else if(kind==='youtube'){youtube.src='https://www.youtube-nocookie.com/embed/'+button.dataset.youtube+'?rel=0';youtube.title=button.dataset.title;}
  else{video.src=button.dataset.video;video.poster=button.dataset.poster;video.setAttribute('aria-label',button.dataset.title);}
  dialog.showModal();document.body.classList.add('dialog-open');close.focus();
  if(kind==='video')video.play().catch(()=>{help.hidden=false;});
 }
 document.querySelectorAll('[data-image]').forEach(button=>button.addEventListener('click',()=>openMedia(button,'image')));
 document.querySelectorAll('[data-video]').forEach(button=>button.addEventListener('click',()=>openMedia(button,'video')));
+document.querySelectorAll('[data-youtube]').forEach(button=>button.addEventListener('click',()=>openMedia(button,'youtube')));
 close.addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
-dialog.addEventListener('close',()=>{video.pause();video.removeAttribute('src');video.load();document.body.classList.remove('dialog-open');previousFocus?.focus({preventScroll:true});});
+dialog.addEventListener('close',()=>{youtube.removeAttribute('src');video.pause();video.removeAttribute('src');video.load();document.body.classList.remove('dialog-open');previousFocus?.focus({preventScroll:true});});
 })();
