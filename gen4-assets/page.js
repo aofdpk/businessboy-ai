@@ -1,9 +1,9 @@
 (() => {
 'use strict';
 const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-const general='สนใจสมัครคอร์ส เปลี่ยนเพจธรรมดา ให้กลายเป็นเครื่องจักรผลิตเงิน รุ่นที่ 4';
+const general='สนใจรุ่น4';
 const lineUrl=message=>mobile?'https://line.me/R/oaMessage/%40034oysgq/?'+encodeURIComponent(message):'https://lin.ee/sl6unNh';
-document.querySelectorAll('[data-line]').forEach(link=>{link.href=lineUrl(link.hasAttribute('data-onsite')?general+' แพ็กเกจ 25,990 บาท พร้อมเรียนในห้อง 3 ครั้ง':general);});
+document.querySelectorAll('[data-line]').forEach(link=>{link.href=lineUrl(general);});
 const fmt=new Intl.NumberFormat('th-TH');
 function updatePackage(input){
  const price=Number(input.dataset.price), duration=input.dataset.duration, onsite=input.hasAttribute('data-onsite');
@@ -13,7 +13,7 @@ function updatePackage(input){
  document.getElementById('selected-price').textContent=fmt.format(price)+' บาท';
  document.getElementById('selected-installment').textContent=fmt.format(price/10)+' บาท/เดือน';
  const cta=document.getElementById('selected-cta');
- cta.href=lineUrl(general+' แพ็กเกจ '+packageLabel+' ราคา '+fmt.format(price)+' บาท');
+ cta.href=lineUrl(general+' โปร'+price);
  cta.setAttribute('aria-label','ให้แอดมินช่วยสมัคร '+packageLabel+' ราคา '+fmt.format(price)+' บาท ผ่าน LINE');
 }
 document.querySelectorAll('input[name="package"]').forEach(input=>input.addEventListener('change',()=>updatePackage(input)));
