@@ -34,7 +34,11 @@ export function startAnalytics() {
   }});
   if (!/^\/ai-page-gen4(?:\.html)?\/?$/.test(location.pathname)) return;
   const send = (name, data) => { try { track(name, data); } catch { /* Never block enrollment. */ } };
-  const packageName = () => ({ '1 เดือน': '1_month', '3 เดือน': '3_months', '1 ปี': '1_year', 'ตลอดชีพ': 'lifetime' }[document.querySelector('input[name="package"]:checked')?.dataset.duration] || 'unknown');
+  const packageName = () => {
+    const input = document.querySelector('input[name="package"]:checked');
+    if (input?.hasAttribute('data-onsite')) return 'onsite';
+    return { '1 เดือน': '1_month', '3 เดือน': '3_months', '1 ปี': '1_year', 'ตลอดชีพ': 'lifetime' }[input?.dataset.duration] || 'unknown';
+  };
   document.addEventListener('click', event => {
     const link = event.target.closest?.('a[data-line], a[data-register]');
     if (!link) return;
@@ -47,7 +51,7 @@ export function startAnalytics() {
     let sent = false;
     detail.addEventListener('toggle', () => { if (detail.open && !sent) { sent = true; send('gen4_faq_opened', { question: index + 1 }); } });
   });
-  document.querySelectorAll('[data-video], [data-youtube]').forEach((button, index) => button.addEventListener('click', () => send('gen4_video_opened', { video: index + 1 })));
+  document.querySelectorAll('[data-video]').forEach((button, index) => button.addEventListener('click', () => send('gen4_video_opened', { video: index + 1 })));
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {
       for (const entry of entries) if (entry.isIntersecting) {

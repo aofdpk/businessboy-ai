@@ -10,7 +10,7 @@ test('page URLs retain campaign attribution and strip private data', () => {
   for (const url of ['https://preview.vercel.app/ai-page-gen4', 'http://businessboy.ai/ai-page-gen4', 'https://businessboy.ai/student-story/admin', 'https://businessboy.ai/api/student-story', 'https://user:pass@businessboy.ai/']) assert.equal(sanitizeUrl(url), null);
 });
 
-function browser(url, storage = new Map()) {
+function browser(url, storage = new Map(), selected = { duration: '1 ปี', onsite: false }) {
   const listeners = {}, scripts = [], window = {};
   const context = vm.createContext({ window, location: new URL(url), URL, console,
     localStorage: { setItem: (k,v) => storage.set(k,v), getItem: k => storage.get(k), removeItem: k => storage.delete(k) },
@@ -19,7 +19,7 @@ function browser(url, storage = new Map()) {
       createElement: () => ({ dataset: {} }),
       addEventListener: (name, callback) => listeners[name] = callback,
       querySelectorAll: () => [],
-      querySelector: () => ({ dataset: { duration: '1 ปี' } }),
+      querySelector: () => ({ dataset: { duration: selected.duration }, hasAttribute: name => name === 'data-onsite' && selected.onsite }),
     },
   });
   const run = () => vm.runInContext(readFileSync('site-analytics.js','utf8'), context);
@@ -57,4 +57,15 @@ test('self-service enrollment records a register click, never a LINE click or pu
   assert.equal(events.length,1);
   assert.equal(events[0].name,'gen4_register_click');
   assert.deepEqual(JSON.parse(JSON.stringify(events[0].data)),{placement:'packages',package:'1_year'});
+});
+
+test('onsite selection is distinct from lifetime for both enrollment paths', () => {
+  for (const onsite of [true, false]) for (const register of [true, false]) {
+    const page = browser('https://businessboy.ai/ai-page-gen4', new Map(), { duration: 'ตลอดชีพ', onsite });
+    const link = { id: register ? 'register-cta' : 'selected-cta', closest: () => ({id:'packages'}), hasAttribute: name => name === 'data-register' && register };
+    page.listeners.click({target: {closest: () => link}});
+    const event = page.window.vaq.find(entry => entry[0] === 'event')[1];
+    assert.equal(event.name, register ? 'gen4_register_click' : 'gen4_line_click');
+    assert.equal(event.data.package, onsite ? 'onsite' : 'lifetime');
+  }
 });
