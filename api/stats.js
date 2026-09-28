@@ -102,9 +102,23 @@ async function hourlyTrend(range, filter) {
   const batches = await Promise.all(trendRanges(range).map(chunk => query('visits','hour',chunk,filter)));
   return [...new Map(batches.flat().map(row => [row.timestamp,row])).values()];
 }
+function youtubeRows(landings, contacts, includeTests) {
+  const grouped = new Map();
+  for (const [kind, raw] of [['visit', landings], ['line', contacts]]) {
+    for (const item of rows(raw, 'eventData/attribution')) {
+      const match = /^(youtube|qa)\/([a-z][a-z0-9_-]{0,79})\/([a-z][a-z0-9_-]{0,79})$/i.exec(item.label);
+      if (!match || (match[1] === 'qa' && !includeTests)) continue;
+      const entry = grouped.get(item.label) || { attribution:item.label, source:match[1], campaign:match[2], content:match[3], visitors:0, views:0, lineVisitors:0, lineClicks:0 };
+      if (kind === 'visit') { entry.visitors += item.visitors; entry.views += item.count; }
+      else { entry.lineVisitors += item.visitors; entry.lineClicks += item.count; }
+      grouped.set(item.label, entry);
+    }
+  }
+  return [...grouped.values()].map(row => ({ ...row, clickRate:row.visitors ? row.lineVisitors / row.visitors * 100 : null })).sort((a,b)=>b.visitors-a.visitors);
+}
 async function report(days, scope, includeTests) {
   const range = period(days); let filter = filters(scope, includeTests), utm = true, sourceRows = []; 
-  const key = `bb:stats:report:v4:${days}:${scope}:${includeTests}:${range.since}`;
+  const key = `bb:stats:report:v5:${days}:${scope}:${includeTests}:${range.since}`;
   await schema();
   const sql = store();
   const cached = await sql`SELECT payload FROM bb_stats_cache WHERE key=${key} AND expires_at>now()`;
@@ -122,9 +136,19 @@ async function report(days, scope, includeTests) {
   const visits = data[0].reduce((sum,r) => ({visitors: sum.visitors + number(r.visitors), views: sum.views + number(r.pageviews)}), {visitors:0,views:0});
   const events = rows(data[7],'eventName');
   const line = events.find(e => e.label === 'gen4_line_click') || {visitors:0,count:0};
+  // Custom event properties work independently of the optional provider UTM reports.
+  let youtube = { available: false, rows: [] };
+  try {
+    const base = filters('gen4', true);
+    const [landings, contacts] = await Promise.all([
+      query('events', 'eventData/attribution', range, base + " and eventName eq 'gen4_youtube_visit'"),
+      query('events', 'eventData/attribution', range, base + " and eventName eq 'gen4_line_click'"),
+    ]);
+    youtube = { available: true, rows: youtubeRows(landings, contacts, includeTests) };
+  } catch { /* Keep the existing report usable; never turn an unavailable feed into zero. */ }
   const result = {range, scope, includeTests:utm ? includeTests : true, features:{utm}, updatedAt:new Date().toISOString(), source:'Vercel Web Analytics',
     totals:{...visits,lineClicks:line.count,lineVisitors:line.visitors,clickRate:visits.visitors ? line.visitors/visits.visitors*100 : 0},
-    trend:trend(data[1],range), pages:rows(data[2],'requestPath'), sources:rows(sourceRows,'utmSource'), referrers:rows(data[4],'referrerHostname'),
+    youtube, trend:trend(data[1],range), pages:rows(data[2],'requestPath'), sources:rows(sourceRows,'utmSource'), referrers:rows(data[4],'referrerHostname'),
     devices:rows(data[5],'deviceType'), campaigns:rows(data[6],'utmCampaign'), events, sections:rows(data[8],'eventData/section'), packages:rows(data[9],'eventData/package')};
   await sql`INSERT INTO bb_stats_cache(key,payload,expires_at) VALUES(${key},${JSON.stringify(result)}::jsonb,now()+interval '120 seconds')
     ON CONFLICT(key) DO UPDATE SET payload=excluded.payload, expires_at=excluded.expires_at`;
@@ -174,4 +198,4 @@ async function handler(req,res) {
   }
 }
 module.exports = handler;
-module.exports._test = { period, filters, trend, trendRanges, session, rows };
+module.exports._test = { period, filters, trend, trendRanges, session, rows, youtubeRows };

@@ -17,6 +17,17 @@ export function sanitizeUrl(value) {
   return clean.href;
 }
 
+// Explicit landing attribution only: never carry paid labels into a later organic visit.
+export function youtubeAttribution(value) {
+  const clean = sanitizeUrl(value);
+  if (!clean) return null;
+  const params = new URL(clean).searchParams;
+  if (!['youtube', 'qa'].includes(params.get('utm_source')) || params.get('utm_medium') !== 'paid_video') return null;
+  const campaign = params.get('utm_campaign'), content = params.get('utm_content');
+  if (!campaign || !content) return null;
+  return `${params.get('utm_source')}/${campaign}/${content}`;
+}
+
 export function startAnalytics() {
   if (!hosts.has(location.hostname) || location.protocol !== 'https:' || !sanitizeUrl(location.href)) return;
   const mode = new URL(location.href).searchParams.get('analytics');
@@ -34,6 +45,8 @@ export function startAnalytics() {
   }});
   if (!/^\/ai-page-gen4(?:\.html)?\/?$/.test(location.pathname)) return;
   const send = (name, data) => { try { track(name, data); } catch { /* Never block enrollment. */ } };
+  const attribution = youtubeAttribution(location.href);
+  if (attribution) send('gen4_youtube_visit', { attribution });
   const packageName = () => {
     const input = document.querySelector('input[name="package"]:checked');
     if (input?.hasAttribute('data-onsite')) return 'onsite';
@@ -44,7 +57,7 @@ export function startAnalytics() {
     if (!link) return;
     const section = link.closest('section[id]')?.id;
     const placement = sections.has(section) ? section : link.closest('header') ? 'header' : 'floating';
-    send(link.hasAttribute('data-register') ? 'gen4_register_click' : 'gen4_line_click', { placement, package: ['selected-cta', 'register-cta'].includes(link.id) ? packageName() : link.hasAttribute('data-onsite') ? 'onsite' : 'general' });
+    send(link.hasAttribute('data-register') ? 'gen4_register_click' : 'gen4_line_click', { placement, package: ['selected-cta', 'register-cta'].includes(link.id) ? packageName() : link.hasAttribute('data-onsite') ? 'onsite' : 'general', ...(attribution ? { attribution } : {}) });
   });
   document.querySelectorAll('input[name="package"]').forEach(input => input.addEventListener('change', () => send('gen4_package_selected', { package: packageName() })));
   document.querySelectorAll('#faq details').forEach((detail, index) => {

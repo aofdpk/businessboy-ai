@@ -87,7 +87,7 @@ function devices(rows) {
 function render(data) {
   const t=data.totals;
   const utm=data.features?.utm!==false;
-  $('test-control').hidden=!utm;
+  $('test-control').hidden=false;
   $('plan-note').hidden=utm;
   $('plan-note').textContent='ตัวเลขรวมการเข้าชมของทีมทดสอบด้วย · ดูแหล่งที่มาได้จากเว็บไซต์อ้างอิง ส่วนชื่อแคมเปญยังไม่เปิดใช้งาน';
   $('sources-description').textContent=utm?'ลิงก์ที่ติดชื่อช่องทางไว้ (UTM)':'เว็บไซต์ที่ส่งคนเข้ามา · จำนวนเปิดหน้าเว็บ';
@@ -104,6 +104,25 @@ function render(data) {
   list('packages',data.packages,'count','ยังไม่มีการกด LINE ในช่วงนี้');
   list('campaigns',data.campaigns,'views',utm?'ยังไม่มีข้อมูลแคมเปญ':'การแยกชื่อแคมเปญต้องใช้ Web Analytics Plus ของ Vercel · ยังไม่ได้เปิดบริการเสริมนี้','ไม่ได้ระบุแคมเปญ');
   list('events',data.events,'count','ยังไม่มีกิจกรรมในช่วงนี้');
+  renderYoutube(data.youtube);
+}
+function renderYoutube(report) {
+  const parent=$('youtube-results'); parent.replaceChildren();
+  if (!report?.available || !report.rows.length) {
+    const p=document.createElement('p'); p.className='list-empty';
+    p.textContent=report?.available?'ยังไม่มีข้อมูลจากลิงก์โฆษณา YouTube ในช่วงนี้':'รายงานแยกคลิปยังโหลดไม่ได้ กรุณาลองอัปเดตอีกครั้ง'; parent.append(p); return;
+  }
+  const table=document.createElement('table'); table.className='youtube-table';
+  const head=document.createElement('tr');
+  for(const title of ['คลิป / แคมเปญ','คนเข้าเว็บ ≈','เปิดหน้า','คนกด LINE ≈','กด LINE (ครั้ง)','อัตรากด LINE']) { const th=document.createElement('th');th.textContent=title;head.append(th); }
+  table.append(head);
+  const names={baansuan_v01:'บ้านสวน',prompt_flow_v01:'Prompt → วิดีโอ',live26sep_v01:'ไลฟ์ 26 กันยายน'};
+  for(const row of report.rows) {
+    const tr=document.createElement('tr');
+    for(const value of [`${row.source==='qa'?'[ทดสอบ] ':''}${names[row.content]||row.content} · ${row.campaign}`,number.format(row.visitors),number.format(row.views),number.format(row.lineVisitors),number.format(row.lineClicks),row.clickRate===null?'—':row.clickRate.toFixed(1)+'%']) { const td=document.createElement('td');td.textContent=value;tr.append(td); }
+    table.append(tr);
+  }
+  parent.append(table);
 }
 async function load() {
   const id=++requestId;loading=true;$('report').setAttribute('aria-busy','true');$('refresh').disabled=true;$('updated-at').textContent='กำลังอัปเดต…';$('data-error').hidden=true;
@@ -124,7 +143,7 @@ function buildLink(){
   $('copy-link').disabled=!valid;
   if(!valid){$('generated-link').value='ใช้ภาษาอังกฤษ ตัวเลข - หรือ _ และเริ่มด้วยตัวอักษร';return;}
   const source=$('link-source').value;
-  const url=new URL('https://businessboy.ai/ai-page-gen4');url.search=new URLSearchParams({utm_source:source,utm_medium:source==='line'?'broadcast':'organic_social',utm_campaign:campaign,utm_content:content});$('generated-link').value=url.href;
+  const url=new URL('https://businessboy.ai/ai-page-gen4');url.search=new URLSearchParams({utm_source:source,utm_medium:source==='youtube'?'paid_video':source==='line'?'broadcast':'organic_social',utm_campaign:campaign,utm_content:content});$('generated-link').value=url.href;
 }
 ['link-source','link-campaign','link-content'].forEach(id=>$(id).addEventListener('input',buildLink));
 $('copy-link').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('generated-link').value);$('copy-status').textContent='คัดลอกแล้ว! นำลิงก์ไปวางในโพสต์หรือโปรไฟล์ได้เลย';}catch{$('generated-link').select();$('copy-status').textContent='เลือกลิงก์ไว้ให้แล้ว กดคัดลอกบนเครื่องได้เลย';}});

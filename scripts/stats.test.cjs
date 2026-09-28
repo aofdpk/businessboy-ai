@@ -38,19 +38,28 @@ test('Bangkok day boundaries and hourly chart rollup are correct',()=>{
 });
 test('authenticated report uses fixed project, production filter and cache',async()=>{
  const {handler,calls}=setup();const auth=await request(handler,{method:'POST',query:{action:'login'},headers:{origin:'https://businessboy.ai','content-type':'application/json'},body:{password:'correct-test-password'}});const headers={cookie:auth.headers['Set-Cookie'].split(';')[0]};
- const r=await request(handler,{headers,query:{days:'7',scope:'gen4'}});assert.equal(r.statusCode,200);assert.equal(r.body.totals.views,20);assert.equal(r.body.totals.lineClicks,4);assert.equal(r.body.totals.clickRate,20);assert.equal(calls.length,10);
- for(const call of calls){const u=new URL(call);assert.equal(u.hostname,'api.vercel.com');assert.equal(u.searchParams.get('projectId'),'prj_GQAb9h8tzmAnXtaCnTedFtfwhYua');assert.match(u.searchParams.get('filter'),/environment eq 'production'/);assert.match(u.searchParams.get('filter'),/utmSource ne 'qa'/);}
- await request(handler,{headers,query:{days:'7',scope:'gen4'}});assert.equal(calls.length,10);
+ const r=await request(handler,{headers,query:{days:'7',scope:'gen4'}});assert.equal(r.statusCode,200);assert.equal(r.body.totals.views,20);assert.equal(r.body.totals.lineClicks,4);assert.equal(r.body.totals.clickRate,20);assert.equal(calls.length,12);
+ for(const call of calls){const u=new URL(call);assert.equal(u.hostname,'api.vercel.com');assert.equal(u.searchParams.get('projectId'),'prj_GQAb9h8tzmAnXtaCnTedFtfwhYua');assert.match(u.searchParams.get('filter'),/environment eq 'production'/);if(!u.searchParams.get('by').includes('attribution'))assert.match(u.searchParams.get('filter'),/utmSource ne 'qa'/);}
+ await request(handler,{headers,query:{days:'7',scope:'gen4'}});assert.equal(calls.length,12);
 });
 
 test('base plan still shows real analytics when UTM is unavailable',async()=>{
  const {handler,calls}=setup({utm:false});const auth=await request(handler,{method:'POST',query:{action:'login'},headers:{origin:'https://businessboy.ai','content-type':'application/json'},body:{password:'correct-test-password'}});
- const r=await request(handler,{headers:{cookie:auth.headers['Set-Cookie'].split(';')[0]},query:{days:'7',scope:'gen4'}});assert.equal(r.statusCode,200);assert.equal(r.body.features.utm,false);assert.equal(r.body.includeTests,true);assert.equal(r.body.totals.visitors,10);assert.equal(calls.length,9);for(const call of calls.slice(1))assert.doesNotMatch(new URL(call).searchParams.get('filter'),/utmSource/);
+ const r=await request(handler,{headers:{cookie:auth.headers['Set-Cookie'].split(';')[0]},query:{days:'7',scope:'gen4'}});assert.equal(r.statusCode,200);assert.equal(r.body.features.utm,false);assert.equal(r.body.includeTests,true);assert.equal(r.body.totals.visitors,10);assert.equal(calls.length,11);for(const call of calls.slice(1))assert.doesNotMatch(new URL(call).searchParams.get('filter'),/utmSource/);
 });
 test('custom event dimensions preserve section and package labels',()=>{
  const {helpers:h}=setup();
  for(const row of [{'eventData/section':'packages'},{'eventData.section':'packages'},{eventData:{section:'packages'}},{eventData:'packages'}])assert.equal(h.rows([row],'eventData/section')[0].label,'packages');
  assert.equal(h.rows([{'eventData/package':'1_year',count:2}],'eventData/package')[0].label,'1_year');
+});
+
+test('YouTube report joins the same creative, separates campaigns, excludes QA and repeated clicks from visitor rate',()=>{
+ const {helpers:h}=setup();
+ const visits=[{eventData:{attribution:'youtube/campaign_a/baansuan_v01'},visitors:10,count:15},{eventData:{attribution:'youtube/campaign_b/baansuan_v01'},visitors:3,count:3},{eventData:{attribution:'qa/campaign_a/check'},visitors:1,count:1}];
+ const clicks=[{eventData:{attribution:'youtube/campaign_a/baansuan_v01'},visitors:2,count:5},{eventData:{attribution:'qa/campaign_a/check'},visitors:1,count:2},{eventData:{attribution:''},visitors:900,count:900}];
+ const result=h.youtubeRows(visits,clicks,false);
+ assert.equal(result.length,2);assert.equal(result[0].clickRate,20);assert.equal(result[0].lineClicks,5);assert.equal(result[1].lineVisitors,0);
+ assert.equal(h.youtubeRows(visits,clicks,true).length,3);
 });
 test('30-day hourly ranges stay within provider limits with no gaps or overlaps',()=>{
  const {helpers:h}=setup(),range=h.period(30,Date.parse('2026-09-23T08:00:00Z')),chunks=h.trendRanges(range);

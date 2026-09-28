@@ -2,12 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFileSync, readdirSync } from 'node:fs';
-import { sanitizeUrl } from './site-analytics.mjs';
+import { sanitizeUrl, youtubeAttribution } from './site-analytics.mjs';
 
 test('page URLs retain campaign attribution and strip private data', () => {
   assert.equal(sanitizeUrl('https://businessboy.ai/ai-page-gen4?utm_source=tiktok&utm_campaign=live_26sep&email=a%40b.com&phone=0812345678#private'), 'https://businessboy.ai/ai-page-gen4?utm_source=tiktok&utm_campaign=live_26sep');
   assert.equal(sanitizeUrl('https://businessboy.ai/ai-page-gen4?utm_content=a%40b.com'), 'https://businessboy.ai/ai-page-gen4');
   for (const url of ['https://preview.vercel.app/ai-page-gen4', 'http://businessboy.ai/ai-page-gen4', 'https://businessboy.ai/student-story/admin', 'https://businessboy.ai/api/student-story', 'https://user:pass@businessboy.ai/']) assert.equal(sanitizeUrl(url), null);
+});
+
+test('paid YouTube attribution joins visits to LINE clicks but excludes organic traffic and private input', () => {
+  const url='https://businessboy.ai/ai-page-gen4?utm_source=youtube&utm_medium=paid_video&utm_campaign=gen4_youtube_long_v01&utm_content=baansuan_v01';
+  assert.equal(youtubeAttribution(url),'youtube/gen4_youtube_long_v01/baansuan_v01');
+  for (const invalid of [url.replace('paid_video','organic_social'),url.replace('baansuan_v01','a%40b.com'),url.replace('youtube','facebook')]) assert.equal(youtubeAttribution(invalid),null);
+  const page=browser(url);page.run();
+  const link={id:'line',closest:()=>({id:'contact'}),hasAttribute:()=>false};
+  page.listeners.click({target:{closest:()=>link}});
+  const events=page.window.vaq.filter(e=>e[0]==='event').map(e=>e[1]);
+  assert.equal(events.filter(e=>e.name==='gen4_youtube_visit').length,1);
+  assert.equal(events.find(e=>e.name==='gen4_line_click').data.attribution,events[0].data.attribution);
 });
 
 function browser(url, storage = new Map(), selected = { duration: '1 ปี', onsite: false }) {
