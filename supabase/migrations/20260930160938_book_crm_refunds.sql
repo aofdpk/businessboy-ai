@@ -42,4 +42,3 @@ declare a book_addons; o book_orders; s book_staff; oid uuid; begin
  insert into book_audit(actor,order_id,action,details) values(p_actor,o.id,'addon_'||p_action,jsonb_build_object('addon_id',a.id,'product',a.product,'amount',a.amount,'delivery_status',a.delivery_status));
  return to_jsonb(a)-'slip_hash'-'slip_path';
 end $$;
-
