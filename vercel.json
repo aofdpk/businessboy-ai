@@ -34,6 +34,10 @@
   ],
   "rewrites": [
     {
+      "source": "/book-payment",
+      "destination": "/book-payment.html"
+    },
+    {
       "source": "/ai-book",
       "destination": "/ai-book.html"
     },
@@ -311,6 +315,27 @@
     }
   ],
   "headers": [
+    {
+      "source": "/book-payment",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: https://oezzgzzqgsrpvjeesgva.supabase.co; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
     {
       "source": "/book-admin",
       "headers": [

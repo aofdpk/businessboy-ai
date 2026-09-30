@@ -1,3 +1,4 @@
+import { createCRM } from './crm.ts';
 import addresses from './addresses.json' with { type: 'json' };
 const URL = Deno.env.get('SUPABASE_URL')!;
 const KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -46,6 +47,7 @@ async function slip(o:any,data:any){
  await db('book_audit','POST',{order_id:o.id,action:'slip_uploaded'});return publicOrder(changed[0]);
  }catch(e){await fetch(`${URL}/storage/v1/object/book-slips`,{method:'DELETE',headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({prefixes:[path]})});throw e;}
 }
+const crm=createCRM({db,fail,clean,uuid,hash,url:URL,key:KEY,authHeaders});
 Deno.serve(async(req)=>{
  const origin=req.headers.get('origin')||'';
  const cors:Record<string,string>=origins.has(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Credentials':'true','Vary':'Origin'}:{};
@@ -63,16 +65,20 @@ Deno.serve(async(req)=>{
   if(reader){while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>7200000){await reader.cancel();fail('ไฟล์ใหญ่เกินไป',413);}chunks.push(value);}}
   const raw=new Uint8Array(size);let offset=0;for(const c of chunks){raw.set(c,offset);offset+=c.length;}let body:any;try{body=JSON.parse(new TextDecoder().decode(raw));}catch{fail('ข้อมูลไม่ถูกต้อง');}
   const ip=req.headers.get('x-forwarded-for')?.split(',')[0]||req.headers.get('cf-connecting-ip')||'unknown';
-  const key=await hash(`${KEY}:${new Date().toISOString().slice(0,10)}:${ip}:${op}`);
+  const key=await hash(`${KEY}:${new Date().toISOString().slice(0,10)}:${ip}:${op}:${op==='login'?clean(body.email,150).toLowerCase():''}`);
+  if(op==='login'&&!await db('rpc/book_rate','POST',{p_key:await hash(`${KEY}:${ip}:login_global`),p_limit:60,p_seconds:600}))fail('ทำรายการถี่เกินไป กรุณารอสักครู่',429);
   const allowed=await db('rpc/book_rate','POST',{p_key:key,p_limit:op==='login'?12:op==='order'?25:240,p_seconds:600});if(!allowed)fail('ทำรายการถี่เกินไป กรุณารอสักครู่',429);
   if(op==='login'){
-   const signed=await auth('token?grant_type=password',{email:clean(body.email),password:body.password});
+   let email=clean(body.email).toLowerCase();
+   if(!email.includes('@')){if(!/^[a-z0-9_]{3,40}$/.test(email))fail('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',401);const member=(await db(`book_staff?username=eq.${email}&active=eq.true&limit=1`))[0];email=member?.email||'unknown@staff.businessboy.ai';}
+   const signed=await auth('token?grant_type=password',{email,password:body.password});
    if(!signed.ok)fail('อีเมลหรือรหัสผ่านไม่ถูกต้อง',401);
    const staff=(await db(`book_staff?user_id=eq.${signed.data.user.id}&active=eq.true&limit=1`))[0];if(!staff)fail('บัญชีนี้ไม่มีสิทธิ์หลังบ้าน',403);
    const token=crypto.randomUUID()+crypto.randomUUID();await db('book_sessions','POST',{token_hash:await hash(token),user_id:staff.user_id,expires_at:new Date(Date.now()+8*3600000).toISOString()});
    headers['Set-Cookie']=`bb_book_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/api/book; Max-Age=28800`;
    return respond({ok:true,user:{email:staff.email,role:staff.role}});
   }
+  const publicCRM=await crm.public(op,body);if(publicCRM!==null)return respond(publicCRM);
   if(op==='order'){
    if(typeof body.key!=='string'||!/^[a-f0-9-]{72}$/.test(body.key))fail('กรุณาโหลดหน้าแล้วลองใหม่');
    const ih=await hash(body.key);const existing=(await db(`book_orders?idempotency_hash=eq.${ih}&limit=1`))[0];if(existing)return respond(publicOrder(existing));
@@ -95,6 +101,8 @@ Deno.serve(async(req)=>{
   if(!sess)fail('กรุณาเข้าสู่ระบบ',401);
   const staff=(await db(`book_staff?user_id=eq.${sess.user_id}&active=eq.true&limit=1`))[0];if(!staff)fail('ไม่มีสิทธิ์',403);
   if(op==='logout'){await db(`book_sessions?token_hash=eq.${await hash(token)}`,'DELETE');headers['Set-Cookie']='bb_book_session=; HttpOnly; Secure; SameSite=Strict; Path=/api/book; Max-Age=0';return respond({ok:true});}
+  const staffCRM=await crm.staff(op,body,staff);if(staffCRM!==null)return respond(staffCRM);
+  if(staff.role==='telesales')fail('หน้าที่นี้สำหรับเจ้าของ การเงิน หรือจัดส่ง',403);
   if(op==='insert'){const value=(await db('book_private_settings?id=eq.true&select=prompt_code'))[0];if(!value?.prompt_code)fail('ยังไม่ได้ตั้งรหัสเว็บ Prompt');return respond({code:value.prompt_code});}
   if(op==='admin'){
    const page=Math.max(0,Math.min(100000,Number(body.page)||0));let filter='';if(['new','ready','shipped','delivered','cancelled','returned'].includes(body.status))filter=`&status=eq.${body.status}`;
@@ -108,7 +116,7 @@ Deno.serve(async(req)=>{
    return respond(await db('rpc/book_change','POST',{p_id:body.id,p_revision:body.revision,p_actor:staff.user_id,p_action:body.action,p_data:data}));
   }
   if(op==='slip_view'){
-   if(staff.role==='fulfillment')fail('เฉพาะฝ่ายการเงิน',403);if(!uuid(body.id))fail('ข้อมูลไม่ถูกต้อง');
+   if(!['owner','finance'].includes(staff.role))fail('เฉพาะฝ่ายการเงิน',403);if(!uuid(body.id))fail('ข้อมูลไม่ถูกต้อง');
    const o=(await db(`book_orders?id=eq.${body.id}&select=slip_path&limit=1`))[0];if(!o?.slip_path)fail('ยังไม่มีสลิป');
    const r=await fetch(`${URL}/storage/v1/object/sign/book-slips/${o.slip_path}`,{method:'POST',headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:120})});const s=await r.json();if(!r.ok)fail('เปิดสลิปไม่ได้');
    await db('book_audit','POST',{actor:staff.user_id,order_id:body.id,action:'view_slip'});return respond({url:`${URL}/storage/v1${s.signedURL}`});
@@ -118,6 +126,7 @@ Deno.serve(async(req)=>{
    return respond(await db('rpc/book_export','POST',{p_id:body.id,p_ids:body.ids,p_actor:staff.user_id}));
   }
   if(op==='batch'){
+   if(!['owner','fulfillment'].includes(staff.role))fail('เฉพาะฝ่ายจัดส่ง',403);
    if(!uuid(body.id))fail('ข้อมูลไม่ถูกต้อง');const b=(await db(`book_exports?id=eq.${body.id}&limit=1`))[0];if(!b)fail('ไม่พบรอบส่งออก',404);await db('book_audit','POST',{actor:staff.user_id,action:'download_batch',details:{batch:body.id}});return respond({id:b.id,orders:b.snapshot});
   }
   if(op==='audit'){if(!uuid(body.id))fail('ข้อมูลไม่ถูกต้อง');return respond(await db(`book_audit?order_id=eq.${body.id}&order=created_at.desc&limit=50`));}
@@ -126,11 +135,16 @@ Deno.serve(async(req)=>{
    if(s.ga4_id&&!/^G-[A-Z0-9]{5,20}$/.test(s.ga4_id)||s.pixel_id&&!/^\d{8,25}$/.test(s.pixel_id)||s.clarity_id&&!/^[a-z0-9]{5,25}$/.test(s.clarity_id))fail('รูปแบบ ID ไม่ถูกต้อง');
    await db('book_settings?id=eq.true','PATCH',s);await db('book_audit','POST',{actor:staff.user_id,action:'tracking_settings'});return respond({ok:true});
   }
-  if(op==='staff_list'){if(staff.role!=='owner')fail('เฉพาะเจ้าของ',403);return respond(await db('book_staff?select=user_id,email,role,active'));}
+  if(op==='staff_list'){if(staff.role!=='owner')fail('เฉพาะเจ้าของ',403);return respond(await db('book_staff?select=user_id,email,username,display_name,role,active'));}
   if(op==='staff_create'){
-   if(staff.role!=='owner')fail('เฉพาะเจ้าของ',403);if(!['finance','fulfillment'].includes(body.role)||!/^\S+@\S+\.\S+$/.test(body.email)||typeof body.password!=='string'||body.password.length<12)fail('กรุณาตรวจอีเมลและใช้รหัสผ่านอย่างน้อย 12 ตัวอักษร');
-   const created=await auth('admin/users',{email:body.email,password:body.password,email_confirm:true});if(!created.ok)fail('เพิ่มบัญชีไม่สำเร็จ อีเมลนี้อาจมีบัญชีอยู่แล้ว');
-   await db('book_staff','POST',{user_id:created.data.id,email:body.email,role:body.role});await db('book_audit','POST',{actor:staff.user_id,action:'staff_created',details:{user_id:created.data.id,role:body.role}});return respond({ok:true});
+   if(staff.role!=='owner')fail('เฉพาะเจ้าของ',403);
+   const username=clean(body.username,40).toLowerCase(),display_name=clean(body.display_name,100),email=username?`${username}@staff.businessboy.ai`:clean(body.email).toLowerCase();
+   if(!['finance','fulfillment','telesales'].includes(body.role)||(username&&!/^[a-z0-9_]{3,40}$/.test(username))||!/^\S+@\S+\.\S+$/.test(email)||typeof body.password!=='string'||body.password.length<8)fail('ตรวจชื่อผู้ใช้และใช้รหัสผ่านอย่างน้อย 8 ตัว');
+   if((await db(`book_staff?email=eq.${encodeURIComponent(email)}&limit=1`)).length)fail('ชื่อผู้ใช้นี้มีอยู่แล้ว');
+   const created=await auth('admin/users',{email,password:body.password,email_confirm:true});if(!created.ok)fail('เพิ่มบัญชีไม่สำเร็จ ชื่อนี้อาจมีบัญชีอยู่แล้ว');
+   try{await db('book_staff','POST',{user_id:created.data.id,email,username:username||null,display_name,role:body.role});}
+   catch(e){await fetch(`${URL}/auth/v1/admin/users/${created.data.id}`,{method:'DELETE',headers:authHeaders});throw e;}
+   await db('book_audit','POST',{actor:staff.user_id,action:'staff_created',details:{user_id:created.data.id,role:body.role}});return respond({ok:true});
   }
   if(op==='staff_disable'){if(staff.role!=='owner'||!uuid(body.id)||body.id===staff.user_id)fail('ไม่อนุญาต',403);await db(`book_staff?user_id=eq.${body.id}&role=neq.owner`,'PATCH',{active:false});await db('book_audit','POST',{actor:staff.user_id,action:'staff_disabled',details:{user_id:body.id}});return respond({ok:true});}
   fail('ไม่พบคำสั่ง',404);

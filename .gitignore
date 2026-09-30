@@ -13,3 +13,5 @@ qa-runs/
 !api/_awards-private.js
 
 !api/_awards-admin-config.js
+
+supabase/.temp/
