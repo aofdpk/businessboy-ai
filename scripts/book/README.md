@@ -19,7 +19,7 @@ Static HTML/CSS/JS on the existing businessboy-ai Vercel project. `/api/book` re
 
 All dedicated `book_*` tables use RLS and deny `anon` / `authenticated` direct access. Only the function service role has table access. Slips are in private `book-slips` storage, signed for 120 seconds for finance/owner. Export writes and audit are in one PostgreSQL transaction. Existing sales/bot tables are untouched.
 
-GA4/Pixel/Clarity IDs are editable by the owner. Event payloads use allowlisted fields and no names, phones, addresses or slip contents. Providers load only on production domain after consent. Checkout is marked for Clarity masking; admin loads no tracking script. Unknown URL parameters are removed before provider initialization. Cookie preference can be withdrawn, stopping trackers after reload.
+GA4/Pixel/Clarity IDs are editable by the owner. Event payloads use allowlisted fields and no names, phones, addresses or slip contents. Providers load only on production domain after consent. Checkout is marked for Clarity masking; admin loads no tracking script. Unknown URL parameters are removed before provider initialization. A validated fbclid is preserved only with marketing consent so Meta can attribute the click; it is not added to first-party order/event payloads. Cookie preference can be withdrawn, stopping trackers after reload.
 
 Daily maintenance at 03:15 Thailand time clears expired staff sessions, old rate limits and events older than 90 days. Order records are not auto-deleted.
 

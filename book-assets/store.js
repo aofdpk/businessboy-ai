@@ -7,6 +7,9 @@
  let draft=null;try{const d=JSON.parse(read('bb_book_draft',true)||'null');if(d&&Date.now()-d.at<3600000)draft=d.data;}catch{}
  let consent=read('bb_book_consent'),config={},tracking=false,started=false,addresses=[],pending=null;
  const sid=read('bb_book_sid',true)||uuid();save('bb_book_sid',sid,true);
+ // Keep the click identifier in memory until marketing consent is granted.
+ const incomingFbclid=new URL(location.href).searchParams.get('fbclid');
+ const fbclid=incomingFbclid&&/^[a-zA-Z0-9_-]{1,500}$/.test(incomingFbclid)?incomingFbclid:null;
  const utm={};for(const k of ['utm_source','utm_medium','utm_campaign','utm_content','utm_term']){const v=new URL(location.href).searchParams.get(k);if(v&&/^[a-zA-Z0-9_-]{1,80}$/.test(v))utm[k]=v;}
  try{if(Object.keys(utm).length)save('bb_book_utm',JSON.stringify(utm),true);else Object.assign(utm,JSON.parse(read('bb_book_utm',true)||'{}'))}catch{}
  async function api(op,data){const r=await fetch(`/api/book?op=${op}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});let d;try{d=await r.json()}catch{throw Error('ระบบขัดข้องชั่วคราว กรุณาลองใหม่')}if(!r.ok)throw Error(d.error||'ทำรายการไม่สำเร็จ');return d;}
@@ -14,7 +17,7 @@
  function event(name,data={}){if(!analytics())return;const payload={id:uuid(),session_id:sid,event:name,data,utm,consent:true};fetch('/api/book?op=event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true}).catch(()=>{});if(window.gtag)window.gtag('event',name,{...data,...utm,page_location:'https://businessboy.ai/ai-book',page_title:'หนังสือ AI'});}
  function script(src){const s=document.createElement('script');s.src=src;s.async=true;document.head.append(s);}
  function startTracking(){if(!analytics()||tracking)return;tracking=true;
-  const safeURL=new URL(location.origin+location.pathname);for(const [k,v] of Object.entries(utm))safeURL.searchParams.set(k,v);if(/^#[a-z_-]+$/.test(location.hash))safeURL.hash=location.hash;history.replaceState(null,'',safeURL.href);
+  const safeURL=new URL(location.origin+location.pathname);for(const [k,v] of Object.entries(utm))safeURL.searchParams.set(k,v);if(consent==='all'&&fbclid)safeURL.searchParams.set('fbclid',fbclid);if(/^#[a-z_-]+$/.test(location.hash))safeURL.hash=location.hash;history.replaceState(null,'',safeURL.href);
   const live=['businessboy.ai','www.businessboy.ai'].includes(location.hostname);
   if(live&&config.ga4_id){window.dataLayer=window.dataLayer||[];window.gtag=function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{analytics_storage:'granted',ad_storage:consent==='all'?'granted':'denied',ad_user_data:'denied',ad_personalization:consent==='all'?'granted':'denied'});window.gtag('js',new Date());window.gtag('config',config.ga4_id,{send_page_view:false,allow_google_signals:false,allow_ad_personalization_signals:false,page_location:'https://businessboy.ai/ai-book'});script(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(config.ga4_id)}`);}
   if(live&&consent==='all'&&config.pixel_id){const f=window.fbq=function(){f.callMethod?f.callMethod.apply(f,arguments):f.queue.push(arguments)};f.queue=[];f.loaded=true;f.version='2.0';window._fbq=f;f('set','autoConfig',false,config.pixel_id);f('init',config.pixel_id);f('consent','grant');script('https://connect.facebook.net/en_US/fbevents.js');f('track','PageView');f('track','ViewContent',{content_ids:['ai-book'],content_type:'product',currency:'THB'});}
