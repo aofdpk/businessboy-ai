@@ -34,6 +34,18 @@
   ],
   "rewrites": [
     {
+      "source": "/ai-book",
+      "destination": "/ai-book.html"
+    },
+    {
+      "source": "/book-admin",
+      "destination": "/book-admin.html"
+    },
+    {
+      "source": "/api/book",
+      "destination": "https://oezzgzzqgsrpvjeesgva.supabase.co/functions/v1/book-store"
+    },
+    {
       "source": "/stats",
       "destination": "/stats.html"
     },
@@ -299,6 +311,41 @@
     }
   ],
   "headers": [
+    {
+      "source": "/book-admin",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://oezzgzzqgsrpvjeesgva.supabase.co; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/api/book",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/ai-book",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    },
     {
       "source": "/stats-assets/:path*",
       "headers": [
