@@ -2,7 +2,7 @@ import addresses from './addresses.json' with { type: 'json' };
 const URL = Deno.env.get('SUPABASE_URL')!;
 const KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const authHeaders = { apikey: KEY, Authorization: `Bearer ${KEY}` };
-const origins = new Set(['https://businessboy.ai','https://www.businessboy.ai','http://localhost:4310']);
+const origins = new Set(['https://businessboy.ai','https://www.businessboy.ai','http://localhost:4310','https://businessboy-ai-git-feat-ai-book-checkout-20260930-businessboy.vercel.app','https://businessboy-j5036ydlv-businessboy.vercel.app']);
 const encoder = new TextEncoder();
 const hash = async (s: string | Uint8Array) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',typeof s==='string'?encoder.encode(s):new Uint8Array(s)))).map(n=>n.toString(16).padStart(2,'0')).join('');
 const uuid = (s: unknown) => typeof s==='string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(s);
