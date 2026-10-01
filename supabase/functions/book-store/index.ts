@@ -5,6 +5,7 @@ const KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const authHeaders = { apikey: KEY, Authorization: `Bearer ${KEY}` };
 const origins = new Set(['https://businessboy.ai','https://www.businessboy.ai','http://localhost:4310','https://businessboy-ai-git-feat-ai-book-checkout-20260930-businessboy.vercel.app','https://businessboy-j5036ydlv-businessboy.vercel.app']);
 const encoder = new TextEncoder();
+async function salesEnabled(){return (await db('book_sales_settings?id=eq.true&select=telesales_enabled'))[0]?.telesales_enabled===true;}
 const hash = async (s: string | Uint8Array) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',typeof s==='string'?encoder.encode(s):new Uint8Array(s)))).map(n=>n.toString(16).padStart(2,'0')).join('');
 const uuid = (s: unknown) => typeof s==='string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(s);
 const clean = (s: unknown,max=150) => typeof s==='string'?s.trim().replace(/[\x00-\x1f]/g,'').slice(0,max):'';
@@ -74,6 +75,7 @@ Deno.serve(async(req)=>{
    const signed=await auth('token?grant_type=password',{email,password:body.password});
    if(!signed.ok)fail('อีเมลหรือรหัสผ่านไม่ถูกต้อง',401);
    const staff=(await db(`book_staff?user_id=eq.${signed.data.user.id}&active=eq.true&limit=1`))[0];if(!staff)fail('บัญชีนี้ไม่มีสิทธิ์หลังบ้าน',403);
+   if(staff.role==='telesales'&&!await salesEnabled())fail('พักระบบเทเลไว้ชั่วคราว',403);
    const token=crypto.randomUUID()+crypto.randomUUID();await db('book_sessions','POST',{token_hash:await hash(token),user_id:staff.user_id,expires_at:new Date(Date.now()+8*3600000).toISOString()});
    headers['Set-Cookie']=`bb_book_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/api/book; Max-Age=28800`;
    return respond({ok:true,user:{email:staff.email,role:staff.role}});
@@ -101,6 +103,8 @@ Deno.serve(async(req)=>{
   if(!sess)fail('กรุณาเข้าสู่ระบบ',401);
   const staff=(await db(`book_staff?user_id=eq.${sess.user_id}&active=eq.true&limit=1`))[0];if(!staff)fail('ไม่มีสิทธิ์',403);
   if(op==='logout'){await db(`book_sessions?token_hash=eq.${await hash(token)}`,'DELETE');headers['Set-Cookie']='bb_book_session=; HttpOnly; Secure; SameSite=Strict; Path=/api/book; Max-Age=0';return respond({ok:true});}
+  if(staff.role==='telesales'&&!await salesEnabled())fail('พักระบบเทเลไว้ชั่วคราว',403);
+  if((op==='sales_action'||op.startsWith('addon_')||op==='sales_settings')&&!await salesEnabled())fail('พักระบบเทเลและอัพเซลล์ไว้ชั่วคราว',403);
   const staffCRM=await crm.staff(op,body,staff);if(staffCRM!==null)return respond(staffCRM);
   if(staff.role==='telesales')fail('หน้าที่นี้สำหรับเจ้าของ การเงิน หรือจัดส่ง',403);
   if(op==='insert'){const value=(await db('book_private_settings?id=eq.true&select=prompt_code'))[0];if(!value?.prompt_code)fail('ยังไม่ได้ตั้งรหัสเว็บ Prompt');return respond({code:value.prompt_code});}
@@ -125,6 +129,12 @@ Deno.serve(async(req)=>{
    if(staff.role==='finance')fail('เฉพาะฝ่ายจัดส่ง',403);if(!uuid(body.id)||!Array.isArray(body.ids)||!body.ids.every(uuid))fail('ข้อมูลไม่ถูกต้อง');
    return respond(await db('rpc/book_export','POST',{p_id:body.id,p_ids:body.ids,p_actor:staff.user_id}));
   }
+  if(op==='batches'){
+   if(!['owner','fulfillment'].includes(staff.role))fail('เฉพาะฝ่ายจัดส่ง',403);
+   const batches=await db('book_exports?is_test=eq.false&select=id,created_at,created_by,snapshot&order=created_at.desc&limit=100');
+   const people=await db('book_staff?select=user_id,display_name,username');
+   return respond(batches.map((b:any)=>({id:b.id,created_at:b.created_at,count:b.snapshot.length,created_by:people.find((p:any)=>p.user_id===b.created_by)?.display_name||people.find((p:any)=>p.user_id===b.created_by)?.username||'ทีมงาน'})));
+  }
   if(op==='batch'){
    if(!['owner','fulfillment'].includes(staff.role))fail('เฉพาะฝ่ายจัดส่ง',403);
    if(!uuid(body.id))fail('ข้อมูลไม่ถูกต้อง');const b=(await db(`book_exports?id=eq.${body.id}&limit=1`))[0];if(!b)fail('ไม่พบรอบส่งออก',404);await db('book_audit','POST',{actor:staff.user_id,action:'download_batch',details:{batch:body.id}});return respond({id:b.id,orders:b.snapshot});
@@ -138,6 +148,7 @@ Deno.serve(async(req)=>{
   if(op==='staff_list'){if(staff.role!=='owner')fail('เฉพาะเจ้าของ',403);return respond(await db('book_staff?select=user_id,email,username,display_name,role,active'));}
   if(op==='staff_create'){
    if(staff.role!=='owner')fail('เฉพาะเจ้าของ',403);
+   if(body.role==='telesales'&&!await salesEnabled())fail('พักการเพิ่มทีมเทเลไว้ก่อน',403);
    const username=clean(body.username,40).toLowerCase(),display_name=clean(body.display_name,100),email=username?`${username}@staff.businessboy.ai`:clean(body.email).toLowerCase();
    if(!['finance','fulfillment','telesales'].includes(body.role)||(username&&!/^[a-z0-9_]{3,40}$/.test(username))||!/^\S+@\S+\.\S+$/.test(email)||typeof body.password!=='string'||body.password.length<8)fail('ตรวจชื่อผู้ใช้และใช้รหัสผ่านอย่างน้อย 8 ตัว');
    if((await db(`book_staff?email=eq.${encodeURIComponent(email)}&limit=1`)).length)fail('ชื่อผู้ใช้นี้มีอยู่แล้ว');

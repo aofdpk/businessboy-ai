@@ -1,5 +1,17 @@
 # Book CRM and telesales, 30 September 2026
 
+## Current operation: shipping only (1 October 2026)
+
+Owner requested a temporary pause of telesales and all upsells. `book_sales_settings.telesales_enabled=false` gates staff login, sales APIs, addon payment APIs and the sales mutation RPC. All five telesales accounts are inactive and their custom sessions have been revoked. Records remain intact. There is no UI switch to reactivate sales; wait for a new explicit owner instruction before changing the flag and reactivating staff.
+
+`natlogis` and `muaylogis` are active fulfillment accounts using the owner's requested credentials in Supabase Auth only. They can view orders, confirm COD orders, export ready parcels, print packing lists/Prompt inserts and record tracking. They cannot approve payments, view private slips, change prices or manage staff.
+
+Shipping users see three primary menus: orders, prepare shipments and shipped. Owner also sees payment review and team settings. Exported orders have their own queue awaiting tracking; export never marks a parcel shipped. Each batch shows time, creator, count, books/Prompt inserts and total COD. Re-download the existing snapshot rather than creating another batch.
+
+Exports include product, book quantity, packing instructions, payment method, payment status and separate order/COD amounts. Thai-header packing XLSX is separate from carrier XLSX/CSV. The latter is a generic mapping file; this account's exact DHL Web Portal template is still unverified. No DHL API, label purchase or automatic customer messaging is involved.
+
+Verified with `shipping-verification.mjs` (credentials only via process environment) and `shipping-transaction-test.sql` (all synthetic writes rolled back): both account scopes, five denied telesales logins, disabled sales APIs, paid-transfer gate, COD readiness, four offer/payment combinations, snapshot retry, duplicate export rejection, tracking, file integrity and leading zeroes. Browser checked at 1280, 390 and 320px, including 21px large text and batch summary. Public checkout and its current tracking behavior are unchanged.
+
 ## Staff workflow
 
 The same `/book-admin` accepts an email or a username. Owner can create or disable staff. The five requested accounts use usernames boatadmin, aeadmin, armadmin, pookieadmin and gunadmin, with Thai display names. Role: telesales. Passwords are held only by Supabase Auth, are not stored here, and are not forced to rotate per the owner's explicit instruction.

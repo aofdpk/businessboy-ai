@@ -24,6 +24,7 @@ export function createCRM(c:Context){
  return {
   async public(op:string,body:any){
    if(!['addon_status','addon_slip'].includes(op))return null;
+   if(!(await db('book_sales_settings?id=eq.true&select=telesales_enabled'))[0]?.telesales_enabled)fail('พักระบบสินค้าเพิ่มไว้ชั่วคราว',403);
    if(!uuid(body.id)||typeof body.key!=='string'||body.key.length!==64||body.key!==await paymentKey(body.id))fail('ลิงก์ไม่ถูกต้อง',404);
    const a=(await db(`book_addons?id=eq.${body.id}&limit=1`))[0];if(!a)fail('ไม่พบรายการ',404);
    if(op==='addon_slip')return await upload(a,body.image);
