@@ -17,7 +17,7 @@ for(const username of ['natlogis','muaylogis']){
  try{
   const {data}=await api('crm',{},cookie);assert.equal(data.user.role,'fulfillment');assert.equal(data.sales_settings.telesales_enabled,false);
   for(const op of ['staff_list','settings','sales_action','addon_action','addon_link','sales_settings'])await api(op,{},cookie,403);
-  await api('slip_view',{},cookie,403);
+  await api('slip_view',{},cookie,400); // View is allowed; an invalid order ID is rejected.
   const testId='030bcae3-c2fb-45d7-90ae-ef7334c8ee77';
   const fixture=(await api('crm_detail',{id:testId},cookie)).data.order;
   assert.equal(fixture.is_test,true);

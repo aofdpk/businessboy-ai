@@ -6,8 +6,8 @@ export function createCRM(c:Context){
  async function paymentKey(id:string){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode('book-addon:'+id)))).map(x=>x.toString(16).padStart(2,'0')).join('');}
  async function order(id:string,staff:any){if(!uuid(id))fail('ข้อมูลไม่ถูกต้อง');const o=(await db(`book_orders?id=eq.${id}&limit=1`))[0];if(!o)fail('ไม่พบออเดอร์',404);if(staff.role==='telesales'&&o.assigned_to!==staff.user_id)fail('รับงานนี้ก่อนเปิดรายละเอียด',403);return o;}
  async function addon(id:string,staff:any){if(!uuid(id))fail('ข้อมูลไม่ถูกต้อง');const a=(await db(`book_addons?id=eq.${id}&limit=1`))[0];if(!a)fail('ไม่พบรายการ',404);await order(a.order_id,staff);return a;}
- function safeOrder(o:any){const v={...o};delete v.idempotency_hash;delete v.slip_hash;delete v.slip_path;return v;}
- function safeAddon(a:any,staff:any){const v={...a};delete v.slip_hash;delete v.slip_path;if(!['owner','telesales'].includes(staff.role))delete v.activation_code;return v;}
+ function safeOrder(o:any){const v={...o,has_slip:!!o.slip_path};delete v.idempotency_hash;delete v.slip_hash;delete v.slip_path;return v;}
+ function safeAddon(a:any,staff:any){const v={...a,has_slip:!!a.slip_path};delete v.slip_hash;delete v.slip_path;if(!['owner','telesales'].includes(staff.role))delete v.activation_code;return v;}
  async function upload(a:any,image:any){
   if(a.method!=='transfer'||!['awaiting_slip','review'].includes(a.payment_status))fail('รายการนี้ไม่รับสลิปเพิ่ม');
   if(typeof image!=='string'||image.length>7000000)fail('รูปสลิปต้องไม่เกิน 5 MB');
@@ -37,6 +37,12 @@ export function createCRM(c:Context){
     if(staff.role==='telesales')for(const o of result.orders)if(!o.assigned_to){for(const k of ['phone','address','subdistrict','district','postcode','note','call_note','tracking'])delete o[k];o.addons=[];}
     return {...result,user:{id:staff.user_id,email:staff.email,username:staff.username,name:staff.display_name||staff.email,role:staff.role},sales_settings:(await db('book_sales_settings?id=eq.true'))[0]};
    }
+   if(op==='slip_view'){
+    if(!['owner','finance','fulfillment','telesales'].includes(staff.role))fail('ไม่มีสิทธิ์',403);
+    const o=await order(body.id,staff);if(!o.slip_path)fail('ยังไม่มีสลิป');
+    const r=await fetch(`${url}/storage/v1/object/sign/book-slips/${o.slip_path}`,{method:'POST',headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:120})});const v=await r.json();if(!r.ok)fail('เปิดสลิปไม่ได้');
+    await db('book_audit','POST',{actor:staff.user_id,order_id:o.id,action:'view_slip'});return {url:`${url}/storage/v1${v.signedURL}`};
+   }
    if(op==='crm_detail'){
     const o=await order(body.id,staff),addons=await db(`book_addons?order_id=eq.${o.id}&order=created_at.asc`);
     const audit=await db(`book_audit?order_id=eq.${o.id}&select=id,created_at,actor,action,details&order=created_at.desc&limit=50`);
@@ -62,7 +68,7 @@ export function createCRM(c:Context){
     return await upload(await addon(body.id,staff),body.image);
    }
    if(op==='addon_slip_view'){
-    if(!['owner','finance'].includes(staff.role))fail('เฉพาะฝ่ายการเงิน',403);
+    if(!['owner','finance','fulfillment','telesales'].includes(staff.role))fail('ไม่มีสิทธิ์',403);
     const a=await addon(body.id,staff);if(!a.slip_path)fail('ยังไม่มีสลิป');
     const r=await fetch(`${url}/storage/v1/object/sign/book-slips/${a.slip_path}`,{method:'POST',headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:120})});const v=await r.json();if(!r.ok)fail('เปิดสลิปไม่ได้');
     await db('book_audit','POST',{actor:staff.user_id,order_id:a.order_id,action:'view_addon_slip',details:{addon_id:a.id}});return {url:`${url}/storage/v1${v.signedURL}`};

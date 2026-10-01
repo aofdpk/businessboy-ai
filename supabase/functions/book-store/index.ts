@@ -104,7 +104,7 @@ Deno.serve(async(req)=>{
   const staff=(await db(`book_staff?user_id=eq.${sess.user_id}&active=eq.true&limit=1`))[0];if(!staff)fail('ไม่มีสิทธิ์',403);
   if(op==='logout'){await db(`book_sessions?token_hash=eq.${await hash(token)}`,'DELETE');headers['Set-Cookie']='bb_book_session=; HttpOnly; Secure; SameSite=Strict; Path=/api/book; Max-Age=0';return respond({ok:true});}
   if(staff.role==='telesales'&&!await salesEnabled())fail('พักระบบเทเลไว้ชั่วคราว',403);
-  if((op==='sales_action'||op.startsWith('addon_')||op==='sales_settings')&&!await salesEnabled())fail('พักระบบเทเลและอัพเซลล์ไว้ชั่วคราว',403);
+  if((op==='sales_action'||(op.startsWith('addon_')&&op!=='addon_slip_view')||op==='sales_settings')&&!await salesEnabled())fail('พักระบบเทเลและอัพเซลล์ไว้ชั่วคราว',403);
   const staffCRM=await crm.staff(op,body,staff);if(staffCRM!==null)return respond(staffCRM);
   if(staff.role==='telesales')fail('หน้าที่นี้สำหรับเจ้าของ การเงิน หรือจัดส่ง',403);
   if(op==='insert'){const value=(await db('book_private_settings?id=eq.true&select=prompt_code'))[0];if(!value?.prompt_code)fail('ยังไม่ได้ตั้งรหัสเว็บ Prompt');return respond({code:value.prompt_code});}
@@ -125,12 +125,6 @@ Deno.serve(async(req)=>{
    if(!uuid(body.id)||!Number.isInteger(body.revision))fail('ข้อมูลไม่ถูกต้อง');
    const data=body.action==='edit'?address(body.data):{tracking:clean(body.data?.tracking,60),note:clean(body.data?.note,500)};
    return respond(await db('rpc/book_change','POST',{p_id:body.id,p_revision:body.revision,p_actor:staff.user_id,p_action:body.action,p_data:data}));
-  }
-  if(op==='slip_view'){
-   if(!['owner','finance'].includes(staff.role))fail('เฉพาะฝ่ายการเงิน',403);if(!uuid(body.id))fail('ข้อมูลไม่ถูกต้อง');
-   const o=(await db(`book_orders?id=eq.${body.id}&select=slip_path&limit=1`))[0];if(!o?.slip_path)fail('ยังไม่มีสลิป');
-   const r=await fetch(`${URL}/storage/v1/object/sign/book-slips/${o.slip_path}`,{method:'POST',headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:120})});const s=await r.json();if(!r.ok)fail('เปิดสลิปไม่ได้');
-   await db('book_audit','POST',{actor:staff.user_id,order_id:body.id,action:'view_slip'});return respond({url:`${URL}/storage/v1${s.signedURL}`});
   }
   if(op==='export'){
    if(staff.role==='finance')fail('เฉพาะฝ่ายจัดส่ง',403);if(!uuid(body.id)||!Array.isArray(body.ids)||!body.ids.every(uuid))fail('ข้อมูลไม่ถูกต้อง');

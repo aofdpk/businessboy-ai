@@ -17,7 +17,7 @@ Public page: `/ai-book`. Staff: `/book-admin`. Existing `/promptbook` is unchang
 
 Static HTML/CSS/JS on the existing businessboy-ai Vercel project. `/api/book` rewrites to `book-store` on Supabase project `oezzgzzqgsrpvjeesgva`. Its custom session authentication uses HttpOnly Secure SameSite=Strict cookies (8 hours), opaque customer capability keys, server-side prices, address validation, rate limiting and optimistic revisions.
 
-All dedicated `book_*` tables use RLS and deny `anon` / `authenticated` direct access. Only the function service role has table access. Slips are in private `book-slips` storage, signed for 120 seconds for finance/owner. Export writes and audit are in one PostgreSQL transaction. Existing sales/bot tables are untouched.
+All dedicated `book_*` tables use RLS and deny `anon` / `authenticated` direct access. Only the function service role has table access. Slips are in private `book-slips` storage, signed for 120 seconds for authorized active staff within their order scope. Export writes and audit are in one PostgreSQL transaction. Existing sales/bot tables are untouched.
 
 GA4/Pixel/Clarity IDs are editable by the owner. Event payloads use allowlisted fields and no names, phones, addresses or slip contents. Providers load only on production domain after consent. Checkout is marked for Clarity masking; admin loads no tracking script. Unknown URL parameters are removed before provider initialization. A validated fbclid is preserved only with marketing consent so Meta can attribute the click; it is not added to first-party order/event payloads. Cookie preference can be withdrawn, stopping trackers after reload.
 

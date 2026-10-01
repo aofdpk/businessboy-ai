@@ -1,5 +1,11 @@
 # Book CRM and telesales, 30 September 2026
 
+## Shared slip viewing (1 October 2026)
+
+Every active staff role can view book and addon slips on orders it is authorized to see, including after payment approval, shipment, cancellation or refund. Details expose only has_slip, never the storage path. Viewing uses a private signed URL valid for 120 seconds and records an audit event. Telesales, when explicitly reactivated later, remains limited to its assigned orders. Its current pause and inactive accounts are unchanged. Opening an addon slip is allowed during the sales pause; addon mutations remain blocked. Only owner/finance may approve or record refunds.
+
+Verified approved book and historical addon slip HTTP 200 for owner, finance and both logistics accounts; anonymous access and paused telesales login rejected; logistics payment/refund actions still rejected. Browser verified logistics can open the slip after approval.
+
 ## Accounting and finance (1 October 2026)
 
 `financialacc` is an active finance account using the owner-specified password in Auth only. Four primary menus: sales, slip review, COD receipts, reports. Owner can also access these screens. Finance can view private slips, approve actual transfers, reject slips with a reason, confirm DHL remittance after delivery and record completed refunds after cancellation/return. Finance cannot edit recipient data, mark shipments, create shipping exports, manage staff or resume telesales.
@@ -14,7 +20,7 @@ Verified financial login and denied shipping/team/sales APIs, live report downlo
 
 Owner requested a temporary pause of telesales and all upsells. `book_sales_settings.telesales_enabled=false` gates staff login, sales APIs, addon payment APIs and the sales mutation RPC. All five telesales accounts are inactive and their custom sessions have been revoked. Records remain intact. There is no UI switch to reactivate sales; wait for a new explicit owner instruction before changing the flag and reactivating staff.
 
-`natlogis` and `muaylogis` are active fulfillment accounts using the owner's requested credentials in Supabase Auth only. They can view orders, confirm COD orders, export ready parcels, print packing lists/Prompt inserts and record tracking. They cannot approve payments, view private slips, change prices or manage staff.
+`natlogis` and `muaylogis` are active fulfillment accounts using the owner's requested credentials in Supabase Auth only. They can view orders, confirm COD orders, export ready parcels, print packing lists/Prompt inserts and record tracking. They cannot approve payments, change prices or manage staff.
 
 Shipping users see three primary menus: orders, prepare shipments and shipped. Owner also sees payment review and team settings. Exported orders have their own queue awaiting tracking; export never marks a parcel shipped. Each batch shows time, creator, count, books/Prompt inserts and total COD. Re-download the existing snapshot rather than creating another batch.
 
@@ -26,7 +32,7 @@ Verified with `shipping-verification.mjs` (credentials only via process environm
 
 The same `/book-admin` accepts an email or a username. Owner can create or disable staff. The five requested accounts use usernames boatadmin, aeadmin, armadmin, pookieadmin and gunadmin, with Thai display names. Role: telesales. Passwords are held only by Supabase Auth, are not stored here, and are not forced to rotate per the owner's explicit instruction.
 
-Telesales can claim an unassigned order, see only assigned customer details, record call outcomes, schedule a callback in Thailand time, create an agreed upsell, copy its payment link, upload a customer-provided slip, and record manual KCUT delivery. It cannot approve money, export addresses, view private bank slips, edit tracking settings or manage users. The unassigned list hides the phone and address until claimed. Assignment uses an atomic order lock and revision; another caller cannot steal an assigned order. Owner can reassign.
+Telesales can claim an unassigned order, see only assigned customer details, record call outcomes, schedule a callback in Thailand time, create an agreed upsell, copy its payment link, upload a customer-provided slip, and record manual KCUT delivery. It cannot approve money, export addresses, edit tracking settings or manage users. The unassigned list hides the phone and address until claimed. Assignment uses an atomic order lock and revision; another caller cannot steal an assigned order. Owner can reassign.
 
 ## Prices and money
 
@@ -42,7 +48,7 @@ For COD Prompt upgrades, the parcel amount becomes 490 and the 145 addon remains
 
 No Prompt change is permitted once exported to DHL. KCUT can be sold independently after shipment. `base_amount` preserves the original book revenue so addon reporting does not count it twice. Cash totals use paid_at; order counts use created_at. Refunded items are excluded from received totals. For a transferred Prompt refund, cancel/return the book, confirm refund of the 145, then confirm refund of the original book amount. COD Prompt refunds follow the main book refund.
 
-Customer payment links use `/book-payment#id.capability`, without UTM or trackers. The server derives the capability with HMAC; it is not an order ID alone. Public responses contain no name, address, phone or activation code. Slip hashes are unique across book and addon payments, including historical uploads. Signed slip viewing is limited to owner/finance. A slip is not automatically validated against the bank.
+Customer payment links use `/book-payment#id.capability`, without UTM or trackers. The server derives the capability with HMAC; it is not an order ID alone. Public responses contain no name, address, phone or activation code. Slip hashes are unique across book and addon payments, including historical uploads. Signed slip viewing is available to active staff within their order scope. A slip is not automatically validated against the bank.
 
 ## KCUT delivery
 

@@ -64,7 +64,8 @@ function addonCard(a){let actions='';
   actions+=`<button data-pay-link="${a.id}">🔗 คัดลอกลิงก์ชำระ ${money(a.amount)} บาท</button>`;
   if(sales()||finance())actions+=`<label>📎 แนบสลิปที่ลูกค้าส่งให้<input data-upload="${a.id}" type="file" accept="image/jpeg,image/png,image/webp"></label>`;
  }
- if(finance()&&a.payment_status==='review')actions+=`<button data-addon-slip="${a.id}">🔎 เปิดสลิป</button><button class="primary" data-addon-action="paid" data-id="${a.id}">ตรวจยอดเข้าแล้ว ยืนยัน ${money(a.amount)} บาท</button><button data-addon-action="reject" data-id="${a.id}">ให้แนบสลิปใหม่</button>`;
+ if(a.has_slip)actions+=`<button data-addon-slip="${a.id}">🔎 ดูสลิป</button>`;
+ if(finance()&&a.payment_status==='review')actions+=`<button class="primary" data-addon-action="paid" data-id="${a.id}">ตรวจยอดเข้าแล้ว ยืนยัน ${money(a.amount)} บาท</button><button data-addon-action="reject" data-id="${a.id}">ให้แนบสลิปใหม่</button>`;
  if(sales()&&['awaiting_slip','review','cod_pending'].includes(a.payment_status))actions+=`<button class="danger" data-addon-action="cancel" data-id="${a.id}">ยกเลิกรายการเพิ่ม</button>`;
  if(finance()&&a.payment_status==='paid'&&a.method==='transfer')actions+=`<button class="danger" data-addon-refund="${a.id}">บันทึกคืนเงินรายการนี้</button>`;
  let delivery='';if(sales()&&a.product!=='prompt_upgrade'&&a.payment_status==='paid')delivery=`<form class="delivery-form form-grid" data-id="${a.id}"><label>ชื่อ / ID LINE ของลูกค้า<input name="line_name" value="${esc(a.line_name)}" maxlength="150" ${a.delivery_status==='sent'?'readonly':''}></label><label>โค้ดสำหรับลูกค้ารายนี้<input name="code" value="${esc(a.activation_code)}" maxlength="500" autocomplete="off" ${a.delivery_status==='sent'?'readonly':''}></label><label>ขั้นตอนส่งสิทธิ์<select name="status" ${a.delivery_status==='sent'?'disabled':''}>${['waiting_line','ready_to_send','sent'].map(k=>`<option value="${k}" ${a.delivery_status===k?'selected':''}>${deliveries[k]}</option>`).join('')}</select></label><label>หมายเหตุ<input name="note" value="${esc(a.delivery_note)}" maxlength="1000" ${a.delivery_status==='sent'?'readonly':''}></label>${a.delivery_status!=='sent'?'<button class="primary" type="submit">💾 บันทึกขั้นตอนส่งสิทธิ์</button>':''}<button type="button" data-delivery-copy="${a.id}">📋 คัดลอกข้อความส่ง LINE</button></form><p class="muted">คัดลอกข้อความแล้วนำไปส่ง LINE เอง จากนั้นเลือก “ส่งทาง LINE แล้ว”</p>`;
@@ -72,7 +73,8 @@ function addonCard(a){let actions='';
 }
 async function detail(id){detailData=await api('crm_detail',{id});const {order:o,addons,audit}=detailData;const canSales=sales()&&(owner()||o.assigned_to===state.user.id),closed=['cancelled','returned'].includes(o.status);let actions='';
  if(o.method==='cod'&&o.status==='new'&&ship())actions+=button('ready','✅ ยืนยันออเดอร์พร้อมส่ง','primary');
- if(o.method==='transfer'&&o.payment_status==='review'&&o.status==='new'&&finance())actions+=`<button id="view-slip">🔎 เปิดสลิปหนังสือ</button>${button('paid','ตรวจยอดเข้าแล้ว ยืนยันรับเงิน','primary')}${button('reject_slip','ให้แนบสลิปใหม่')}`;
+ if(o.has_slip)actions+=`<button id="view-slip">🔎 ดูสลิปหนังสือ</button>`;
+ if(o.method==='transfer'&&o.payment_status==='review'&&o.status==='new'&&finance())actions+=`${button('paid','ตรวจยอดเข้าแล้ว ยืนยันรับเงิน','primary')}${button('reject_slip','ให้แนบสลิปใหม่')}`;
  if(o.status==='ready'&&o.batch_id&&ship())actions+=`<label>เลขพัสดุ DHL<input id="tracking" minlength="5" maxlength="60" placeholder="เลขพัสดุจริง"></label>${button('shipped','บันทึกว่าจัดส่งแล้ว','primary')}`;
  if(o.status==='shipped'&&ship())actions+=button('delivered','✅ ยืนยันส่งสำเร็จ','primary');
  if(o.status==='delivered'&&o.method==='cod'&&o.payment_status==='cod_pending'&&finance())actions+=button('cod_collected','ตรวจยอด DHL แล้ว ยืนยันรับเงิน','primary');
