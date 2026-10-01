@@ -1,0 +1,87 @@
+{
+  "mode": "built-in imagegen",
+  "created": "2026-10-01",
+  "images": [
+    {
+      "panel": 1,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-1231684e-a4bf-4334-a695-23836ff9114f.png",
+      "output": "book-assets/story-v7/panel-01.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 161024,
+      "sha256": "8c3dc7ab268399d55a56782215bb84290519f01e603977150fd6a0f7c45d9c5c"
+    },
+    {
+      "panel": 2,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-4c621bfe-ca67-4ddb-910f-ca270dac5d76.png",
+      "output": "book-assets/story-v7/panel-02.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 149528,
+      "sha256": "2e3f9693c113be9f39f5716bc7a497ff2237340aabbebb4cc8dfd926ff5989ca"
+    },
+    {
+      "panel": 3,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-9dcf6ea5-37eb-40bd-ac11-28734bd1bda7.png",
+      "output": "book-assets/story-v7/panel-03.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 181108,
+      "sha256": "6847573da5cf27d14579f2f9938b391a94cb6b756a0dd43d4e2b923320512483"
+    },
+    {
+      "panel": 4,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-645eb220-24c4-4360-9a41-ef5e8f4c651e.png",
+      "output": "book-assets/story-v7/panel-04.webp",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 137928,
+      "sha256": "b1716b006bf63c8301ccb97dd603350903b1d5825e0311475132b221ee0bd1e4"
+    },
+    {
+      "panel": 5,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-fb715637-35fd-4915-afa4-74033af9a5ee.png",
+      "output": "book-assets/story-v7/panel-05.webp",
+      "width": 1774,
+      "height": 887,
+      "bytes": 118528,
+      "sha256": "662eb5f51e31ae79eb40f31ad8d64ca4606e29ae6576f910d69112010c39e99c"
+    },
+    {
+      "panel": 6,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-0dc765cc-09d6-42f3-9b54-c27ec95c779c.png",
+      "output": "book-assets/story-v7/panel-06.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 176808,
+      "sha256": "09d5f02df0744f33f6d5c11164d985762be9f4ab19dbb710acf6f036a5413234"
+    },
+    {
+      "panel": 7,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-00670093-922f-454b-82d1-0c4f71b23561.png",
+      "output": "book-assets/story-v7/panel-07.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 178382,
+      "sha256": "c1913bfb8dd7db2753388d510fa7600294ec8f94d273b13a8602a28bf473d782"
+    },
+    {
+      "panel": 8,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-0b76f15a-0c4d-473f-89f5-61174ba0f27e.png",
+      "output": "book-assets/story-v7/panel-08.webp",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 119814,
+      "sha256": "ea7d952d74bcb9b5284d3dd7aeda4e21ccf82bd287c698e481b0f42cb23b426a"
+    },
+    {
+      "panel": 9,
+      "source": "C:/Users/admin/.codex/generated_images/01a0f17e-450e-7f41-b37c-40f8d57439ac/exec-37850f10-b25b-4a48-a54d-82cb3a3a8cd3.png",
+      "output": "book-assets/story-v7/panel-09.webp",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 175284,
+      "sha256": "1d90d4c12e6f9153d7fccc65cd430dd2ff4a3c31706b1c2802f09c665f560273"
+    }
+  ]
+}
