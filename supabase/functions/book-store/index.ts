@@ -25,7 +25,7 @@ function address(data:any){
  return out;
 }
 function attribution(data:any){const out:any={};for(const k of ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'])if(typeof data?.[k]==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(data[k]))out[k]=data[k];return out;}
-function publicOrder(o:any){return {id:o.id,number:`BB${String(o.number).padStart(6,'0')}`,package:o.package,amount:o.amount,method:o.method,status:o.status,payment_status:o.payment_status,tracking:o.tracking};}
+function publicOrder(o:any){return {id:o.id,number:`BB${String(o.number).padStart(6,'0')}`,package:o.package,amount:o.amount,method:o.method,status:o.status,payment_status:o.payment_status,tracking:o.tracking,payment_note:o.payment_status==='awaiting_slip'?o.payment_note:''};}
 async function capability(id:string,key:string){if(!uuid(id)||!key||key.length<32)fail('ไม่พบคำสั่งซื้อ',404);const o=(await db(`book_orders?id=eq.${id}&idempotency_hash=eq.${await hash(key)}&limit=1`))[0];if(!o)fail('ไม่พบคำสั่งซื้อ',404);return o;}
 async function slip(o:any,data:any){
  if(o.method!=='transfer'||o.status!=='new'||!['awaiting_slip','review'].includes(o.payment_status))fail('ออเดอร์นี้ไม่รับสลิปเพิ่ม');
@@ -113,10 +113,17 @@ Deno.serve(async(req)=>{
    const orders=await db(`book_orders?select=*&is_test=eq.false${filter}&order=created_at.desc&limit=100&offset=${page*100}`);orders.forEach((o:any)=>{delete o.idempotency_hash;delete o.slip_hash;});
    return respond({user:{email:staff.email,role:staff.role},orders,metrics:await db('rpc/book_metrics','POST',{}),batches:await db('book_exports?is_test=eq.false&select=id,created_at&order=created_at.desc&limit=30'),settings:(await db('book_settings?id=eq.true'))[0]});
   }
+  if(op==='finance_report'){
+   if(!['owner','finance'].includes(staff.role))fail('เฉพาะบัญชีและการเงิน',403);
+   for(const k of ['from','to'])if(body[k]&&(!/^\d{4}-\d{2}-\d{2}$/.test(body[k])||!Number.isFinite(Date.parse(body[k]))))fail('วันที่ไม่ถูกต้อง');
+   const result=await db('rpc/book_finance','POST',{p_actor:staff.user_id,p_from:body.from||null,p_to:body.to||null,p_basis:body.basis||'ordered',p_view:body.view||'all',p_page:Math.max(0,Math.floor(Number(body.page)||0)),p_export:body.export===true});
+   if(body.export===true)await db('book_audit','POST',{actor:staff.user_id,action:'finance_export',details:{from:body.from||null,to:body.to||null,basis:body.basis||'ordered',count:result.total}});
+   return respond(result);
+  }
   if(op==='change'){
    if(['ready','shipped','delivered','returned'].includes(body.action)&&staff.role==='finance')fail('เฉพาะฝ่ายจัดส่ง',403);
    if(!uuid(body.id)||!Number.isInteger(body.revision))fail('ข้อมูลไม่ถูกต้อง');
-   const data=body.action==='edit'?address(body.data):{tracking:clean(body.data?.tracking,60)};
+   const data=body.action==='edit'?address(body.data):{tracking:clean(body.data?.tracking,60),note:clean(body.data?.note,500)};
    return respond(await db('rpc/book_change','POST',{p_id:body.id,p_revision:body.revision,p_actor:staff.user_id,p_action:body.action,p_data:data}));
   }
   if(op==='slip_view'){

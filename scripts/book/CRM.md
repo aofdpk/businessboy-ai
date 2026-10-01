@@ -1,5 +1,15 @@
 # Book CRM and telesales, 30 September 2026
 
+## Accounting and finance (1 October 2026)
+
+`financialacc` is an active finance account using the owner-specified password in Auth only. Four primary menus: sales, slip review, COD receipts, reports. Owner can also access these screens. Finance can view private slips, approve actual transfers, reject slips with a reason, confirm DHL remittance after delivery and record completed refunds after cancellation/return. Finance cannot edit recipient data, mark shipments, create shipping exports, manage staff or resume telesales.
+
+`book_finance` is a private, role-checked service RPC. Calendar dates are interpreted in Asia/Bangkok with an inclusive ending day. Sales use created_at, gross receipts use paid_at even after refund, and refunds use the new refunded_at. The report covers book orders; paused addons are not counted as book receipts. Transfer book receipts use base_amount to preserve any historical split receipt; COD uses parcel amount. Net cash is receipts during the selected interval minus refunds during that interval. Pending slip and COD cards explicitly show the entire current backlog. Cancelled/returned orders remain visible in detail reports but are excluded from ordered sales.
+
+Report detail dates can use order, receipt or refund date. Excel includes products, amounts, payment status, receipt/refund dates, shipping/tracking and finance notes, plus clearly labelled interval totals. The detail filter excludes footer totals. Export is one database snapshot, caps at 10,000 rows with an explicit narrower-date error, and records an audit event. No shipping reservation is created. Payment changes retain actor/time audit and require a reason for slip rejection/refund. The customer's existing order screen shows a rejection reason and allows another slip upload; no automatic outbound notification is sent.
+
+Verified financial login and denied shipping/team/sales APIs, live report download, mobile 320/390px with large text, XLSX Thai/numeric cells and filter bounds. `finance-transaction-test.sql` rolls back synthetic tests for payment approval, reason requirement, old orders paid today, refunds in a later period, COD receipt without double counting and permissions. No real customer financial status was changed during implementation.
+
 ## Current operation: shipping only (1 October 2026)
 
 Owner requested a temporary pause of telesales and all upsells. `book_sales_settings.telesales_enabled=false` gates staff login, sales APIs, addon payment APIs and the sales mutation RPC. All five telesales accounts are inactive and their custom sessions have been revoked. Records remain intact. There is no UI switch to reactivate sales; wait for a new explicit owner instruction before changing the flag and reactivating staff.
