@@ -1,4 +1,5 @@
 import { createCRM } from './crm.ts';
+import { enabled as measurementEnabled, makeContext, NOTICE_VERSION } from './measurement.ts';
 import addresses from './addresses.json' with { type: 'json' };
 const URL = Deno.env.get('SUPABASE_URL')!;
 const KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -49,6 +50,16 @@ async function slip(o:any,data:any){
  }catch(e){await fetch(`${URL}/storage/v1/object/book-slips`,{method:'DELETE',headers:{...authHeaders,'Content-Type':'application/json'},body:JSON.stringify({prefixes:[path]})});throw e;}
 }
 const crm=createCRM({db,fail,clean,uuid,hash,url:URL,key:KEY,authHeaders});
+async function measurementConfig(){try{return (await db('book_meta_config?id=eq.true'))[0];}catch{return null;}}
+function recordMeasurement(order:any,body:any,req:Request){
+ const task=(async()=>{
+  const cfg=await measurementConfig();
+  const context=await makeContext(cfg,order,body.measurement,req.headers.get('user-agent')||'',hash);
+  if(context)await db('book_meta_context?on_conflict=order_id','POST',context);
+ })().catch(()=>console.error('book_measurement_capture_failed'));
+ // Optional measurement must never turn a saved order into a checkout error.
+ (globalThis as any).EdgeRuntime?.waitUntil(task);
+}
 Deno.serve(async(req)=>{
  const origin=req.headers.get('origin')||'';
  const cors:Record<string,string>=origins.has(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Credentials':'true','Vary':'Origin'}:{};
@@ -58,6 +69,7 @@ Deno.serve(async(req)=>{
  try{
   if(origin&&!origins.has(origin))fail('ไม่อนุญาตต้นทาง',403);
   const u=new globalThis.URL(req.url),op=u.searchParams.get('op')||'config';
+  if(req.method==='GET'&&op==='measurement_config')return respond({enabled:measurementEnabled(await measurementConfig()),notice_version:NOTICE_VERSION});
   if(req.method==='GET'&&op==='config')return respond({...(await db('book_settings?id=eq.true'))[0],bank:'TTB',account:'138-1-08218-7',company:'บริษัท เด็กประกอบการ จำกัด'});
   if(req.method!=='POST')fail('ใช้ POST',405);
   if(Number(req.headers.get('content-length'))>7200000)fail('ไฟล์ใหญ่เกินไป',413);
@@ -87,8 +99,9 @@ Deno.serve(async(req)=>{
    if(body.website)fail('ไม่สามารถทำรายการ');
    if(!['book','bundle'].includes(body.package)||!['cod','transfer'].includes(body.method))fail('กรุณาเลือกแพ็กเกจและวิธีชำระเงิน');
    const data={...address(body),idempotency_hash:ih,package:body.package,amount:body.package==='book'?345:490,method:body.method,payment_status:body.method==='cod'?'cod_pending':'awaiting_slip',utm:attribution(body.utm),analytics_consent:body.analytics_consent===true,marketing_consent:body.marketing_consent===true,session_id:uuid(body.session_id)?body.session_id:null};
-   try{return respond(publicOrder((await db('book_orders','POST',data))[0]));}catch(e){const retry=(await db(`book_orders?idempotency_hash=eq.${ih}&limit=1`))[0];if(retry)return respond(publicOrder(retry));throw e;}
+   try{const saved=(await db('book_orders','POST',data))[0];recordMeasurement(saved,body,req);return respond(publicOrder(saved));}catch(e){const retry=(await db(`book_orders?idempotency_hash=eq.${ih}&limit=1`))[0];if(retry)return respond(publicOrder(retry));throw e;}
   }
+  if(op==='measurement_object'){const order=await capability(body.id,body.key);await db('rpc/book_meta_object','POST',{p_order:order.id});return respond({ok:true});}
   if(op==='slip')return respond(await slip(await capability(body.id,body.key),body));
   if(op==='status')return respond(publicOrder(await capability(body.id,body.key)));
   if(op==='event'){
@@ -103,6 +116,12 @@ Deno.serve(async(req)=>{
   if(!sess)fail('กรุณาเข้าสู่ระบบ',401);
   const staff=(await db(`book_staff?user_id=eq.${sess.user_id}&active=eq.true&limit=1`))[0];if(!staff)fail('ไม่มีสิทธิ์',403);
   if(op==='logout'){await db(`book_sessions?token_hash=eq.${await hash(token)}`,'DELETE');headers['Set-Cookie']='bb_book_session=; HttpOnly; Secure; SameSite=Strict; Path=/api/book; Max-Age=0';return respond({ok:true});}
+  if(op==='measurement_status'){
+   if(!['owner','finance'].includes(staff.role))fail('เฉพาะเจ้าของหรือการเงิน',403);
+   const cfg=await measurementConfig();
+   const jobs=await db('book_meta_outbox?select=event_name,status,amount,event_time,sent_at,last_error&order=event_time.desc&limit=1000');
+   return respond({enabled:measurementEnabled(cfg),pixel_id:cfg?.pixel_id,reviewed:!!cfg?.reviewed_at,jobs});
+  }
   if(staff.role==='telesales'&&!await salesEnabled())fail('พักระบบเทเลไว้ชั่วคราว',403);
   if((op==='sales_action'||(op.startsWith('addon_')&&op!=='addon_slip_view')||op==='sales_settings')&&!await salesEnabled())fail('พักระบบเทเลและอัพเซลล์ไว้ชั่วคราว',403);
   const staffCRM=await crm.staff(op,body,staff);if(staffCRM!==null)return respond(staffCRM);
