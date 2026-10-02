@@ -69,6 +69,8 @@ Deno.serve(async(req)=>{
  try{
   if(origin&&!origins.has(origin))fail('ไม่อนุญาตต้นทาง',403);
   const u=new globalThis.URL(req.url),op=u.searchParams.get('op')||'config';
+  // Administrative work moved to the single central staff directory and audit trail.
+  if(!["config","order","status","slip","event","measurement_config","measurement_object","addon_status","addon_slip"].includes(op))return respond({error:'หลังบ้านย้ายแล้ว กรุณาเข้าที่ https://admin.thaikoom.com',admin_url:'https://admin.thaikoom.com'},410);
   if(req.method==='GET'&&op==='measurement_config')return respond({enabled:measurementEnabled(await measurementConfig()),notice_version:NOTICE_VERSION});
   if(req.method==='GET'&&op==='config')return respond({...(await db('book_settings?id=eq.true'))[0],bank:'TTB',account:'138-1-08218-7',company:'บริษัท เด็กประกอบการ จำกัด'});
   if(req.method!=='POST')fail('ใช้ POST',405);

@@ -27,6 +27,16 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/book-admin",
+      "destination": "https://admin.thaikoom.com",
+      "permanent": false
+    },
+    {
+      "source": "/book-admin.html",
+      "destination": "https://admin.thaikoom.com",
+      "permanent": false
+    },
+    {
       "source": "/gen3.html",
       "destination": "/gen3",
       "permanent": false
