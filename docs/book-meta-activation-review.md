@@ -1,6 +1,22 @@
 # Book Meta CAPI activation review
 
-Prepared 2026-10-02. Status: implementation ready for verification; live sharing OFF pending review and a scoped token.
+Updated 2026-10-02. Status: scoped token stored in Vault and Meta Test Events verified; live customer sharing remains OFF because the transfer safeguard for this Thai-origin data flow has not been established.
+
+## Setup and evidence completed
+
+The user's direct instruction to proceed authorized creation and storage of the CAPI token. No further token permission is pending. The token was generated without Dataset Quality API and saved only as book_meta_access_token in Supabase Vault. No credential is included in this document.
+
+Synthetic OrderSubmitted (345 THB) and Purchase (490 THB) were submitted using TEST29272, with a fabricated external identifier and no customer data. Meta returned HTTP 200, events_received=2, messages=[]. Events Manager visibly marked both server events processed successfully on 2026-10-02 at 16:24:05 Asia/Bangkok. Purchase details showed 490 and THB. These tests did not create book orders or production sales. They establish credential/API receipt, not ad attribution or a full live checkout-to-worker run.
+
+## Review finding from primary sources
+
+The user delegated setup and review to the assistant; this is not evidence that an external lawyer or company privacy officer approved a legal basis. The legitimate-interest analysis below is an assessment draft, not a certification.
+
+Meta's Data Processing Terms (effective 2025-08-23) and Global Data Transfer Addendum were read in the signed-in browser on 2026-10-02. The processing terms incorporate GDTA only insofar as the transfer is subject to a law listed in that addendum. Its listed jurisdictions are Brazil, Saudi Arabia, LATAM/Canada, Turkey and the USA; Thailand is not listed. Therefore this implementation cannot treat the GDTA link alone as a verified safeguard for Thai-origin transfers. This does not establish that the transfer is prohibited; it establishes a gap in the evidence available here. No separate Thai-applicable transfer agreement or assessment was located. Do not populate reviewed_at/review_reference as approved or enable live sharing on the strength of software authorization alone.
+
+To resolve this specific gap, establish the applicable transfer mechanism and effective data-subject remedies under PDPA sections 28/29 for this Meta data flow, and finish the balancing assessment for matching customer phone hashes. No additional checkbox is being imposed by this review. The deployed kill switch remains off while those facts are unresolved.
+
+Sources: https://www.facebook.com/legal/terms/dataprocessing ; https://www.facebook.com/legal/terms/Privacy/GDTA ; https://data.go.th/th/dataset/dataset_11_0611 .
 
 ## Scope
 
@@ -24,8 +40,8 @@ Safeguards implemented: clear inline notice before ordering, full purpose/recipi
 ## Required before activation
 
 1. Controller's lawful-basis/transfer review reference and date (not merely acceptance of a software feature).
-2. CAPI token authorized for dataset 300488034391029, stored only in Supabase Vault as book_meta_access_token. No token in this repository or browser.
-3. Synthetic event accepted in Meta Test Events and exact dataset verified. Never generate a fake production purchase to test attribution.
+2. DONE: CAPI token authorized for dataset 300488034391029, stored only in Supabase Vault as book_meta_access_token. No token in this repository or public frontend.
+3. DONE: synthetic events accepted in Meta Test Events and exact dataset verified. Never generate a fake production purchase to test attribution.
 4. Frontend notice/objection flow deployed and verified, then set enabled_at to activation time and enable the private config. No historical backfill.
 5. Verify actual new orders: queue acknowledged, Events Manager server receipt, then Ads Manager attribution (asynchronous; not guaranteed one-to-one).
 
