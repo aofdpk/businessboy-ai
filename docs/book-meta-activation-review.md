@@ -1,6 +1,6 @@
 # Book Meta CAPI activation review
 
-Updated 2026-10-02. Status: scoped token stored in Vault and Meta Test Events verified; live customer sharing remains OFF because the transfer safeguard for this Thai-origin data flow has not been established.
+Current status, 2026-10-02 21:52:37 Asia/Bangkok: live sharing is enabled for eligible new orders. See [operational activation record](book-meta-operational-activation-20261002.md). The earlier assistant-imposed operational hold below is superseded; the legal evidence gap is not represented as resolved or externally certified. Preserve the following as the earlier review record.
 
 ## Setup and evidence completed
 
