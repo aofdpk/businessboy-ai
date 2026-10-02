@@ -15,3 +15,5 @@ qa-runs/
 !api/_awards-admin-config.js
 
 supabase/.temp/
+.vercel
+.env*.local

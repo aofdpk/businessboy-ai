@@ -11,7 +11,17 @@
  const button=document.querySelector('#measurement-object');
  const result=document.querySelector('#measurement-result');
  function update(){if(button)button.disabled=objected;if(result&&objected)result.textContent='ปิดการส่งข้อมูลวัดผลบนเบราว์เซอร์นี้แล้ว สั่งซื้อได้ตามปกติ';}
- window.BookMeasurement={payload(){return active ? {notice_version:version,objected,gpc:navigator.globalPrivacyControl===true,fbc:objected?null:fbc} : undefined;}};
+ // Read only campaign identifiers from this visit. No cookie or cross-visit storage.
+ function attribution(){
+  if(!active||objected||navigator.globalPrivacyControl===true||navigator.doNotTrack==='1')return {};
+  const params=new URL(location.href).searchParams,out={};
+  for(const key of ['utm_source','utm_medium','utm_campaign','utm_term','utm_content']){
+   const value=params.get(key);
+   if(value&&/^[A-Za-z0-9_-]{1,80}$/.test(value))out[key]=value;
+  }
+  return out;
+ }
+ window.BookMeasurement={attribution,payload(){return active ? {notice_version:version,objected,gpc:navigator.globalPrivacyControl===true,fbc:objected?null:fbc} : undefined;}};
  if(button)button.addEventListener('click',async()=>{
   objected=true;fbc=null;try{localStorage.setItem('bb_book_measurement_objected','1');}catch{}
   update();
