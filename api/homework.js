@@ -50,23 +50,23 @@ function authenticated(req) {
     return !rest.length && /^\d{13}$/.test(exp) && +exp>Date.now() && +exp<Date.now()+43201000 && equal(sig,mac('admin:'+exp+':'+adminConfig.digest));
   }catch{return false;}
 }
-function text(value,max,field,label) {
+function text(value,field,label) {
   const v=typeof value==='string'?value.trim():'';
   if(!v)fail('กรุณากรอก'+label,400,field);
-  if(v.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v))fail('กรุณาตรวจ'+label+' (ไม่เกิน '+max+' ตัวอักษร)',400,field);
+  if(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v))fail('กรุณาตรวจ'+label+' มีอักขระที่ไม่รองรับ',400,field);
   return v;
 }
 function validate(body) {
   if(typeof body.requestId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.requestId))fail('กรุณาโหลดหน้าเว็บใหม่แล้วลองอีกครั้ง');
   if(!Number.isInteger(body.generation)||body.generation<1||body.generation>4)fail('กรุณาเลือกรุ่นที่เรียน',400,'generation');
   if(!Number.isInteger(body.category)||body.category<1||body.category>6)fail('กรุณาเลือกแนวเพจ 1 แบบ',400,'category');
-  let phone=text(body.phone,30,'phone','เบอร์โทรศัพท์').replace(/[๐-๙]/g,d=>String(d.charCodeAt(0)-3664)).replace(/[\s()-]/g,'');
+  let phone=text(body.phone,'phone','เบอร์โทรศัพท์').replace(/[๐-๙]/g,d=>String(d.charCodeAt(0)-3664)).replace(/[\s()-]/g,'');
   if(phone.startsWith('+66'))phone='0'+phone.slice(3);
   if(!/^0\d{8,9}$/.test(phone))fail('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง เช่น 0812345678',400,'phone');
-  return {fullName:text(body.fullName,150,'fullName','ชื่อ–นามสกุล'),phone,
-    facebookName:text(body.facebookName,200,'facebookName','ชื่อ Facebook'),generation:body.generation,category:body.category,
-    pageName:text(body.pageName,200,'pageName','ชื่อเพจ'),reason:text(body.reason,5000,'reason','เหตุผลที่เลือกทำเพจนี้'),
-    discovered:text(body.discovered,5000,'discovered','ช่องทางที่รู้จักกันครั้งแรก'),decision:text(body.decision,5000,'decision','เหตุผลที่เลือกเรียน')};
+  return {fullName:text(body.fullName,'fullName','ชื่อ–นามสกุล'),phone,
+    facebookName:text(body.facebookName,'facebookName','ชื่อ Facebook'),generation:body.generation,category:body.category,
+    pageName:text(body.pageName,'pageName','ชื่อเพจ'),reason:text(body.reason,'reason','เหตุผลที่เลือกทำเพจนี้'),
+    discovered:text(body.discovered,'discovered','ช่องทางที่รู้จักกันครั้งแรก'),decision:text(body.decision,'decision','เหตุผลที่เลือกเรียน')};
 }
 const payloadHash = v => crypto.createHash('sha256').update(JSON.stringify(v)).digest('hex');
 const receipt = row => ({ok:true,receipt:'G4-EP1-'+row.id.toUpperCase(),submittedAt:row.created_at});
@@ -96,7 +96,6 @@ module.exports=async(req,res)=>{
     if(action==='submit'&&req.method!=='POST')return json(405,{error:'Method not allowed'});
     if(['list','export'].includes(action)&&req.method!=='GET')return json(405,{error:'Method not allowed'});
     let body=req.body||{};
-    if(Buffer.byteLength(typeof body==='string'?body:JSON.stringify(body))>65000)return json(413,{error:'ข้อความยาวเกินไป กรุณาย่อแล้วลองใหม่'});
     if(typeof body==='string')try{body=JSON.parse(body);}catch{return json(400,{error:'Invalid JSON'});}
     if(!body||typeof body!=='object'||Array.isArray(body))return json(400,{error:'Invalid request'});
     if(action==='submit') {
