@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
+    "api/homework.js": {"regions": ["sin1"], "maxDuration": 30},
     "api/gen3-products.js": {
       "regions": [
         "sin1"
@@ -43,6 +44,8 @@
     }
   ],
   "rewrites": [
+    {"source": "/homework/gen4/ep1", "destination": "/homework-gen4-ep1.html"},
+    {"source": "/homework/admin", "destination": "/homework-admin.html"},
     {
       "source": "/book-payment",
       "destination": "/book-payment.html"
@@ -325,6 +328,30 @@
     }
   ],
   "headers": [
+    {
+      "source": "/homework/:path*",
+      "headers": [
+        {"key":"X-Robots-Tag","value":"noindex, nofollow"},
+        {"key":"Cache-Control","value":"no-store"},
+        {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}
+      ]
+    },
+    {
+      "source": "/homework-gen4-ep1.html",
+      "headers": [
+        {"key":"X-Robots-Tag","value":"noindex, nofollow"},
+        {"key":"Cache-Control","value":"no-store"},
+        {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}
+      ]
+    },
+    {
+      "source": "/homework-admin.html",
+      "headers": [
+        {"key":"X-Robots-Tag","value":"noindex, nofollow"},
+        {"key":"Cache-Control","value":"no-store"},
+        {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}
+      ]
+    },
     {
       "source": "/book-payment",
       "headers": [
