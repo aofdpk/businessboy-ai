@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#211c16">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/homework-assets/homework.css?v=2"><script src="/homework-assets/homework.js?v=1" defer></script>
+<link rel="stylesheet" href="/homework-assets/homework.css?v=3"><script src="/homework-assets/countdown.js?v=1" defer></script><script src="/homework-assets/homework.js?v=3" defer></script>
 </head>
 <body>
 <a class="skip" href="#homework-form">ข้ามไปกรอกการบ้าน</a>
@@ -15,7 +15,17 @@
 <main>
 <section class="hero" aria-labelledby="page-title"><h1 id="page-title" class="sr-only">ส่งการบ้าน EP1 รุ่น 4</h1><picture><source media="(max-width:540px)" srcset="/homework-assets/hero-gen4-ep1-mobile-v02.png" width="1254" height="1254"><img class="hero-art" src="/homework-assets/hero-gen4-ep1-wide-v02.png" width="1774" height="887" fetchpriority="high" alt="รุ่น 4 ส่งการบ้าน EP1 เริ่มต้นเพจแรกไปด้วยกัน ครั้งนี้ยังไม่ต้องลงคลิปครับ พร้อมมาสคอตนก KVID ยิ้มให้กำลังใจ"></picture></section>
 <div class="page-body">
-<aside class="deadline"><span class="deadline-icon" aria-hidden="true">◷</span><div><span>กำหนดส่งการบ้าน</span><strong>23 ตุลาคม 2569 · 12.00 น.</strong><small>เที่ยงวัน ตามเวลาไทย</small></div></aside>
+<aside class="deadline countdown-card" aria-labelledby="countdown-title">
+<h2 id="countdown-title">เวลาที่เหลือสำหรับส่งการบ้าน</h2>
+<div class="countdown-grid" role="timer" aria-live="off" aria-label="เวลาที่เหลือสำหรับส่งการบ้าน">
+<div class="countdown-unit"><strong id="countdown-days">--</strong><span>วัน</span></div>
+<div class="countdown-unit"><strong id="countdown-hours">--</strong><span>ชั่วโมง</span></div>
+<div class="countdown-unit"><strong id="countdown-minutes">--</strong><span>นาที</span></div>
+<div class="countdown-unit"><strong id="countdown-seconds">--</strong><span>วินาที</span></div>
+</div>
+<p id="countdown-status" role="status">กำลังตรวจสอบเวลาที่เหลือ…</p>
+<p class="countdown-date">ส่งได้ถึง <strong>23 ตุลาคม 2569 เวลา 12.00 น.</strong><small>เที่ยงวัน ตามเวลาไทย</small></p>
+</aside>
 <div id="closed" class="notice" role="status" hidden>หมดเวลาส่งการบ้าน EP1 แล้วครับ<br>กำหนดส่งคือ 23 ตุลาคม 2569 เวลา 12.00 น.</div>
 <section id="success" class="success" aria-labelledby="success-title" tabindex="-1" hidden><span class="success-icon" aria-hidden="true">✓</span><h2 id="success-title">ส่งการบ้านสำเร็จแล้วครับ!</h2><p>เก่งมากครับ คุณได้เริ่มต้นเพจแรกแล้ว<br>พบกันในบทเรียนต่อไปนะครับ</p><div class="receipt"><span>เลขยืนยันการส่ง</span><strong id="receipt"></strong><span id="submitted-time"></span></div><p class="hint">แคปหน้าจอนี้เก็บไว้ได้เลย ไม่ต้องส่งซ้ำครับ</p><a class="button" href="https://www.facebook.com/groups/1270700618286818">กลับไปกลุ่มเรียนรุ่น 4</a></section>
 <form id="homework-form" novalidate>

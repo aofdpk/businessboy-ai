@@ -6,7 +6,7 @@ let requestId=crypto.randomUUID(),busy=false,deadlinePassed=false,lastPayload=''
 function clearErrors(){errorBox.hidden=true;for(const name of names){document.getElementById(name+'-error').textContent='';document.querySelectorAll('[name="'+name+'"]').forEach(el=>el.removeAttribute('aria-invalid'));}}
 function fieldError(name,message){const messageEl=document.getElementById(name+'-error');if(!messageEl)return;messageEl.textContent=message;document.querySelectorAll('[name="'+name+'"]').forEach(el=>{el.setAttribute('aria-invalid','true');if(el.type==='radio')el.setAttribute('aria-describedby',name+'-error');});}
 function focusField(name){const el=document.querySelector('[name="'+name+'"]');if(el){el.focus();el.scrollIntoView({behavior:'auto',block:'center'});}}
-function showClosed(){deadlinePassed=true;document.querySelector('#closed').hidden=false;button.disabled=true;button.textContent='หมดเวลาส่งการบ้าน';}
+function showClosed(){deadlinePassed=true;document.querySelector('#closed').hidden=form.hidden;button.disabled=true;button.textContent='หมดเวลาส่งการบ้าน';}
 function values(){const data=new FormData(form),out={};for(const name of names)out[name]=String(data.get(name)||'').trim();out.generation=Number(out.generation);out.category=Number(out.category);out.website=String(data.get('website')||'');return out;}
 function complete(result){form.hidden=true;document.querySelector('#closed').hidden=true;const panel=document.querySelector('#success');panel.hidden=false;document.querySelector('#receipt').textContent=result.receipt;document.querySelector('#submitted-time').textContent='ส่งเมื่อ '+new Date(result.submittedAt).toLocaleString('th-TH',{dateStyle:'long',timeStyle:'short',timeZone:'Asia/Bangkok'})+' น.';panel.focus();panel.scrollIntoView({behavior:'auto',block:'start'});}
 form.addEventListener('input',e=>{const name=e.target.name;if(names.includes(name)){document.getElementById(name+'-error').textContent='';e.target.removeAttribute('aria-invalid');}});
@@ -25,4 +25,31 @@ form.addEventListener('submit',async e=>{
   }catch(error){errorBox.textContent=error.name==='AbortError'?'ยังไม่ได้รับการยืนยัน กรุณากดส่งอีกครั้ง ข้อมูลที่กรอกยังอยู่':error.message||'เชื่อมต่อไม่ได้ กรุณาลองอีกครั้ง';errorBox.hidden=false;if(error.field)focusField(error.field);}
   finally{clearTimeout(timer);busy=false;if(!deadlinePassed){button.disabled=false;button.innerHTML='ส่งการบ้าน EP1 <span aria-hidden="true">→</span>';}statusText.textContent='';}
 });
-fetch('/api/homework?action=config',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(config=>{if(config&&!config.open)showClosed();}).catch(()=>{});
+const clock=HomeworkCountdown.createClock(()=>performance.now());
+const countdownCard=document.querySelector('.countdown-card'),countdownStatus=document.querySelector('#countdown-status');
+let syncing=false;
+function renderCountdown(){
+  const state=clock.read();if(!state)return;
+  if(state.expired&&!deadlinePassed)showClosed();
+  for(const unit of ['days','hours','minutes','seconds'])document.querySelector('#countdown-'+unit).textContent=String(deadlinePassed?0:state[unit]).padStart(2,'0');
+  countdownCard.classList.toggle('is-urgent',state.urgent&&!deadlinePassed);
+  countdownCard.classList.toggle('is-closed',deadlinePassed);
+  const message=deadlinePassed?'หมดเวลาส่งการบ้าน EP1 แล้วครับ':state.urgent?'วันสุดท้ายสำหรับส่งการบ้านครับ':'ค่อย ๆ กรอก แล้วกดส่งก่อนหมดเวลานะครับ';
+  if(countdownStatus.textContent!==message)countdownStatus.textContent=message;
+}
+async function syncCountdown(){
+  if(syncing)return;syncing=true;
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+    const response=await fetch('/api/homework?action=config',{cache:'no-store',signal:controller.signal});
+    if(!response.ok)throw new Error('Time unavailable');
+    clock.sync(await response.json());renderCountdown();
+  }catch{if(!clock.read())countdownStatus.textContent='ยังตรวจสอบเวลาไม่ได้ กำลังเชื่อมต่อใหม่ครับ';}
+  finally{clearTimeout(timeout);syncing=false;}
+}
+syncCountdown();
+setInterval(renderCountdown,1000);
+setInterval(()=>{if(!document.hidden)syncCountdown();},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderCountdown();syncCountdown();}});
+window.addEventListener('pageshow',()=>{renderCountdown();syncCountdown();});
+window.addEventListener('online',syncCountdown);
