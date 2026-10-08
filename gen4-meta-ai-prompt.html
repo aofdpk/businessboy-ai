@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101010">
+  <meta name="theme-color" content="#f3f7fc">
   <meta name="description" content="เครื่องมือประกอบ Prompt สำหรับนักเรียน Business Boy รุ่น 4 กรอกข้อมูล คัดลอก แล้วนำไปใช้ใน Meta AI">
   <title>รุ่น 4 · Meta AI Prompt | Business Boy</title>
   <link rel="icon" href="/businessboy-logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/gen4-assets/prompt-tool-v02.css">
-  <script type="module" src="/gen4-assets/prompt-tool-v02.mjs"></script>
+  <link rel="stylesheet" href="/gen4-assets/prompt-tool-v03.css">
+  <script type="module" src="/gen4-assets/prompt-tool-v03.mjs"></script>
 </head>
 <body>
   <a class="skip" href="#builder">ข้ามไปกรอกข้อมูล</a>
@@ -28,7 +28,7 @@
     <nav class="mobile-tabs" aria-label="ส่วนของเครื่องมือ"><button type="button" data-view="input" aria-pressed="true">1. กรอกข้อมูล</button><button type="button" data-view="output" aria-pressed="false">2. ดู Prompt</button></nav>
     <div class="workspace" id="builder" data-view="input">
       <section id="input-panel" class="panel input-panel" aria-labelledby="input-title">
-        <div class="panel-heading"><div><h2 id="input-title">ตั้งค่าคลิปของคุณ</h2></div><button class="reset" type="button" id="reset">↺ คืนค่าเริ่มต้น</button></div>
+        <div class="panel-heading"><div><h2 id="input-title"><span class="emoji" aria-hidden="true">✍️</span> ตั้งค่าคลิปของคุณ</h2></div><button class="reset" type="button" id="reset">↺ คืนค่าเริ่มต้น</button></div>
         <form id="prompt-form">
           <div class="field reference-field"><div class="field-title"><span class="number">1</span><span>รูปตัวละครอ้างอิง</span><span class="optional">ถ้ามี</span></div><div class="reference-note"><span class="reference-icon" aria-hidden="true">▧</span><div><strong>แนบรูปใน Meta AI ได้เลย</strong><p>ช่องนี้คงข้อความไว้ใน Prompt<br>ถ้าไม่มีรูป ให้ AI สร้างตัวละครใหม่</p></div></div></div>
           <div class="field"><label class="field-title" for="scenes"><span class="number">2</span>จำนวนซีน</label><div class="scene-row"><div class="stepper"><button type="button" id="minus" aria-label="ลดจำนวนซีน">−</button><input id="scenes" name="scenes" type="number" inputmode="numeric" min="1" max="999" step="1" value="1" required aria-describedby="duration"><button type="button" id="plus" aria-label="เพิ่มจำนวนซีน">+</button></div><span class="duration" id="duration">1 ซีน × 10 วินาที = <b>10 วินาที</b></span></div></div>
@@ -40,7 +40,7 @@
         </form>
       </section>
       <section id="output-panel" class="panel output-panel" aria-labelledby="output-title">
-        <div class="panel-heading output-heading"><div><h2 id="output-title">Prompt พร้อมใช้งาน</h2></div><span class="live"><span></span> อัปเดตทันที</span></div>
+        <div class="panel-heading output-heading"><div><h2 id="output-title"><span class="emoji" aria-hidden="true">📋</span> Prompt พร้อมใช้งาน</h2></div><span class="live"><span></span> อัปเดตทันที</span></div>
         <div class="output-toolbar"><div class="chips"><span id="scene-badge">1 ซีน / 10 วินาที</span><span>9:16</span><span>เสียงไทย</span></div></div>
         <div class="copy-area"><button type="button" class="copy-button" id="copy" disabled><span aria-hidden="true">⧉</span> <span id="copy-label">คัดลอก Prompt ทั้งหมด</span><span aria-hidden="true">↗</span></button><p id="copy-help">กรอกหัวข้อ / สคริปต์ เพื่อพร้อมคัดลอก</p></div>
         <div class="reader-controls"><label>ขนาดตัวอักษร <select class="font-size" aria-label="ขนาดตัวอักษร Prompt"><option value="18">18</option><option value="20">20</option><option value="22">22</option></select></label><button type="button" class="secondary-button" id="expand">⤢ ขยายอ่าน Prompt</button></div>
