@@ -1,7 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/homework.js": {"regions": ["sin1"], "maxDuration": 30},
+    "api/homework.js": {
+      "regions": [
+        "sin1"
+      ],
+      "maxDuration": 30
+    },
     "api/gen3-products.js": {
       "regions": [
         "sin1"
@@ -23,12 +28,26 @@
         "sin1"
       ],
       "maxDuration": 30
+    },
+    "api/homework-ep2.js": {
+      "regions": [
+        "sin1"
+      ],
+      "maxDuration": 30
     }
   },
   "trailingSlash": false,
   "redirects": [
-    {"source": "/gen4.html", "destination": "/gen4", "permanent": false},
-    {"source": "/gen4-meta-ai-prompt.html", "destination": "/gen4/meta-ai-prompt", "permanent": false},
+    {
+      "source": "/gen4.html",
+      "destination": "/gen4",
+      "permanent": false
+    },
+    {
+      "source": "/gen4-meta-ai-prompt.html",
+      "destination": "/gen4/meta-ai-prompt",
+      "permanent": false
+    },
     {
       "source": "/book-admin",
       "destination": "https://admin.thaikoom.com",
@@ -46,11 +65,34 @@
     }
   ],
   "rewrites": [
-    {"source": "/gen4-assets/:asset(.*\\.mjs)", "destination": "/api/gen4?asset=:asset"},
-    {"source": "/gen4/meta-ai-prompt", "destination": "/api/gen4?view=prompt"},
-    {"source": "/gen4", "destination": "/api/gen4?view=hub"},
-    {"source": "/homework/gen4/ep1", "destination": "/homework-gen4-ep1.html"},
-    {"source": "/homework/admin", "destination": "/homework-admin.html"},
+    {
+      "source": "/homework/gen4/ep2",
+      "destination": "/homework-gen4-ep2.html"
+    },
+    {
+      "source": "/homework/admin/ep2",
+      "destination": "/homework-admin-ep2.html"
+    },
+    {
+      "source": "/gen4-assets/:asset(.*\\.mjs)",
+      "destination": "/api/gen4?asset=:asset"
+    },
+    {
+      "source": "/gen4/meta-ai-prompt",
+      "destination": "/api/gen4?view=prompt"
+    },
+    {
+      "source": "/gen4",
+      "destination": "/api/gen4?view=hub"
+    },
+    {
+      "source": "/homework/gen4/ep1",
+      "destination": "/homework-gen4-ep1.html"
+    },
+    {
+      "source": "/homework/admin",
+      "destination": "/homework-admin.html"
+    },
     {
       "source": "/book-payment",
       "destination": "/book-payment.html"
@@ -334,27 +376,88 @@
   ],
   "headers": [
     {
+      "source": "/homework-gen4-ep2.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/homework-admin-ep2.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
+      ]
+    },
+    {
       "source": "/homework/:path*",
       "headers": [
-        {"key":"X-Robots-Tag","value":"noindex, nofollow"},
-        {"key":"Cache-Control","value":"no-store"},
-        {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
       ]
     },
     {
       "source": "/homework-gen4-ep1.html",
       "headers": [
-        {"key":"X-Robots-Tag","value":"noindex, nofollow"},
-        {"key":"Cache-Control","value":"no-store"},
-        {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
       ]
     },
     {
       "source": "/homework-admin.html",
       "headers": [
-        {"key":"X-Robots-Tag","value":"noindex, nofollow"},
-        {"key":"Cache-Control","value":"no-store"},
-        {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
       ]
     },
     {
