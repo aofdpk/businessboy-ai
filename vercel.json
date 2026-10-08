@@ -44,6 +44,7 @@
     }
   ],
   "rewrites": [
+    {"source": "/gen4", "destination": "/gen4.html"},
     {"source": "/homework/gen4/ep1", "destination": "/homework-gen4-ep1.html"},
     {"source": "/homework/admin", "destination": "/homework-admin.html"},
     {
