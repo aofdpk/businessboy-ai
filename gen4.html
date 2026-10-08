@@ -1,53 +1,17 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101010">
-  <meta name="description" content="เครื่องมือประกอบ Prompt สำหรับนักเรียน Business Boy รุ่น 4 กรอกข้อมูล คัดลอก แล้วนำไปใช้ใน Meta AI">
-  <title>รุ่น 4 · Meta AI Prompt | Business Boy</title>
-  <link rel="icon" href="/businessboy-logo.jpg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/gen4-assets/prompt-tool-v01.css">
-  <script type="module" src="/gen4-assets/prompt-tool-v01.mjs"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#151515">
+<meta name="description" content="รวมเครื่องมือสำหรับนักเรียน Business Boy รุ่น 4 เลือกเครื่องมือที่ต้องการ แล้วเริ่มลงมือสร้างได้เลย">
+<title>Toolkit รุ่น 4 | Business Boy</title><link rel="icon" href="/businessboy-logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/gen4-assets/prompt-tool-v02.css">
 </head>
-<body>
-  <a class="skip" href="#builder">ข้ามไปกรอกข้อมูล</a>
-  <header class="site-header">
-    <div class="brand"><img src="/businessboy-logo.jpg" alt="Business Boy" width="42" height="42"><span>BUSINESS BOY<small>เครื่องมือสำหรับนักเรียน</small></span></div>
-    <span class="cohort">GEN <b>04</b><span>รุ่น 4</span></span>
-  </header>
-  <main>
-    <section class="intro" aria-labelledby="page-title">
-      <div><div class="eyebrow"><span></span> STUDENT TOOLKIT / 01</div><h1 id="page-title">ไอเดียของคุณ <span>พร้อมเป็น Prompt.</span></h1><p>Prompt กลาง — สร้างวิดีโอด้วย Meta AI</p></div>
-      <ol class="workflow" aria-label="วิธีใช้งาน"><li><b>01</b> กรอกข้อมูล</li><li><b>02</b> คัดลอก Prompt</li><li><b>03</b> วางใน Meta AI</li></ol>
-    </section>
-    <div class="workspace" id="builder">
-      <section class="panel input-panel" aria-labelledby="input-title">
-        <div class="panel-heading"><div><span class="eyebrow">YOUR INPUT</span><h2 id="input-title">ตั้งค่าคลิปของคุณ</h2></div><button class="reset" type="button" id="reset">↺ คืนค่าเริ่มต้น</button></div>
-        <form id="prompt-form">
-          <div class="field reference-field"><div class="field-title"><span class="number">1</span><span>รูปตัวละครอ้างอิง</span><span class="optional">ถ้ามี</span></div><div class="reference-note"><span class="reference-icon" aria-hidden="true">▧</span><div><strong>แนบรูปใน Meta AI ได้เลย</strong><p>ช่องนี้คงข้อความไว้ใน Prompt<br>ถ้าไม่มีรูป ให้ AI สร้างตัวละครใหม่</p></div></div></div>
-          <div class="field"><label class="field-title" for="scenes"><span class="number">2</span>จำนวนซีน</label><div class="scene-row"><div class="stepper"><button type="button" id="minus" aria-label="ลดจำนวนซีน">−</button><input id="scenes" name="scenes" type="number" inputmode="numeric" min="1" max="999" step="1" value="1" required aria-describedby="duration"><button type="button" id="plus" aria-label="เพิ่มจำนวนซีน">+</button></div><span class="duration" id="duration">1 ซีน × 10 วินาที = <b>10 วินาที</b></span></div></div>
-          <div class="field"><label class="field-title" for="topic"><span class="number">3</span>หัวข้อ / สคริปต์ <span class="required">จำเป็น</span></label><textarea id="topic" name="topic" rows="4" placeholder="เช่น เทคนิคเก็บเงินสำหรับคนเริ่มทำงาน เล่าให้เข้าใจง่าย พร้อมตัวอย่างใกล้ตัว" required></textarea><p class="hint">พิมพ์หัวข้อสั้น ๆ หรือวางสคริปต์ที่เตรียมไว้ได้เลย</p></div>
-          <fieldset class="field"><legend class="field-title"><span class="number">4</span>สไตล์ภาพ</legend><div class="style-options"><label><input type="radio" name="style" value="realistic" checked><span>สมจริง</span></label><label><input type="radio" name="style" value="pixar"><span>Pixar 3D</span></label><label><input type="radio" name="style" value="custom"><span>อื่น ๆ</span></label></div><div id="custom-style-wrap" hidden><label class="sub-label" for="custom-style">ระบุสไตล์ภาพ</label><input id="custom-style" type="text" placeholder="เช่น อนิเมะญี่ปุ่น / ภาพสีน้ำ"></div></fieldset>
-          <div class="field"><label class="field-title" for="outfit"><span class="number">5</span>เสื้อผ้า / ท่าทาง</label><select id="outfit"><option value="reference">ตามคาแรคเตอร์ชีท</option><option value="custom">ระบุเอง</option></select><div id="custom-outfit-wrap" hidden><label class="sub-label" for="custom-outfit">ระบุเสื้อผ้าและท่าทาง</label><textarea id="custom-outfit" rows="2" placeholder="เช่น เสื้อเชิ้ตสีดำ ยืนพูดกับกล้องอย่างเป็นกันเอง"></textarea></div></div>
-          <div class="field"><label class="field-title" for="speed"><span class="number">6</span>ความเร็วบทพูด</label><select id="speed"><option value="slow">พูดช้า · 15–20 คำ</option><option value="normal" selected>พูดปกติ · 20–25 คำ</option><option value="fast">พูดเร็ว · 25–30 คำ</option><option value="veryfast">พูดเร็วมาก · 30–35 คำ</option></select><p class="hint">จำนวนคำต่อซีน 10 วินาที</p></div>
-          <div class="save-note" id="save-status">บันทึกอัตโนมัติในเบราว์เซอร์นี้</div>
-        </form>
-      </section>
-      <section class="panel output-panel" aria-labelledby="output-title">
-        <div class="panel-heading output-heading"><div><span class="eyebrow">YOUR PROMPT</span><h2 id="output-title">Prompt พร้อมใช้งาน</h2></div><span class="live"><span></span> อัปเดตทันที</span></div>
-        <div class="output-toolbar"><div class="chips"><span id="scene-badge">1 ซีน / 10 วินาที</span><span>9:16</span><span>เสียงไทย</span></div><span class="template-label">แม่แบบกลาง</span></div>
-        <div class="copy-area"><button type="button" class="copy-button" id="copy" disabled><span aria-hidden="true">⧉</span> <span id="copy-label">คัดลอก Prompt ทั้งหมด</span><span aria-hidden="true">↗</span></button><p id="copy-help">กรอกหัวข้อ / สคริปต์ เพื่อพร้อมคัดลอก</p></div>
-        <label class="sr-only" for="prompt-output">Prompt ฉบับเต็มสำหรับคัดลอก</label><textarea id="prompt-output" readonly spellcheck="false" aria-describedby="copy-help"></textarea>
-        <div class="next-step"><span class="next-number">03</span><div><strong>ไปต่อที่ Meta AI</strong><p>วาง Prompt ที่คัดลอก แล้วแนบรูปตัวละครที่นั่น หากมี</p></div><a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" aria-label="เปิด Meta AI ในแท็บใหม่">เปิด Meta AI ↗</a></div>
-      </section>
-    </div>
-    <footer><span>BUSINESS BOY <span class="footer-dot">/</span> GENERATION 04</span><span>กรอกไอเดีย · คัดลอก · ลงมือสร้าง</span></footer>
-  </main>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <noscript><p class="noscript">กรุณาเปิด JavaScript เพื่อใช้งานเครื่องมือประกอบ Prompt</p></noscript>
-</body>
-</html>
+<body class="hub-page">
+<a class="skip" href="#tools">ข้ามไปเลือกเครื่องมือ</a>
+<header class="site-header"><div class="brand"><img src="/businessboy-logo.jpg" alt="Business Boy" width="48" height="48"><span>BUSINESS BOY<small>เครื่องมือสำหรับนักเรียน</small></span></div><span class="cohort">GEN <b>04</b><span>รุ่น 4</span></span></header>
+<main><section class="hub-intro"><span class="hub-tag">Toolkit รุ่น 4</span><h1>เครื่องมือสำหรับ<br><span>นักเรียนรุ่น 4</span></h1><p>เลือกเครื่องมือที่ต้องการใช้งาน<br>แล้วเริ่มลงมือสร้างได้เลย</p></section>
+<section id="tools" aria-labelledby="tools-title"><div class="tools-heading"><h2 id="tools-title">เลือกเครื่องมือ</h2><span>พร้อมใช้งาน 1 เครื่องมือ</span></div><div class="tools-grid">
+<a class="tool-card" href="/gen4/meta-ai-prompt"><div class="card-top"><span class="tool-icon" aria-hidden="true">✦</span><span class="tool-category">สร้างวิดีโอ</span></div><h3>Prompt กลาง — Meta AI</h3><p>กรอกหัวข้อและตั้งค่าซีน เพื่อรับ Prompt พร้อมคัดลอกไปสร้างวิดีโอใน Meta AI</p><span class="tool-link">เปิดเครื่องมือ <span aria-hidden="true">→</span></span></a>
+</div></section><footer><span>BUSINESS BOY <span class="footer-dot">/</span> GENERATION 04</span><span>เรียนรู้ แล้วลงมือสร้าง</span></footer></main>
+</body></html>
