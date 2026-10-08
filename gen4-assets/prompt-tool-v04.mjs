@@ -1,4 +1,4 @@
-import { getTemplate, makeBrief, scenePlan } from './templates-v01.mjs';
+import { getTemplate, makeBrief, scenePlan, SCENE_DIRECTION } from './templates-v01.mjs';
 import { initLibrary } from './template-library-v01.mjs';
 export const DEFAULTS = Object.freeze({scenes:1,topic:'',style:'realistic',customStyle:'',outfit:'reference',customOutfit:'',speed:'normal',inputMode:'custom',templateId:'',focus:'',product:'',customTopic:'',templateTopic:''});
 const SPEEDS = {slow:'พูดช้า 15-20 คำ',normal:'พูดปกติ 20-25 คำ',fast:'พูดเร็ว 25-30 คำ',veryfast:'พูดเร็วมาก 30-35 คำ'};
@@ -14,7 +14,7 @@ export function buildPrompt(input) {
   const speed=SPEEDS[state.speed];
   const style=state.style==='custom'?(state.customStyle.trim()||'[ใส่สไตล์ภาพ]'):STYLES[state.style];
   const outfit=state.outfit==='custom'?(state.customOutfit.trim()||'[ใส่เสื้อผ้า/ท่าทาง]'):'ตามคาแรคเตอร์ชีท';
-  const topic=state.inputMode==='template'&&getTemplate(state.templateId)?[state.topic.trim()||makeBrief(state.templateId),state.focus.trim()?'เจาะจงเพิ่มเติม: '+state.focus.trim():'ประเด็นย่อย: ให้ AI เลือกเองภายในหมวดและมุมเล่านี้',getTemplate(state.templateId).categoryId==='product'?'ข้อมูลสินค้าที่ใช้เป็นแหล่งอ้างอิง: '+(state.product.trim()||'[ระบุชื่อสินค้าและข้อมูลจริงก่อนคัดลอก]'):'',scenePlan(state.templateId,n)].filter(Boolean).join('\n\n'):state.topic.trim()||'[ใส่หัวข้อหรือสคริปต์ตรงนี้]';
+  const topic=state.inputMode==='template'&&getTemplate(state.templateId)?[state.topic.trim()||makeBrief(state.templateId),state.focus.trim()?'เจาะจงเพิ่มเติม: '+state.focus.trim():'ประเด็นย่อย: ให้ AI เลือกเองภายในหมวดและมุมเล่านี้',getTemplate(state.templateId).categoryId==='product'?'ข้อมูลสินค้าที่ใช้เป็นแหล่งอ้างอิง: '+(state.product.trim()||'[ระบุชื่อสินค้าและข้อมูลจริงก่อนคัดลอก]'):'',scenePlan(state.templateId,n),SCENE_DIRECTION].filter(Boolean).join('\n\n'):state.topic.trim()||'[ใส่หัวข้อหรือสคริปต์ตรงนี้]';
   return `บทบาท: คุณคือผู้กำกับ AI สร้างวิดีโอ End-to-End ต้องรักษาหน้าตาตัวละครหลักให้เหมือนเดิม 100%
 
 ================ INPUT - แก้แค่โซนนี้เท่านั้น =================
