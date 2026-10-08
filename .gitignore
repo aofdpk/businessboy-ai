@@ -3,6 +3,9 @@ node_modules/
 .playwright-mcp/
 _*.js
 !api/_gen3-bundle.js
+!api/_gen4-content.js
+!api/_gen4-session.js
+!api/_gen4-credential.js
 !api/_gen3-products.js
 !api/_catalog-data-source.js
 catalog-db/*.jsonl

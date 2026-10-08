@@ -27,6 +27,8 @@
   },
   "trailingSlash": false,
   "redirects": [
+    {"source": "/gen4.html", "destination": "/gen4", "permanent": false},
+    {"source": "/gen4-meta-ai-prompt.html", "destination": "/gen4/meta-ai-prompt", "permanent": false},
     {
       "source": "/book-admin",
       "destination": "https://admin.thaikoom.com",
@@ -44,8 +46,9 @@
     }
   ],
   "rewrites": [
-    {"source": "/gen4/meta-ai-prompt", "destination": "/gen4-meta-ai-prompt.html"},
-    {"source": "/gen4", "destination": "/gen4.html"},
+    {"source": "/gen4-assets/:asset(.*\\.mjs)", "destination": "/api/gen4?asset=:asset"},
+    {"source": "/gen4/meta-ai-prompt", "destination": "/api/gen4?view=prompt"},
+    {"source": "/gen4", "destination": "/api/gen4?view=hub"},
     {"source": "/homework/gen4/ep1", "destination": "/homework-gen4-ep1.html"},
     {"source": "/homework/admin", "destination": "/homework-admin.html"},
     {

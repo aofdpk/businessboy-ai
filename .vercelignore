@@ -15,3 +15,10 @@ awards-assets/awards-v3.js
 
 supabase/
 book-ops/
+
+# Gen4 protected source is served only through api/gen4 and its private bundle.
+gen4.html
+gen4-meta-ai-prompt.html
+gen4-login.html
+gen4-assets/*.mjs
+build-gen4.cjs
