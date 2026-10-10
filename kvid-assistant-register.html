@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>ลงทะเบียนผู้ช่วย KVID · BusinessBoy</title><link rel="stylesheet" href="/kvid-assistant-assets/app.css"></head>
+<body><header><a href="/kvid-assistant" class="brand">BUSINESSBOY <span>· KVID ASSISTANT</span></a></header>
+<main class="registration"><p class="eyebrow">กรอกครั้งเดียว เริ่มสร้างคลิปได้เลย</p><h1>เปิดใช้งานผู้ช่วย KVID</h1><p class="lead">กรอกข้อมูลที่ใช้ลงทะเบียนคอร์สของคุณ</p>
+<p id="status" role="status" aria-live="polite">กำลังตรวจลิงก์ลงทะเบียน…</p>
+<form id="enrollment" class="panel" hidden><div class="grid"><label>ชื่อ<input name="firstName" id="firstName" autocomplete="given-name" maxlength="160" required></label><label>นามสกุล<input name="lastName" id="lastName" autocomplete="family-name" maxlength="160" required></label></div>
+<label>เบอร์โทรศัพท์<input name="phone" id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxx" maxlength="20" required></label>
+<label>รุ่นเรียน<select name="cohort" id="cohort" required><option value="">เลือกรุ่นเรียนของคุณ</option value="1">รุ่น 1</option><option value="2">รุ่น 2</option><option value="3">รุ่น 3</option><option value="4">รุ่น 4</option></select></label>
+<p class="muted">ใช้ข้อมูลนี้เพื่อจัดการสิทธิ์คอร์ส แสดงเฉพาะผู้ดูแลระบบ ขณะนี้เปิดใช้ได้ทันทีเมื่อกรอกครบ ยังไม่มีการตรวจรายชื่อหรือยืนยันเบอร์ด้วย OTP</p>
+<button id="submit">ลงทะเบียนและเริ่มใช้งาน</button></form>
+<section id="success" class="panel" hidden><h2>บันทึกข้อมูลเรียบร้อยแล้ว</h2><p>กลับไปที่ Codex แล้วพิมพ์</p><p class="quote">“กรอกข้อมูลแล้ว เริ่มทำคลิป”</p><p>ผู้ช่วยจะตรวจสิทธิ์และถามว่าคุณอยากทำคลิปแบบไหน ไม่ต้องคัดลอกรหัสกลับไปครับ</p></section>
+</main><footer>BusinessBoy · KVID Assistant</footer><script src="/kvid-assistant-assets/register.js" defer></script></body></html>

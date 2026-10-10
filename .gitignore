@@ -24,3 +24,4 @@ supabase/.temp/
 # KVID desktop source is maintained privately; distribute compiled releases only.
 kvid-desktop/
 !api/_kvid-policy.js
+!api/_kvid-enrollment.js

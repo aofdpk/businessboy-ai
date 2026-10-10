@@ -8,6 +8,12 @@ function name(value){
  return v;
 }
 function key(first,last){return (name(first).replace(/^(?:นางสาว|นาย|นาง|ด\.ช\.|ด\.ญ\.|Mr\.|Mrs\.|Ms\.)\s*/i,'').trim()+'\u001f'+name(last)).toLocaleLowerCase('en-US');}
+function profile(input){
+ let phone=String(input.phone||'').replace(/[\s()-]/g,'');if(phone.startsWith('+66'))phone='0'+phone.slice(3);
+ if(!/^0\d{8,9}$/.test(phone))fail('กรุณากรอกเบอร์โทรศัพท์ไทยให้ครบ');
+ const cohort=Number(input.cohort);if(!Number.isInteger(cohort)||cohort<1||cohort>4)fail('กรุณาเลือกรุ่นเรียน 1–4');
+ return {firstName:name(input.firstName),lastName:name(input.lastName),phone,cohort};
+}
 function policy(input){
  if(!input||!['open','allowlist','paused'].includes(input.mode)||typeof input.registrationOpen!=='boolean')fail('นโยบายไม่ถูกต้อง');
  if(!Array.isArray(input.names)||input.names.length>20000)fail('รายชื่อไม่ถูกต้อง หรือเกินสองหมื่นรายการ');
@@ -25,4 +31,4 @@ function decision(member,p){
 function impact(members,p){return members.map(m=>({id:m.id,firstName:m.first_name,lastName:m.last_name,...decision(m,p)}));}
 function digest(x){return crypto.createHash('sha256').update(JSON.stringify(x)).digest('hex');}
 function csvCell(x){let s=String(x??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
-module.exports={fail,name,key,policy,decision,impact,digest,csvCell};
+module.exports={fail,name,key,profile,policy,decision,impact,digest,csvCell};

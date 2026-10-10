@@ -6,7 +6,7 @@ tag.transaction=queries=>pg.transaction(async tx=>{const out=[];for(const q of q
 const mod=require.resolve('@neondatabase/serverless');require.cache[mod]={id:mod,filename:mod,loaded:true,exports:{neon:()=>tag}};
 process.env.STUDENT_STORY_DATABASE_URL='postgresql://local-ui-test';process.env.STUDENT_STORY_SECRET='local-ui-test-secret';
 const handler=require('../api/kvid-assistant'),adminConfig=require('../api/_student-story-admin-config');
-const root=path.resolve(__dirname,'..'),routes={'/kvid-assistant':'/kvid-assistant.html','/kvid-assistant/admin':'/kvid-assistant-admin.html','/kvid-assistant/install':'/kvid-assistant-assets/install.txt'};
+const root=path.resolve(__dirname,'..'),routes={'/kvid-assistant/register':'/kvid-assistant-register.html','/kvid-assistant':'/kvid-assistant.html','/kvid-assistant/admin':'/kvid-assistant-admin.html','/kvid-assistant/install':'/kvid-assistant-assets/install.txt'};
 http.createServer(async(req,res)=>{const u=new URL(req.url,'http://localhost:4392');
  if(u.pathname.startsWith('/api/')){
   req.query=Object.fromEntries(u.searchParams);let text='';for await(const chunk of req)text+=chunk;req.body=text?JSON.parse(text):{};
@@ -19,4 +19,4 @@ http.createServer(async(req,res)=>{const u=new URL(req.url,'http://localhost:439
  }
  const file=path.resolve(root,'.'+(routes[u.pathname]||decodeURIComponent(u.pathname)));if(!file.startsWith(root+path.sep)){res.statusCode=403;res.end();return;}
  try{const data=fs.readFileSync(file);res.setHeader('Content-Type',({'.html':'text/html; charset=utf-8','.js':'application/javascript','.css':'text/css','.txt':'text/plain; charset=utf-8','.json':'application/json'})[path.extname(file)]||'application/octet-stream');res.end(data);}catch{res.statusCode=404;res.end('Not found');}
-}).listen(4392,'127.0.0.1',()=>console.log('KVID isolated test server on http://127.0.0.1:4392'));
+}).listen(Number(process.env.PORT||4392),'127.0.0.1',()=>console.log('KVID isolated test server on http://127.0.0.1:4392'));
