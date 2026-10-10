@@ -40,6 +40,12 @@
         "sin1"
       ],
       "maxDuration": 60
+    },
+    "api/homework-ep3.js": {
+      "regions": [
+        "sin1"
+      ],
+      "maxDuration": 30
     }
   },
   "trailingSlash": false,
@@ -71,6 +77,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/homework/gen4/ep3",
+      "destination": "/homework-gen4-ep3.html"
+    },
+    {
+      "source": "/homework/admin/ep3",
+      "destination": "/homework-admin-ep3.html"
+    },
     {
       "source": "/kvid-assistant/register",
       "destination": "/kvid-assistant-register.html"
@@ -405,6 +419,40 @@
     }
   ],
   "headers": [
+    {
+      "source": "/homework-admin-ep3.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/homework-gen4-ep3.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        }
+      ]
+    },
     {
       "source": "/kvid-assistant/register",
       "headers": [
