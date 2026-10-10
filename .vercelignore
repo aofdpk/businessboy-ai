@@ -22,3 +22,5 @@ gen4-meta-ai-prompt.html
 gen4-login.html
 gen4-assets/*.mjs
 build-gen4.cjs
+
+kvid-desktop/

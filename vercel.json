@@ -34,6 +34,12 @@
         "sin1"
       ],
       "maxDuration": 30
+    },
+    "api/kvid-assistant.js": {
+      "regions": [
+        "sin1"
+      ],
+      "maxDuration": 60
     }
   },
   "trailingSlash": false,
@@ -65,6 +71,18 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/kvid-assistant",
+      "destination": "/kvid-assistant.html"
+    },
+    {
+      "source": "/kvid-assistant/admin",
+      "destination": "/kvid-assistant-admin.html"
+    },
+    {
+      "source": "/kvid-assistant/install",
+      "destination": "/kvid-assistant-assets/install.txt"
+    },
     {
       "source": "/homework/gen4/ep2",
       "destination": "/homework-gen4-ep2.html"
@@ -375,6 +393,41 @@
     }
   ],
   "headers": [
+    {
+      "source": "/kvid-assistant/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/kvid-assistant-assets/latest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/kvid-assistant-assets/install.txt",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
+      ]
+    },
     {
       "source": "/homework-gen4-ep2.html",
       "headers": [

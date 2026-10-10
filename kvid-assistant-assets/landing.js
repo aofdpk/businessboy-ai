@@ -1,0 +1,1 @@
+document.getElementById('copy').addEventListener('click',async()=>{const area=document.getElementById('install-copy'),status=document.getElementById('copy-status');try{await navigator.clipboard.writeText(area.value);status.textContent='คัดลอกแล้ว เปิด Codex แล้ววางข้อความได้เลย';}catch{area.focus();area.select();status.textContent='เลือกข้อความให้แล้ว กรุณากดคัดลอก';}});

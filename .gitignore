@@ -20,3 +20,7 @@ qa-runs/
 supabase/.temp/
 .vercel
 .env*.local
+
+# KVID desktop source is maintained privately; distribute compiled releases only.
+kvid-desktop/
+!api/_kvid-policy.js

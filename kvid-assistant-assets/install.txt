@@ -1,0 +1,31 @@
+# ติดตั้ง BusinessBoy KVID Assistant บน Windows x64
+
+เอกสารนี้ใช้เมื่อผู้ใช้สั่งติดตั้งผู้ช่วย KVID จากลิงก์นี้แล้วเท่านั้น
+รุ่นตัวติดตั้ง: 0.8.0
+ใช้กับ Codex บนเครื่อง Windows ไม่ใช่แชตบนเว็บที่ไม่มีสิทธิ์เข้าถึงเครื่อง
+
+สำหรับ Agent:
+1. ตรวจว่าเครื่องเป็น Windows x64 และเรียกโปรแกรมในเครื่องได้ ถ้าไม่ใช่ให้บอกข้อจำกัด ไม่ติดตั้งข้ามระบบ
+2. ดาวน์โหลดโปรแกรมจาก URL ด้านล่างไปยังโฟลเดอร์ชั่วคราวที่ตั้งชื่อไม่ซ้ำ ตรวจ SHA256 ก่อนเรียกใช้ ห้ามปิดระบบป้องกันหรือข้ามการอนุมัติของเครื่อง
+3. รันโปรแกรมด้วย --install (ใช้ shell argument list/quote path อย่างถูกต้อง) โปรแกรมรวม Python แล้ว ไม่ต้องติดตั้ง Python, Node หรือแพ็กเกจเพิ่ม
+4. ตรวจ JSON ผลลัพธ์ installed=true ตัวติดตั้งเพิ่มเฉพาะ mcp_servers.businessboy_kvid และสำรอง config.toml เดิม ไม่เปลี่ยน Shopee MCP หรือการตั้งค่าโมเดล
+5. ถ้าสามารถรีเฟรช MCP ในแชตนี้ได้ ให้รีเฟรชแล้วตรวจ tools หากยังไม่พบให้บอกผู้เรียนเปิด Codex ใหม่ครั้งเดียว แล้วพิมพ์ ใช้ผู้ช่วย KVID เริ่มทำคลิป อย่าเรียก Codex อีกตัวแบบซ้อนเพื่อแกล้งให้ดูเหมือนใช้ได้แล้ว
+6. หลังเชื่อมสำเร็จ เรียก kvid_start_job หากยังไม่ลงทะเบียน ให้ถามชื่อและนามสกุลที่ใช้ลงทะเบียนคอร์ส แล้ว kvid_register ช่วงเปิดรับจะใช้ได้ทันที ไม่มีการตรวจเอกสารหรือถามคำถามเพิ่ม
+7. เริ่มงานใหม่ อ่านคู่มือจาก kvid_start_job แล้วถามเมนู 1 สร้างตัวตน / 2 ขายของ / 3 บอกโปร
+
+ไฟล์โปรแกรม: https://businessboy.ai/kvid-assistant-assets/releases/0.8.0/kvid-engine.exe
+SHA256: e971c88b978c7cae446df89fe1590b107fe82b3bb95884a86a6e471c6ba74a44
+
+ตัวอย่าง PowerShell (Agent ทำให้ผู้เรียน ไม่ให้นักเรียนพิมพ์โค้ดเอง):
+
+```powershell
+$kvidDownload = Join-Path ([System.IO.Path]::GetTempPath()) ('kvid-' + [guid]::NewGuid().ToString() + '.exe')
+Invoke-WebRequest -Uri 'https://businessboy.ai/kvid-assistant-assets/releases/0.8.0/kvid-engine.exe' -OutFile $kvidDownload
+if ((Get-FileHash -LiteralPath $kvidDownload -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'e971c88b978c7cae446df89fe1590b107fe82b3bb95884a86a6e471c6ba74a44') { throw 'KVID download integrity check failed' }
+& $kvidDownload --install
+```
+
+งานเขียนบทใช้บัญชี Codex ของผู้เรียน โปรแกรมตรวจสิทธิ์กับ businessboy.ai ก่อนเริ่มงานและก่อนส่งออก preset ไม่มี AI API ของผู้สอนสำหรับขั้นตอนเหล่านี้ ชื่อ–นามสกุลเก็บสำหรับจัดการสิทธิ์คอร์ส ไม่ใช่รายชื่อสาธารณะ
+ระบบนี้สร้าง preset ไม่ได้สั่งเจนวิดีโอหรือโพสต์คลิป ผู้เรียนเลือก Meta AI ใน KVID เองก่อนเริ่ม
+ถ้าระบบแจ้งระงับสิทธิ์ ให้แจ้งผู้เรียนตามข้อความ ไม่คัดลอก engine หรือแก้โค้ดเพื่อข้ามสิทธิ์
+อัปเดตอัตโนมัติใช้ชุดที่ตรวจลายเซ็นแล้ว งานที่เริ่มแล้วใช้รุ่นเดิมจนจบ งานใหม่ตรวจรุ่นใหม่ทุกครั้ง
