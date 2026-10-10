@@ -19,7 +19,7 @@
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง');
       password.value = '';
-      location.replace(location.pathname.includes('meta-ai-prompt') || new URLSearchParams(location.search).get('view') === 'prompt' ? '/gen4/meta-ai-prompt' : '/gen4');
+      location.replace(location.pathname.includes('toolkit-2') || new URLSearchParams(location.search).get('view') === 'toolkit2' ? '/gen4/toolkit-2' : location.pathname.includes('meta-ai-prompt') || new URLSearchParams(location.search).get('view') === 'prompt' ? '/gen4/meta-ai-prompt' : '/gen4');
     } catch (error) {
       feedback.textContent = error instanceof TypeError ? 'เชื่อมต่อไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่' : error.message;
       button.disabled = false;

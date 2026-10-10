@@ -104,6 +104,14 @@
       "destination": "/api/gen4?view=prompt"
     },
     {
+      "source": "/gen4/toolkit-2/download",
+      "destination": "/api/gen4?action=download-toolkit2"
+    },
+    {
+      "source": "/gen4/toolkit-2",
+      "destination": "/api/gen4?view=toolkit2"
+    },
+    {
       "source": "/gen4",
       "destination": "/api/gen4?view=hub"
     },

@@ -43,6 +43,17 @@ module.exports = async (req, res) => {
   }
 
   if (!['GET', 'HEAD'].includes(req.method)) { res.setHeader('Allow', 'GET, HEAD'); return res.status(405).send('Method not allowed'); }
+  if (req.query?.action === 'download-toolkit2') {
+    if (!session.validSession(req)) { res.setHeader('Location', '/gen4/toolkit-2'); return res.status(302).end(); }
+    const pack = require('./_gen4-toolkit2');
+    const bytes = Buffer.from(pack.base64, 'base64');
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="kvid-toolkit-2-v1.zip"');
+    res.setHeader('Content-Length', bytes.length);
+    res.setHeader('X-Toolkit-Version', pack.version);
+    res.setHeader('X-Content-SHA256', pack.sha256);
+    return req.method === 'HEAD' ? res.status(200).end() : res.status(200).send(bytes);
+  }
   if (req.query?.asset !== undefined) {
     if (!session.validSession(req)) return res.status(401).json({ error: 'กรุณากรอกรหัสก่อนใช้งาน' });
     const asset = req.query.asset;
@@ -51,7 +62,7 @@ module.exports = async (req, res) => {
     return req.method === 'HEAD' ? res.status(200).end() : res.status(200).send(content.scripts[asset]);
   }
   const view = req.query?.view || 'hub';
-  if (!['hub', 'prompt'].includes(view)) return res.status(404).send('Not found');
+  if (!['hub', 'prompt', 'toolkit2'].includes(view)) return res.status(404).send('Not found');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   const html = session.validSession(req) ? content.pages[view] : content.login;
   return req.method === 'HEAD' ? res.status(200).end() : res.status(200).send(html);
