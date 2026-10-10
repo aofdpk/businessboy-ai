@@ -3,6 +3,7 @@ const crypto=require('node:crypto');
 const {neon}=require('@neondatabase/serverless');
 const D=require('./_kvid-policy.js');
 const E=require('./_kvid-enrollment');
+const R=require('./_kvid-read');
 const adminConfig=require('./_student-story-admin-config');
 let database,ready;
 const secret=()=>process.env.STUDENT_STORY_SECRET||process.env.GEN3_SESSION_SECRET||process.env.SESSION_SECRET||'';
@@ -10,7 +11,7 @@ const mac=s=>crypto.createHmac('sha256',secret()).update(s).digest('base64url');
 const equal=(a,b)=>typeof a==='string'&&typeof b==='string'&&Buffer.byteLength(a)===Buffer.byteLength(b)&&crypto.timingSafeEqual(Buffer.from(a),Buffer.from(b));
 function db(){if(!database){const url=process.env.STUDENT_STORY_DATABASE_URL||process.env.GEN3_CATALOG_DATABASE_URL||process.env.DATABASE_URL;if(!url||!secret())D.fail('ระบบยังไม่พร้อม กรุณาลองใหม่',503);database=neon(url);}return database;}
 async function schema(){if(!ready)ready=(async()=>{const s=db();
- const [installed]=await s`SELECT to_regclass('public.kvid_schema_v2') IS NOT NULL AS ready`;
+ const [installed]=await R.retryRead(()=>s`SELECT to_regclass('public.kvid_schema_v2') IS NOT NULL AS ready`);
  if(installed.ready)return;
  await s`CREATE TABLE IF NOT EXISTS kvid_access_control(id integer PRIMARY KEY CHECK(id=1),mode text NOT NULL DEFAULT 'open',registration_open boolean NOT NULL DEFAULT true,names jsonb NOT NULL DEFAULT '[]',revision integer NOT NULL DEFAULT 0)`;
  await s`INSERT INTO kvid_access_control(id) VALUES(1) ON CONFLICT DO NOTHING`;
@@ -33,6 +34,7 @@ const readPolicy=r=>({mode:r.mode,registrationOpen:r.registration_open,names:r.n
 async function state(){const s=db();const [r]=await s`SELECT * FROM kvid_access_control WHERE id=1`;return readPolicy(r);}
 async function members(){return db()`SELECT id,first_name,last_name,phone,cohort,name_key,suspended,note,version,created_at,last_seen_at,client_version FROM kvid_members ORDER BY created_at DESC,id`;}
 async function rosterRevision(){const [r]=await db()`SELECT COALESCE(sum(version),0)::text AS revision FROM kvid_roster_shards`;return r.revision;}
+const readMember=R.makeReader(ids=>R.retryRead(()=>db()`SELECT m.id,m.token_hash,m.suspended,m.phone,m.cohort,c.mode,c.revision,(c.mode<>'allowlist' OR EXISTS(SELECT 1 FROM jsonb_array_elements(c.names) n WHERE n->>'key'=m.name_key)) AS listed FROM kvid_members m CROSS JOIN kvid_access_control c WHERE m.id IN (SELECT value::uuid FROM jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)) AND c.id=1`,{onRetry:(reason,attempt)=>console.warn('kvid-read-retry',reason,attempt)}));
 module.exports=async(req,res)=>{
  for(const k of ['Cache-Control','CDN-Cache-Control','Vercel-CDN-Cache-Control'])res.setHeader(k,'no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Robots-Tag','noindex, nofollow');
  const json=(status,v)=>{res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.end(JSON.stringify(v));};
@@ -75,7 +77,7 @@ module.exports=async(req,res)=>{
   }
   if(action==='check'){
    const t=token(req),id=String(req.query.id||'');if(!uuid(id))D.fail('กรุณาลงทะเบียนก่อน',401);
-   const [m]=await s`SELECT m.token_hash,m.suspended,m.phone,m.cohort,c.mode,c.revision,(c.mode<>'allowlist' OR EXISTS(SELECT 1 FROM jsonb_array_elements(c.names) n WHERE n->>'key'=m.name_key)) AS listed FROM kvid_members m CROSS JOIN kvid_access_control c WHERE m.id=${id} AND c.id=1`;
+   const m=await readMember(id);
    if(!m||!equal(m.token_hash,D.digest(t)))D.fail('สิทธิ์เชื่อมต่อไม่ถูกต้อง กรุณาติดต่อผู้ดูแล',401);
    const result=m.suspended?{allowed:false,reason:'suspended',message:'บัญชีนี้ถูกระงับ กรุณาติดต่อผู้ดูแลคอร์ส'}:m.mode==='paused'?{allowed:false,reason:'paused',message:'ผู้ดูแลหยุดให้บริการชั่วคราว'}:!m.listed?{allowed:false,reason:'not_on_list',message:'ยังไม่พบชื่อในรายชื่อผู้มีสิทธิ์ กรุณาติดต่อผู้ดูแลคอร์ส'}:!E.complete(m)?{allowed:false,reason:'profile_required',message:'กรุณากรอกข้อมูลลงทะเบียนให้ครบก่อนเริ่มงาน'}:{allowed:true,reason:m.mode==='open'?'unverified':'name_matched',message:'ใช้งานได้'};
    if(result.reason==='profile_required'){const f=await E.handle({action:'enroll',body:{id},req,s,token,uuid,rate});result.registration_url=f.registration_url;result.message+=' เปิดแบบฟอร์มให้นักเรียนกรอก: '+f.registration_url;}
@@ -105,6 +107,6 @@ module.exports=async(req,res)=>{
    if(!uuid(body.id))D.fail('Invalid id');const r=await s`DELETE FROM kvid_members WHERE id=${body.id} AND first_name='ทดสอบระบบ-KVID-QA' AND last_name='ไม่ใช่นักเรียน' RETURNING id`;return json(200,{removed:r.length});
   }
   return json(404,{error:'Not found'});
- }catch(e){if(!e.status)console.error('kvid-assistant failed',e.code||e.name);return json(e.status||503,{error:e.status?e.message:'ระบบเชื่อมต่อไม่สำเร็จ กรุณาลองใหม่'});}
+ }catch(e){if(!e.status)console.error('kvid-assistant failed',R.reason(e));return json(e.status||503,{error:e.status?e.message:'ระบบเชื่อมต่อไม่สำเร็จ กรุณาลองใหม่'});}
 };
 module.exports._test={admin,uuid,readPolicy};

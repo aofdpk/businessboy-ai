@@ -25,3 +25,4 @@ supabase/.temp/
 kvid-desktop/
 !api/_kvid-policy.js
 !api/_kvid-enrollment.js
+!api/_kvid-read.js
