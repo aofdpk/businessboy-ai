@@ -1,4 +1,5 @@
-import { getTemplate, makeBrief, scenePlan, SCENE_DIRECTION } from './templates-v01.mjs';
+import { buildCustomerPrompt } from './template-catalog-v01.mjs';
+import { getTemplate, makeBrief, scenePlan, SCENE_DIRECTION } from './template-catalog-v01.mjs';
 import { initLibrary } from './template-library-v01.mjs';
 export const DEFAULTS = Object.freeze({scenes:1,topic:'',style:'realistic',customStyle:'',outfit:'reference',customOutfit:'',speed:'normal',inputMode:'custom',templateId:'',focus:'',product:'',customTopic:'',templateTopic:''});
 const SPEEDS = {slow:'พูดช้า 15-20 คำ',normal:'พูดปกติ 20-25 คำ',fast:'พูดเร็ว 25-30 คำ',veryfast:'พูดเร็วมาก 30-35 คำ'};
@@ -14,6 +15,7 @@ export function buildPrompt(input) {
   const speed=SPEEDS[state.speed];
   const style=state.style==='custom'?(state.customStyle.trim()||'[ใส่สไตล์ภาพ]'):STYLES[state.style];
   const outfit=state.outfit==='custom'?(state.customOutfit.trim()||'[ใส่เสื้อผ้า/ท่าทาง]'):'ตามคาแรคเตอร์ชีท';
+  if(state.inputMode==='template' && getTemplate(state.templateId)?.isNew) return buildCustomerPrompt(state,{style,outfit,speed});
   const topic=state.inputMode==='template'&&getTemplate(state.templateId)?[state.topic.trim()||makeBrief(state.templateId),state.focus.trim()?'เจาะจงเพิ่มเติม: '+state.focus.trim():'ประเด็นย่อย: ให้ AI เลือกเองภายในหมวดและมุมเล่านี้',getTemplate(state.templateId).categoryId==='product'?'ข้อมูลสินค้าที่ใช้เป็นแหล่งอ้างอิง: '+(state.product.trim()||'[ระบุชื่อสินค้าและข้อมูลจริงก่อนคัดลอก]'):'',scenePlan(state.templateId,n),SCENE_DIRECTION].filter(Boolean).join('\n\n'):state.topic.trim()||'[ใส่หัวข้อหรือสคริปต์ตรงนี้]';
   return `บทบาท: คุณคือผู้กำกับ AI สร้างวิดีโอ End-to-End ต้องรักษาหน้าตาตัวละครหลักให้เหมือนเดิม 100%
 
@@ -105,12 +107,16 @@ if (typeof document !== 'undefined') {
   function render(){
     const selected=getTemplate(state.templateId),usingTemplate=state.inputMode==='template'&&selected;
     $('template-options').hidden=!usingTemplate;
+    const special=usingTemplate && ['song','silent'].includes(selected.format);
+    $('speed').disabled=Boolean(special);
+    $('speed-hint').textContent=special?(selected.format==='song'?'เทมเพลตเพลง: ร้องให้จบแต่ละซีนอย่างเป็นธรรมชาติ ไม่ใช้ความเร็วบทพูด':'ASMR: ใช้เสียงจากการกระทำ ไม่มีบทพูดหรือผู้บรรยาย'):'จำนวนคำต่อซีน 10 วินาที';
+    $('audio-badge').textContent=special?(selected.format==='song'?'เพลงเด็ก':'เสียง ASMR'):'เสียงไทย';
     $('product-details-wrap').hidden=!(usingTemplate&&selected.categoryId==='product');
     $('product-details').required=Boolean(usingTemplate&&selected.categoryId==='product');
     $('mode-template').setAttribute('aria-pressed',String(Boolean(usingTemplate)));$('mode-custom').setAttribute('aria-pressed',String(!usingTemplate));
     $('topic-caption').textContent=usingTemplate?'แนวทางที่เลือก — แก้ข้อความต่อได้':'หัวข้อหรือสคริปต์ของคุณ';
     $('topic-hint').textContent=usingTemplate?'เว้นช่องเจาะจงเพิ่มเติมไว้ ให้ AI คิดเรื่องย่อยเอง โครงแบ่งซีนจะเติมใน Prompt อัตโนมัติ':'พิมพ์หัวข้อสั้น ๆ หรือวางสคริปต์ที่เตรียมไว้ได้เลย';
-    if(usingTemplate){$('selected-template').textContent=selected.title;$('template-meta').textContent=selected.framework+' · แนะนำ '+selected.scenes+' ซีน';$('scene-plan').textContent=scenePlan(selected.id,state.scenes);}
+    if(usingTemplate){$('selected-template').textContent=selected.title;$('template-meta').textContent=selected.framework+' · แนะนำ '+selected.scenes+' ซีน'+(selected.sceneReason?' — '+selected.sceneReason:'');$('scene-plan').textContent=scenePlan(selected.id,state.scenes);}
 
     $('custom-style-wrap').hidden=state.style!=='custom';$('custom-style').required=state.style==='custom';
     $('custom-outfit-wrap').hidden=state.outfit!=='custom';$('custom-outfit').required=state.outfit==='custom';
