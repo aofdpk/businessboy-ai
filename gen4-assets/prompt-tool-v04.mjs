@@ -1,4 +1,4 @@
-import { buildCustomerPrompt } from './template-catalog-v01.mjs';
+import { buildCustomerPrompt, migrateSavedDraft } from './template-catalog-v01.mjs';
 import { getTemplate, makeBrief, scenePlan, SCENE_DIRECTION } from './template-catalog-v01.mjs';
 import { initLibrary } from './template-library-v01.mjs';
 export const DEFAULTS = Object.freeze({scenes:1,topic:'',style:'realistic',customStyle:'',outfit:'reference',customOutfit:'',speed:'normal',inputMode:'custom',templateId:'',focus:'',product:'',customTopic:'',templateTopic:''});
@@ -15,7 +15,7 @@ export function buildPrompt(input) {
   const speed=SPEEDS[state.speed];
   const style=state.style==='custom'?(state.customStyle.trim()||'[ใส่สไตล์ภาพ]'):STYLES[state.style];
   const outfit=state.outfit==='custom'?(state.customOutfit.trim()||'[ใส่เสื้อผ้า/ท่าทาง]'):'ตามคาแรคเตอร์ชีท';
-  if(state.inputMode==='template' && getTemplate(state.templateId)?.isNew) return buildCustomerPrompt(state,{style,outfit,speed});
+  if(state.inputMode==='template' && getTemplate(state.templateId)?.usesCustomerPrompt) return buildCustomerPrompt(state,{style,outfit,speed});
   const topic=state.inputMode==='template'&&getTemplate(state.templateId)?[state.topic.trim()||makeBrief(state.templateId),state.focus.trim()?'เจาะจงเพิ่มเติม: '+state.focus.trim():'ประเด็นย่อย: ให้ AI เลือกเองภายในหมวดและมุมเล่านี้',getTemplate(state.templateId).categoryId==='product'?'ข้อมูลสินค้าที่ใช้เป็นแหล่งอ้างอิง: '+(state.product.trim()||'[ระบุชื่อสินค้าและข้อมูลจริงก่อนคัดลอก]'):'',scenePlan(state.templateId,n),SCENE_DIRECTION].filter(Boolean).join('\n\n'):state.topic.trim()||'[ใส่หัวข้อหรือสคริปต์ตรงนี้]';
   return `บทบาท: คุณคือผู้กำกับ AI สร้างวิดีโอ End-to-End ต้องรักษาหน้าตาตัวละครหลักให้เหมือนเดิม 100%
 
@@ -95,7 +95,7 @@ ${n===1?'- ใช้ Video_01 ความยาว 10 วิเป๊ะ ส่
 if (typeof document !== 'undefined') {
   const $=id=>document.getElementById(id), form=$('prompt-form'), output=$('prompt-output');
   let state={...DEFAULTS},storageAvailable=true,toastTimer;
-  try {const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));if(saved&&typeof saved==='object'&&!Array.isArray(saved))state=normalize(saved);} catch {storageAvailable=false;}
+  try {const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));if(saved&&typeof saved==='object'&&!Array.isArray(saved))state=normalize(migrateSavedDraft(saved));} catch {storageAvailable=false;}
   function restoreForm(){
     $('scenes').value=state.scenes;$('topic').value=state.topic;$('template-focus').value=state.focus;$('product-details').value=state.product;
     form.querySelector(`input[name="style"][value="${state.style}"]`).checked=true;
