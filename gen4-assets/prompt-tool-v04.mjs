@@ -19,7 +19,6 @@ export function buildPrompt(input) {
   const topic=state.inputMode==='template'&&getTemplate(state.templateId)?[state.topic.trim()||makeBrief(state.templateId),state.focus.trim()?'เจาะจงเพิ่มเติม: '+state.focus.trim():'ประเด็นย่อย: ให้ AI เลือกเองภายในหมวดและมุมเล่านี้',getTemplate(state.templateId).categoryId==='product'?'ข้อมูลสินค้าที่ใช้เป็นแหล่งอ้างอิง: '+(state.product.trim()||'[ระบุชื่อสินค้าและข้อมูลจริงก่อนคัดลอก]'):'',scenePlan(state.templateId,n),SCENE_DIRECTION].filter(Boolean).join('\n\n'):state.topic.trim()||'[ใส่หัวข้อหรือสคริปต์ตรงนี้]';
   return `บทบาท: คุณคือผู้กำกับ AI สร้างวิดีโอ End-to-End ต้องรักษาหน้าตาตัวละครหลักให้เหมือนเดิม 100%
 
-================ INPUT - แก้แค่โซนนี้เท่านั้น =================
 1. Master Character Reference = [แนบรูป 1 รูป - ถ้าไม่มี ให้สร้างตัวละครใหม่]
 2. จำนวนซีนที่ต้องการ = ${n} ซีน
 3. หัวข้อ / สคริปต์ = ${topic}
