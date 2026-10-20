@@ -78,6 +78,18 @@
   ],
   "rewrites": [
     {
+      "source": "/ai-book-plus",
+      "destination": "/ai-book-plus.html"
+    },
+    {
+      "source": "/book-tools",
+      "destination": "/book-tools.html"
+    },
+    {
+      "source": "/api/book-tools",
+      "destination": "https://oezzgzzqgsrpvjeesgva.supabase.co/functions/v1/book-tools"
+    },
+    {
       "source": "/homework/gen4/ep3",
       "destination": "/homework-gen4-ep3.html"
     },
@@ -419,6 +431,19 @@
     }
   ],
   "headers": [
+    {
+      "source": "/book-tools",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
     {
       "source": "/homework-admin-ep3.html",
       "headers": [
