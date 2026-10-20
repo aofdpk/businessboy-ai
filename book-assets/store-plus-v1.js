@@ -9,7 +9,7 @@
  // No optional browser analytics. Server measurement is separately gated and never implies consent.
  try{localStorage.removeItem('bb_book_plus_consent');for(const k of ['bb_book_plus_sid','bb_book_plus_utm'])sessionStorage.removeItem(k);}catch{}
  async function api(op,data){const r=await fetch(`/api/book?op=${op}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});let d;try{d=await r.json()}catch{throw Error('ระบบขัดข้องชั่วคราว กรุณาลองใหม่')}if(!r.ok)throw Error(d.error||'ทำรายการไม่สำเร็จ');return d;}
- const prices={book:345,bundle:490,complete:790},names={book:'หนังสือ 1 เล่ม',bundle:'หนังสือ + เว็บรวม Prompt',complete:'หนังสือ + เว็บ Prompt + Tools'};
+ const prices={book:345,bundle:490,complete:790},names={book:'หนังสือ 1 เล่ม',bundle:'หนังสือ + เว็บรวม Prompt',complete:'หนังสือ + เว็บ Prompt + เครื่องมือช่วยผลิตคลิป'};
  function selected(n){return form.querySelector(`input[name="${n}"]:checked`).value;}
  function update(){const p=selected('package'),m=selected('method');$$('.total').forEach(e=>e.textContent=prices[p]);$('#summary-package').textContent=names[p];$('#bank-panel').hidden=m!=='transfer';$('#submit-order').textContent=`ยืนยันสั่งซื้อ • ${m==='cod'?'เก็บเงินปลายทาง':'โอนเงิน'} ${prices[p]} บาท`;}
  $$('input[name="package"]').forEach(e=>e.addEventListener('change',()=>{update();}));
