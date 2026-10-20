@@ -6,6 +6,6 @@
  $('#login').onsubmit=async e=>{e.preventDefault();$('#login-error').textContent='';$('#login-submit').disabled=true;try{show(await api('login',{password:$('#password').value}));window.scrollTo(0,0);}catch(e){$('#login-error').textContent=e.message;}finally{$('#login-submit').disabled=false;}};
  $('#logout').onclick=async()=>{try{await api('logout',{});location.reload();}catch(e){alert(e.message);}};
  $('#play-video').onclick=()=>{if(!settings)return;const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(settings.video_id)+'?autoplay=1&rel=0';f.title='คลิปเดโม่แนะนำ Promptbook';f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;$('#video').replaceChildren(f);};
- $('#copy-link').onclick=async()=>{try{await navigator.clipboard.writeText(settings.tool_url);$('#copy-status').textContent='คัดลอกแล้ว ส่งลิงก์ไปเปิดบนคอมพิวเตอร์ได้เลย';}catch{$('#copy-status').textContent='คัดลอกอัตโนมัติไม่ได้ กดค้างที่ปุ่มเปิดเครื่องมือแล้วเลือกคัดลอกลิงก์';}};
+ $('#copy-link').onclick=async()=>{try{await navigator.clipboard.writeText(settings.tool_url);$('#copy-status').textContent='คัดลอกแล้ว เปิดลิงก์ในเบราว์เซอร์บนมือถือหรือคอมพิวเตอร์ได้เลย';}catch{$('#copy-status').textContent='คัดลอกอัตโนมัติไม่ได้ กดค้างที่ปุ่มเปิดเครื่องมือแล้วเลือกคัดลอกลิงก์';}};
  api('content').then(show).catch(()=>{});
 })();
