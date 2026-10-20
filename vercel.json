@@ -78,6 +78,38 @@
   ],
   "rewrites": [
     {
+      "source": "/b8",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b8"
+    },
+    {
+      "source": "/b7",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b7"
+    },
+    {
+      "source": "/b6",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b6"
+    },
+    {
+      "source": "/b5",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b5"
+    },
+    {
+      "source": "/b4",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b4"
+    },
+    {
+      "source": "/b3",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b3"
+    },
+    {
+      "source": "/b2",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b2"
+    },
+    {
+      "source": "/b1",
+      "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b1"
+    },
+    {
       "source": "/ai-book-plus",
       "destination": "/ai-book-plus.html"
     },
@@ -431,6 +463,110 @@
     }
   ],
   "headers": [
+    {
+      "source": "/b8",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b7",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b6",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b5",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b4",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b3",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b2",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/b1",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
     {
       "source": "/book-tools",
       "headers": [
