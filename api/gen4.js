@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
     const pack = require('./_gen4-toolkit2');
     const bytes = Buffer.from(pack.base64, 'base64');
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', 'attachment; filename="kvid-toolkit-2-v3.0.zip"');
+    res.setHeader('Content-Disposition', 'attachment; filename="kvid-toolkit-2-v4.0.zip"');
     res.setHeader('Content-Length', bytes.length);
     res.setHeader('X-Toolkit-Version', pack.version);
     res.setHeader('X-Content-SHA256', pack.sha256);

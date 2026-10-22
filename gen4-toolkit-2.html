@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/gen4-assets/prompt-tool-v04.css">
-<link rel="stylesheet" href="/gen4-assets/toolkit-2-v1.css?v=20261010-theme1">
+<link rel="stylesheet" href="/gen4-assets/toolkit-2-v1.css?v=20261022-v4">
 </head>
 <body class="toolkit2-page">
 <a class="skip" href="#toolkit-download">ข้ามไปดาวน์โหลดผู้ช่วย</a>
@@ -23,39 +23,41 @@
 </section>
 <div class="workspace toolkit-workspace">
 <section class="panel" id="toolkit-download" aria-labelledby="download-title">
-<div class="panel-heading"><h2 id="download-title"><span class="emoji" aria-hidden="true">🧰</span> ดาวน์โหลดผู้ช่วย</h2><span class="live">เวอร์ชัน 3.0</span></div>
+<div class="panel-heading"><h2 id="download-title"><span class="emoji" aria-hidden="true">🧰</span> ดาวน์โหลดผู้ช่วย</h2><span class="live">เวอร์ชัน 4.0</span></div>
 <div class="toolkit-body">
-<div class="chips"><span>Toolkit 2</span><span>3 โหมด</span><span>ใช้กับ Codex</span></div>
-<a class="copy-button download" href="/gen4/toolkit-2/download" download="kvid-toolkit-2-v3.0.zip"><span aria-hidden="true">↓</span><span>ดาวน์โหลดโฟลเดอร์ผู้ช่วย</span><span aria-hidden="true">↗</span></a>
-<p class="hint download-hint">ไฟล์ ZIP · เวอร์ชัน 3.0 · อัปเดต 17 ตุลาคม 2569</p>
+<div class="chips"><span>Toolkit 2</span><span>4 โหมด</span><span>ใช้กับ Codex</span></div>
+<a class="copy-button download" href="/gen4/toolkit-2/download" download="kvid-toolkit-2-v4.0.zip"><span aria-hidden="true">↓</span><span>ดาวน์โหลดโฟลเดอร์ผู้ช่วย</span><span aria-hidden="true">↗</span></a>
+<p class="hint download-hint">ไฟล์ ZIP · เวอร์ชัน 4.0 · อัปเดต 22 ตุลาคม 2569</p>
 <ol class="toolkit-steps">
 <li><span class="number">1</span><div><h3>แตกไฟล์ ZIP</h3><p>จะได้โฟลเดอร์ <strong>ผู้ช่วยสร้างคลิป KVID</strong></p></div></li>
 <li><span class="number">2</span><div><h3>เปิดแชตใหม่ แล้วลากโฟลเดอร์เข้า Codex</h3><p>ใช้ไฟล์ทั้งหมดในโฟลเดอร์เดียวกัน ไม่ต้องติดตั้ง KVID MCP</p></div></li>
-<li><span class="number">3</span><div><h3>ส่งข้อความเริ่มต้น</h3><p>คัดลอกข้อความในหน้านี้ไปวาง ผู้ช่วยจะถามให้เลือกโหมด 1 / 2 / 3</p></div></li>
+<li><span class="number">3</span><div><h3>ส่งข้อความเริ่มต้น</h3><p>คัดลอกข้อความในหน้านี้ไปวาง ผู้ช่วยจะถามให้เลือกโหมด 1 / 2 / 3 / 4</p></div></li>
 </ol>
 <div class="reference-note"><span class="reference-icon" aria-hidden="true">▧</span><div><strong>เริ่มจากไอเดียหรือ Prompt ก็ได้</strong><p>ใช้กับ Codex ที่เปิดอ่านและสร้างไฟล์บนคอมพิวเตอร์ได้ นักเรียนไม่ต้องเขียน JSON เอง</p></div></div>
 </div></section>
 <section class="panel starter-panel" aria-labelledby="starter-title">
 <div class="panel-heading"><h2 id="starter-title"><span class="emoji" aria-hidden="true">📋</span> ข้อความพร้อมเริ่มใช้</h2><span class="live"><span></span> คัดลอกได้เลย</span></div>
 <div class="toolkit-body">
-<div class="chips"><span>สร้างตัวตน</span><span>ขายของ</span><span>บอกโปร</span></div>
+<div class="chips"><span>สร้างตัวตน</span><span>ขายของ</span><span>บอกโปร</span><span>เล่าเรื่องและบันเทิง</span></div>
 <button class="copy-button" id="copy-prompt" type="button"><span aria-hidden="true">⧉</span><span>คัดลอกข้อความเริ่มต้น</span><span aria-hidden="true">↗</span></button>
 <p id="copy-status" role="status" aria-live="polite">ลากโฟลเดอร์เข้า Codex แล้ววางข้อความนี้ในแชต</p>
 <label class="sub-label" for="start-prompt">ข้อความสำหรับวางในแชต</label>
-<textarea id="start-prompt" rows="5" readonly>อ่านโฟลเดอร์นี้ แล้วเริ่มเป็นผู้ช่วยสร้าง Preset KVID ให้ฉัน โดยถามให้เลือกโหมด 1 / 2 / 3 ก่อน</textarea>
+<textarea id="start-prompt" rows="5" readonly>อ่านโฟลเดอร์นี้ แล้วถามฉันหน่อย</textarea>
 </div>
 <div class="next-step"><span class="next-number">03</span><div><strong>คุยกับผู้ช่วยใน Codex</strong><p>เลือกโหมด แล้วส่งไอเดีย รูป และข้อมูลตามที่ผู้ช่วยถาม</p></div></div>
 </section>
 </div>
-<section class="mode-section" aria-labelledby="modes-title"><div class="toolkit-section-heading"><h2 id="modes-title">ผู้ช่วยคนเดียว ทำได้ 3 โหมด</h2><p>เลือกสิ่งที่อยากเล่า แล้วให้ผู้ช่วยจัดการต่อ</p></div>
+<section class="mode-section" aria-labelledby="modes-title"><div class="toolkit-section-heading"><h2 id="modes-title">ผู้ช่วยคนเดียว ทำได้ 4 โหมด</h2><p>เลือกสิ่งที่อยากเล่า แล้วให้ผู้ช่วยจัดการต่อ</p></div>
 <div class="toolkit-modes">
 <article class="panel"><span class="number">1</span><h3>สร้างตัวตน</h3><p>คำคม ความรู้ เรื่องเล่า นิทาน เริ่มด้วยไอเดียหรือ Prompt จาก Toolkit 1</p></article>
 <article class="panel"><span class="number">2</span><h3>ขายของ</h3><p>เปิดขายตั้งแต่ซีนแรก ใช้หรือโชว์สินค้าให้เห็นประโยชน์ แล้วปิดด้วยคำชวนสั่งซื้อ</p></article>
 <article class="panel"><span class="number">3</span><h3>ขายของแนวบอกโปร</h3><p>โชว์สินค้า บอกราคา เลือกสถานที่ เลือกเห็นเฉพาะมือหรือมีคนขายได้</p></article>
+<article class="panel"><span class="number">4</span><h3>เล่าเรื่องและความบันเทิง</h3><p>เลือกได้ 25 แนว เช่น เรื่องผี ประวัติแบรนด์ นิทาน สัตว์พูดได้ หรือ ASMR ถามไม่เกิน 5 สเตปหลังเลือกโหมด พร้อมพื้นที่เล่าไอเดียของคุณ</p></article>
 </div></section>
+<section class="panel finish" aria-labelledby="character-title"><div class="panel-heading"><h2 id="character-title">ไม่มีรูปตัวละคร ผู้ช่วยสร้างให้ในแชต</h2></div><div class="toolkit-body"><p>ถ้าคลิปต้องมีตัวละคร แต่คุณไม่มีรูป ผู้ช่วยจะสร้างรูปต้นแบบในแชต ตรวจรูป แล้วฝังรูปจริงลงใน Preset ใช้ตัวละครเดิมต่อเนื่องทั้งชุด โดยไม่ต้องดาวน์โหลดแล้วแนบรูปกลับมาเอง</p><p>งานเห็นเฉพาะมือ ภาพธรรมชาติ หรือ ASMR ที่ไม่มีตัวละคร ไม่ต้องสร้างคนเพิ่ม การสร้างรูปใช้โควตาภาพของบัญชีคุณ และต้องมีเครื่องมือสร้างภาพในแชตที่ใช้งาน</p></div></section>
 <section class="panel finish" aria-labelledby="finish-title"><div class="panel-heading"><h2 id="finish-title">คุยจบ รับ Preset ไปใช้ใน KVID</h2></div><div class="toolkit-body"><p>นำเข้าไฟล์ <strong>preset JSON</strong> แล้วเลือก <strong>Meta AI</strong> ก่อนเริ่มสร้างวิดีโอ เก็บไฟล์ work JSON ไว้แก้งานหรือขยายเรื่องต่อ โหมดขายมีไฟล์ลิงก์สินค้าให้ด้วย</p><p>ถ้าเชื่อม Shopee MCP แล้ว สามารถให้ผู้ช่วยค้นสินค้าได้ หรือส่งรูปและข้อมูลสินค้าเองก็ได้ หากต้องการลิงก์ Affiliate ให้สั่ง “แปลงลิงก์ Aff ให้ด้วย”</p></div></section>
 <section class="panel finish" aria-labelledby="posting-title"><div class="panel-heading"><h2 id="posting-title">มีคลิปแล้ว ให้ผู้ช่วยโพสต์ต่อได้</h2></div><div class="toolkit-body"><p>ส่งคลิปสำเร็จและลิงก์เพจ แล้วสั่ง “ช่วยโพสต์คลิปนี้ลงเพจให้หน่อย” ผู้ช่วยจะเขียนแคปชั่นสั้นและถามว่าต้องการทำปกด้วยไหม</p><p>คลิปขายของจะมีพิกัดในแคปชั่น ถ้าโพสต์ทันทีจะใส่พิกัดในคอมเมนต์ให้ด้วย ส่วนการตั้งเวลาโพสต์ใช้พิกัดในแคปชั่น โดยไม่เพิ่มคอมเมนต์</p></div></section>
-<details class="toolkit-help"><summary>ต้องเตรียมอะไร และอัปเดตอย่างไร?</summary><p>ใช้บัญชี Codex ของคุณเอง ไม่ต้องลงทะเบียนชื่อหรือเบอร์โทรกับผู้ช่วยชุดนี้ ผู้ช่วยจะถามข้อมูลที่จำเป็นก่อนทำงาน นักเรียนไม่ต้องเขียน JSON เอง</p><p>ตอนประกอบไฟล์ ผู้ช่วยใช้ Python 3 ที่รันได้ในสภาพแวดล้อมของคุณ หากยังไม่มีจะแจ้งสิ่งที่ต้องเตรียม ชุดดาวน์โหลดไม่มี EXE หรือ DLL แนบมา</p><p>เวอร์ชันปัจจุบันคือ <strong>เวอร์ชัน 3.0</strong> อัปเดต 17 ตุลาคม 2569 เมื่อมีอัปเดตให้ดาวน์โหลด แตกไฟล์ แล้วแนบโฟลเดอร์รุ่นใหม่ในแชตใหม่ ชุดโฟลเดอร์ไม่ได้อัปเดตตัวเอง</p></details>
-<footer><span>BUSINESS BOY <span class="footer-dot">/</span> GENERATION 04</span><span>Toolkit 2 · เวอร์ชัน 3.0</span></footer>
+<details class="toolkit-help"><summary>ต้องเตรียมอะไร และอัปเดตอย่างไร?</summary><p>ใช้บัญชี Codex ของคุณเอง ไม่ต้องลงทะเบียนชื่อหรือเบอร์โทรกับผู้ช่วยชุดนี้ ผู้ช่วยจะถามข้อมูลที่จำเป็นก่อนทำงาน นักเรียนไม่ต้องเขียน JSON เอง</p><p>ตอนประกอบไฟล์ ผู้ช่วยใช้ Python 3 ที่รันได้ในสภาพแวดล้อมของคุณ หากยังไม่มีจะแจ้งสิ่งที่ต้องเตรียม ชุดดาวน์โหลดไม่มี EXE หรือ DLL แนบมา</p><p>เวอร์ชันปัจจุบันคือ <strong>เวอร์ชัน 4.0</strong> อัปเดต 22 ตุลาคม 2569 เมื่อมีอัปเดตให้ดาวน์โหลด แตกไฟล์ แล้วแนบโฟลเดอร์รุ่นใหม่ในแชตใหม่ ชุดโฟลเดอร์ไม่ได้อัปเดตตัวเอง</p></details>
+<footer><span>BUSINESS BOY <span class="footer-dot">/</span> GENERATION 04</span><span>Toolkit 2 · เวอร์ชัน 4.0</span></footer>
 </main><script src="/gen4-assets/toolkit-2-v1.js" defer></script>
 </body></html>

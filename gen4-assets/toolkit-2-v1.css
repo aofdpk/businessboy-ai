@@ -14,7 +14,7 @@
 .toolkit2-page .mode-section,.toolkit2-page .finish{margin-top:30px}
 .toolkit2-page .toolkit-section-heading{margin:0 0 20px}
 .toolkit2-page .toolkit-section-heading p{font-size:16px;color:var(--muted);margin:6px 0 0}
-.toolkit2-page .toolkit-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.toolkit2-page .toolkit-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .toolkit2-page .toolkit-modes article{padding:24px}
 .toolkit2-page .toolkit-modes h3{margin-top:14px}
 .toolkit2-page .finish .toolkit-body{background:#f1f6fd}
