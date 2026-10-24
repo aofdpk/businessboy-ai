@@ -7,6 +7,7 @@ _*.js
 !api/_gen4-toolkit2.js
 !api/_gen4-session.js
 !api/_gen4-credential.js
+!api/_gen4-awards-private.js
 !api/_gen3-products.js
 !api/_catalog-data-source.js
 catalog-db/*.jsonl

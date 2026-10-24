@@ -46,6 +46,12 @@
         "sin1"
       ],
       "maxDuration": 30
+    },
+    "api/gen4-awards.js": {
+      "regions": [
+        "sin1"
+      ],
+      "maxDuration": 30
     }
   },
   "trailingSlash": false,
@@ -77,6 +83,22 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/_gen4-awards-private",
+      "destination": "/api/gen4-awards?path=blocked"
+    },
+    {
+      "source": "/api/_gen4-awards-private.js",
+      "destination": "/api/gen4-awards?path=blocked"
+    },
+    {
+      "source": "/gen4-awards",
+      "destination": "/api/gen4-awards?path="
+    },
+    {
+      "source": "/gen4-awards/:path*",
+      "destination": "/api/gen4-awards?path=:path*"
+    },
     {
       "source": "/b8",
       "destination": "https://pl-dashboard-seven.vercel.app/api/book-link/b8"
